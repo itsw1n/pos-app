@@ -7,13 +7,14 @@ import {
   ScrollView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { InputField } from '../../components/common/InputField/InputField';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
+import { radius } from '../../theme';
 import { loginScreenStyles } from './LoginScreen.styles';
 
 interface LoginScreenProps {
@@ -74,61 +75,50 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
             Manage your business easily and efficiently.
           </Text>
 
-          <View style={loginScreenStyles.inputGroup}>
-            <Text style={loginScreenStyles.inputLabel}>Username</Text>
-            <View style={loginScreenStyles.inputWrapper}>
-              <Ionicons
-                name="person-outline"
-                size={18}
-                color={colors.textSecondary}
-                style={loginScreenStyles.inputIcon}
-              />
-              <TextInput
-                style={loginScreenStyles.input}
-                placeholder="Enter your username"
-                placeholderTextColor={colors.textSecondary}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isLoading}
-              />
-            </View>
-          </View>
+           <View style={loginScreenStyles.inputGroup}>
+             <Text style={loginScreenStyles.inputLabel}>Username</Text>
+             <InputField
+               value={username}
+               onChangeText={setUsername}
+               placeholder="Enter your username"
+               autoCapitalize="none"
+               autoCorrect={false}
+               disabled={isLoading}
+               leftIcon={
+                 <Ionicons name="person-outline" size={18} color={colors.textSecondary} />
+               }
+               style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
+             />
+           </View>
 
-          <View style={loginScreenStyles.inputGroupLarge}>
-            <View style={loginScreenStyles.inputLabelRow}>
-              <Text style={loginScreenStyles.inputLabel}>Password</Text>
-              <Pressable>
-                <Text style={loginScreenStyles.forgotText}>Forgot?</Text>
-              </Pressable>
-            </View>
-            <View style={loginScreenStyles.inputWrapper}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={18}
-                color={colors.textSecondary}
-                style={loginScreenStyles.inputIcon}
-              />
-              <TextInput
-                style={loginScreenStyles.input}
-                placeholder="••••••••"
-                placeholderTextColor={colors.textSecondary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-              />
-              <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                <Ionicons
-                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={18}
-                  color={colors.textSecondary}
-                  style={loginScreenStyles.inputIcon}
-                />
-              </Pressable>
-            </View>
-          </View>
+           <View style={loginScreenStyles.inputGroupLarge}>
+             <View style={loginScreenStyles.inputLabelRow}>
+               <Text style={loginScreenStyles.inputLabel}>Password</Text>
+               <Pressable>
+                 <Text style={loginScreenStyles.forgotText}>Forgot?</Text>
+               </Pressable>
+             </View>
+             <InputField
+               value={password}
+               onChangeText={setPassword}
+               placeholder="••••••••"
+               secureTextEntry={!showPassword}
+               disabled={isLoading}
+               leftIcon={
+                 <Ionicons name="lock-closed-outline" size={18} color={colors.textSecondary} />
+               }
+               rightIcon={
+                 <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                   <Ionicons
+                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                     size={18}
+                     color={colors.textSecondary}
+                   />
+                 </Pressable>
+               }
+               style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
+             />
+           </View>
 
           {error ? <Text style={loginScreenStyles.error}>{error}</Text> : null}
 
