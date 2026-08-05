@@ -85,7 +85,7 @@ async function ensureSchema(client) {
 
 async function resetSchema(client) {
   for (const table of TABLES) {
-    await client.query(`drop table if exists ${table} cascade;`);
+    await client.query(`drop table if exists "${table}" cascade;`);
   }
 }
 
@@ -249,7 +249,10 @@ function valuesClause(rows, columns) {
 async function upsertRows(client, sql, rows, columns) {
   if (rows.length === 0) return;
   const { text, values } = valuesClause(rows, columns);
-  await client.query(`${sql} ${text};`, values);
+  const expanded = sql.includes('$1')
+    ? sql.replace('$1', text)
+    : `${sql} ${text}`;
+  await client.query(expanded, values);
 }
 
 async function upsertTransactions(client) {
