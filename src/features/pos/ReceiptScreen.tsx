@@ -1,15 +1,27 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { generateReceipt, shareReceipt } from '../../services/receiptService';
 import { printReceipt } from '../../services/printerService';
 import { POSTransaction } from '../../types/context';
+import { colors } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
 import { receiptScreenStyles } from './ReceiptScreen.styles';
 
 type ReceiptScreenProps = StackScreenProps<POSStackParamList, 'Receipt'> & {
   style?: StyleProp<ViewStyle>;
 };
+
+const TAX_RATE = 0.11;
 
 function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -25,6 +37,9 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
     quantity: item.qty,
     subtotal: item.price * item.qty,
   }));
+
+  const subtotal = receiptItems.reduce((sum, i) => sum + i.subtotal, 0);
+  const tax = subtotal * TAX_RATE;
 
   const paymentLabel: Record<POSTransaction['payment_mode'], string> = {
     cash: 'Cash',
@@ -49,7 +64,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
       .join('');
     await printReceipt(
       `<html><body style="font-family: monospace; padding: 20px;">
-        <h3>IPSS - Cafe Elvira</h3>
+        <h3>Elvira Cafe</h3>
         <p>Transaction: ${transaction.id}</p>
         <p>Date: ${transaction.date}</p>
         <p>Payment: ${paymentLabel[transaction.payment_mode]}</p>
@@ -63,85 +78,127 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
   };
 
   return (
-    <ScrollView style={[receiptScreenStyles.container, style]}>
-      <View style={receiptScreenStyles.receiptCard}>
-        <View style={receiptScreenStyles.receiptHeader}>
-          <Text style={receiptScreenStyles.receiptBrand}>IPSS - Cafe Elvira</Text>
-          <Text style={receiptScreenStyles.receiptMeta}>{formatDate(transaction.date)}</Text>
-          <Text style={receiptScreenStyles.receiptId}>#{transaction.id.slice(0, 8).toUpperCase()}</Text>
-        </View>
-
-        {receiptItems.map((item, index) => (
-          <View key={index} style={receiptScreenStyles.itemRow}>
-            <Text style={receiptScreenStyles.itemName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={receiptScreenStyles.itemQty}>x{item.quantity}</Text>
-            <Text style={receiptScreenStyles.itemSubtotal}>{item.subtotal.toFixed(2)}</Text>
-          </View>
-        ))}
-
-        <View style={receiptScreenStyles.divider} />
-
-        <View style={receiptScreenStyles.totalRow}>
-          <Text style={receiptScreenStyles.totalLabel}>Total</Text>
-          <Text style={receiptScreenStyles.totalValue}>₱{transaction.total_amount.toFixed(2)}</Text>
-        </View>
-
-        {transaction.amount_received !== null ? (
-          <View style={receiptScreenStyles.totalRow}>
-            <Text style={receiptScreenStyles.totalLabel}>Amount received</Text>
-            <Text style={receiptScreenStyles.totalValue}>
-              ₱{transaction.amount_received.toFixed(2)}
-            </Text>
-          </View>
-        ) : null}
-
-        {transaction.change_given !== null ? (
-          <View style={receiptScreenStyles.totalRow}>
-            <Text style={receiptScreenStyles.totalLabel}>Change</Text>
-            <Text style={receiptScreenStyles.changeValue}>
-              ₱{transaction.change_given.toFixed(2)}
-            </Text>
-          </View>
-        ) : null}
-
-        <View style={receiptScreenStyles.paymentBadge}>
-          <Text style={receiptScreenStyles.paymentBadgeText}>
-            {paymentLabel[transaction.payment_mode]}
-          </Text>
-        </View>
-      </View>
-
-      <View style={receiptScreenStyles.actions}>
-        <Pressable
-          style={({ pressed }) => [
-            receiptScreenStyles.actionButton,
-            pressed ? receiptScreenStyles.actionButtonPressed : null,
-          ]}
-          onPress={handleShare}
-        >
-          <Text style={receiptScreenStyles.actionButtonText}>Share Receipt</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            receiptScreenStyles.actionButton,
-            pressed ? receiptScreenStyles.actionButtonPressed : null,
-          ]}
-          onPress={handlePrint}
-        >
-          <Text style={receiptScreenStyles.actionButtonText}>Print Receipt</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [
-            receiptScreenStyles.primaryButton,
-            pressed ? receiptScreenStyles.primaryButtonPressed : null,
-          ]}
-          onPress={() => navigation.popToTop()}
-        >
-          <Text style={receiptScreenStyles.primaryButtonText}>New Sale</Text>
+    <SafeAreaView style={[receiptScreenStyles.container, style]}>
+      <View style={receiptScreenStyles.topBar}>
+        <View style={receiptScreenStyles.topBarBalance} />
+        <Text style={receiptScreenStyles.topBarTitle}>Elvira Cafe</Text>
+        <Pressable>
+          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
-    </ScrollView>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={receiptScreenStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={receiptScreenStyles.successHeader}>
+          <View style={receiptScreenStyles.successCircle}>
+            <Ionicons name="checkmark" size={28} color={colors.surface} />
+          </View>
+          <Text style={receiptScreenStyles.successTitle}>Payment Successful</Text>
+          <Text style={receiptScreenStyles.successSubtitle}>Thank you for your visit!</Text>
+        </View>
+
+        <View style={receiptScreenStyles.receiptCard}>
+          <View style={receiptScreenStyles.receiptHeader}>
+            <View style={receiptScreenStyles.receiptIconCircle}>
+              <Ionicons name="cafe-outline" size={22} color={colors.primary} />
+            </View>
+            <Text style={receiptScreenStyles.receiptBrand}>Elvira Cafe</Text>
+            <Text style={receiptScreenStyles.receiptAddress}>
+              Jalan Raya Elvira No. 12, Jakarta
+            </Text>
+          </View>
+
+          <View style={receiptScreenStyles.receiptMeta}>
+            <Text style={receiptScreenStyles.receiptMetaText}>
+              Order #{transaction.id.slice(0, 4).toUpperCase()}
+            </Text>
+            <Text style={receiptScreenStyles.receiptMetaText}>{formatDate(transaction.date)}</Text>
+          </View>
+
+          <View style={receiptScreenStyles.receiptItems}>
+            {receiptItems.map((item, index) => (
+              <View key={index} style={receiptScreenStyles.itemRow}>
+                <Text style={receiptScreenStyles.itemName} numberOfLines={1}>
+                  {item.quantity}x {item.name}
+                </Text>
+                <Text style={receiptScreenStyles.itemSubtotal}>₱{item.subtotal.toFixed(2)}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={receiptScreenStyles.receiptTotals}>
+            <View style={receiptScreenStyles.itemRow}>
+              <Text style={receiptScreenStyles.itemName}>Subtotal</Text>
+              <Text style={receiptScreenStyles.itemSubtotal}>₱{subtotal.toFixed(2)}</Text>
+            </View>
+            {/*
+              TODO: confirm Tax with client
+            */}
+            <View style={receiptScreenStyles.itemRow}>
+              <Text style={receiptScreenStyles.itemName}>Tax (11%)</Text>
+              <Text style={receiptScreenStyles.itemSubtotal}>₱{tax.toFixed(2)}</Text>
+            </View>
+          </View>
+
+          <View style={receiptScreenStyles.receiptGrandTotal}>
+            <Text style={receiptScreenStyles.grandTotalLabel}>TOTAL</Text>
+            <Text style={receiptScreenStyles.grandTotalValue}>₱{transaction.total_amount.toFixed(2)}</Text>
+          </View>
+
+          <View style={receiptScreenStyles.paymentMethodRow}>
+            <Text style={receiptScreenStyles.paymentMethodLabel}>PAYMENT METHOD</Text>
+            <Text style={receiptScreenStyles.paymentMethodValue}>
+              {paymentLabel[transaction.payment_mode]}
+            </Text>
+          </View>
+
+          <View style={receiptScreenStyles.dashedDivider} />
+
+          <View style={receiptScreenStyles.barcodeSection}>
+            {/* TODO: replace with barcode library later */}
+            <View style={receiptScreenStyles.barcodePlaceholder} />
+            <Text style={receiptScreenStyles.barcodeText}>Thanks for visiting Elvira Cafe</Text>
+          </View>
+
+          <View style={receiptScreenStyles.receiptEdge} />
+        </View>
+
+        <View style={receiptScreenStyles.actions}>
+          <Pressable
+            style={receiptScreenStyles.newTransactionButton}
+            onPress={() => navigation.popToTop()}
+          >
+            <Ionicons name="add" size={18} color={colors.surface} />
+            <Text style={receiptScreenStyles.newTransactionButtonText}>New Transaction</Text>
+          </Pressable>
+
+          <View style={receiptScreenStyles.secondaryRow}>
+            <Pressable
+              style={({ pressed }) => [
+                receiptScreenStyles.secondaryButton,
+                pressed ? receiptScreenStyles.secondaryButtonPressed : null,
+              ]}
+              onPress={handlePrint}
+            >
+              <Ionicons name="print-outline" size={16} color={colors.textPrimary} />
+              <Text style={receiptScreenStyles.secondaryButtonText}>Print</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                receiptScreenStyles.secondaryButton,
+                pressed ? receiptScreenStyles.secondaryButtonPressed : null,
+              ]}
+              onPress={handleShare}
+            >
+              <Ionicons name="share-outline" size={16} color={colors.textPrimary} />
+              <Text style={receiptScreenStyles.secondaryButtonText}>Send</Text>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
