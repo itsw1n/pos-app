@@ -7,11 +7,11 @@ import {
   ScrollView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { InputField } from '../../components/common/InputField/InputField';
 import { colors } from '../../theme';
 import { InventoryStackParamList } from './InventoryNavigator';
 import { useInventory } from './useInventory';
@@ -65,26 +65,22 @@ export function StockInScreen({ navigation, route, style }: StockInScreenProps):
 
         <View style={stockInScreenStyles.formCard}>
           <Text style={stockInScreenStyles.inputLabel}>Quantity to add</Text>
-          <TextInput
-            style={stockInScreenStyles.input}
+          <InputField
             value={quantityText}
             onChangeText={setQuantityText}
             keyboardType="number-pad"
             placeholder="0"
-            placeholderTextColor={colors.textSecondary}
-            editable={!isSubmitting}
+            disabled={!quantityIsValid || isSubmitting}
           />
 
           <Text style={stockInScreenStyles.inputLabel}>Supplier (optional)</Text>
-          <TextInput
-            style={stockInScreenStyles.input}
+          <InputField
             value={supplier}
             onChangeText={setSupplier}
             placeholder="Supplier name"
-            placeholderTextColor={colors.textSecondary}
             autoCapitalize="words"
             autoCorrect={false}
-            editable={!isSubmitting}
+            disabled={isSubmitting}
           />
         </View>
 
