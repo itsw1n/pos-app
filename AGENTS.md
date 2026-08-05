@@ -44,14 +44,45 @@ There is no configured linter — `tsc --noEmit` is the gate.
 
 ## Environment
 
-Create a `.env` (never commit it):
+Two environments are supported: `development` and `production`. Each has its
+own Supabase project. Only variables prefixed with `EXPO_PUBLIC_` are bundled
+into the app (read via `process.env.EXPO_PUBLIC_*`, see
+`src/services/supabase.ts`); **never put secret keys in `EXPO_PUBLIC_*`**.
 
 ```
-EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+# runtime env files (NEVER commit — gitignored):
+.env.development   # EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (dev project, EXPO_PUBLIC_APP_ENV=development)
+.env.production    # same, for the prod project (EXPO_PUBLIC_APP_ENV=production)
+.env.local         # SEED-ONLY: DATABASE_URL + SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+.env.example       # tracked template
+.env.local.example # tracked template (seed secrets)
 ```
 
-Read via `process.env.EXPO_PUBLIC_*` (see `src/services/supabase.ts`).
+`.env.local` is used **only** by `scripts/seed.cjs` (and `make seed`/`make reset`).
+It holds the **service_role** key and the Postgres connection string — admin
+credentials that must never ship to a client. The app bundle never reads it.
+You need `.env.local` only to run the seed; the app itself only needs
+`.env.development` (or `.env.production`).
+
+### Local Development (Makefile)
+```
+make setup        # npm install
+make dev          # expo start against the development env
+make seed         # apply schema + upsert demo data into the configured DB
+make reset        # drop + recreate schema, then seed
+make typecheck    # npx tsc --noEmit
+make build        # npx expo export --platform android (mobile-only)
+```
+Demo credentials created by the seed: `admin@elvira.cafe`/`admin123` (admin),
+`cashier@elvira.cafe`/`cashier123` (cashier). Log in with the email address;
+AuthContext signs in with `email: username`.
+
+### Docker (tooling only — backend is a hosted Supabase project)
+The database is NOT containerized; Docker runs the Node tooling:
+```
+make docker-seed / docker-reset / docker-typecheck / docker-build
+```
+
 
 ---
 
