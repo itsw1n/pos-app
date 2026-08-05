@@ -7,12 +7,12 @@ import {
   ScrollView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { colors } from '../../theme';
+import { InputField } from '../../components/common/InputField/InputField';
+import { colors, typography } from '../../theme';
 import { TransactionsStackParamList } from './TransactionsNavigator';
 import { useTransactions } from './useTransactions';
 import { voidScreenStyles } from './VoidScreen.styles';
@@ -75,18 +75,19 @@ export function VoidScreen({ navigation, route, style }: VoidScreenProps): React
 
         <View style={voidScreenStyles.formCard}>
           <Text style={voidScreenStyles.inputLabel}>Reason for void *</Text>
-          <TextInput
-            style={voidScreenStyles.input}
+          <InputField
+            multiline
             value={reason}
             onChangeText={setReason}
             placeholder="Required — e.g. wrong item, customer returned"
-            placeholderTextColor={colors.textSecondary}
-            multiline
-            editable={!isVoiding}
+            disabled={!isVoiding}
+            error={
+              reasonIsValid
+                ? undefined
+                : 'A reason is required to void this transaction.'
+            }
+            inputStyle={{ ...typography.lg }}
           />
-          {!reasonIsValid ? (
-            <Text style={voidScreenStyles.hintText}>A reason is required to void this transaction.</Text>
-          ) : null}
         </View>
 
         {error ? <Text style={voidScreenStyles.errorText}>{error}</Text> : null}
