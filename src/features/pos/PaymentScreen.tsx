@@ -6,14 +6,14 @@ import {
   ScrollView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import { InputField } from '../../components/common/InputField/InputField';
 import { PaymentMode } from '../../types/context';
-import { colors } from '../../theme';
+import { colors, typography } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
 import { usePOS } from './usePOS';
 import { paymentScreenStyles } from './PaymentScreen.styles';
@@ -109,22 +109,19 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
           <View style={paymentScreenStyles.cashSection}>
             <View style={paymentScreenStyles.amountGroup}>
               <Text style={paymentScreenStyles.amountLabel}>AMOUNT RECEIVED</Text>
-              <View
-                style={[
-                  paymentScreenStyles.inputWrapper,
-                  amountIsValid && amountReceived < total ? paymentScreenStyles.inputError : null,
-                ]}
-              >
-                <TextInput
-                  style={paymentScreenStyles.input}
-                  value={amountText}
-                  onChangeText={setAmountText}
-                  keyboardType="decimal-pad"
-                  placeholder="0.00"
-                  placeholderTextColor={colors.textSecondary}
-                  editable={!isProcessing}
-                />
-              </View>
+              <InputField
+                value={amountText}
+                onChangeText={setAmountText}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                disabled={isProcessing}
+                inputStyle={{ ...typography.xl, fontWeight: '600' }}
+                error={
+                  amountIsValid && amountReceived < total
+                    ? 'Amount received is less than the total'
+                    : undefined
+                }
+              />
             </View>
 
             <View style={paymentScreenStyles.changeRow}>

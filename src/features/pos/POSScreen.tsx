@@ -12,9 +12,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import { InputField } from '../../components/common/InputField/InputField';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
 import { Product } from '../../types/entities';
-import { colors } from '../../theme';
+import { colors, radius, spacing } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
 import { usePOS } from './usePOS';
 import { posScreenStyles } from './POSScreen.styles';
@@ -114,23 +115,17 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
         </Pressable>
       </View>
 
-      <View style={posScreenStyles.searchBar}>
-        <Ionicons
-          name="search-outline"
-          size={18}
-          color={colors.textSecondary}
-          style={posScreenStyles.searchIcon}
-        />
-        <TextInput
-          style={posScreenStyles.searchInput}
+        <InputField
           placeholder="Cari Menu"
-          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCorrect={false}
+          leftIcon={
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
+          }
+          rightIcon={<Ionicons name="options-outline" size={18} color={colors.textSecondary} />}
+          style={{ height: 44, borderRadius: radius.xl, marginHorizontal: spacing['2xl'], marginVertical: spacing.md }}
         />
-        <Ionicons name="options-outline" size={18} color={colors.textSecondary} />
-      </View>
 
       <ScrollView
         horizontal

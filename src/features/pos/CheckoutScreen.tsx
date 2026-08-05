@@ -5,12 +5,12 @@ import {
   ScrollView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import { InputField } from '../../components/common/InputField/InputField';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
 import { PaymentMode } from '../../types/context';
 import { colors } from '../../theme';
@@ -79,12 +79,10 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
           </View>
           <View style={checkoutScreenStyles.infoText}>
             <Text style={checkoutScreenStyles.infoLabel}>Nama Customer</Text>
-            <TextInput
-              style={checkoutScreenStyles.customerInput}
-              placeholder="Enter customer name"
-              placeholderTextColor={colors.textSecondary}
+            <InputField
               value={customerName}
               onChangeText={setCustomerName}
+              placeholder="Enter customer name"
             />
           </View>
         </View>
