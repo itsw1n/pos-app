@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleProp, Text, TextInput, View, ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleProp,
+  Text,
+  TextInput,
+  View,
+  ViewStyle,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { PaymentMode } from '../../types/context';
+import { colors } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
 import { usePOS } from './usePOS';
 import { paymentScreenStyles } from './PaymentScreen.styles';
-import { colors } from '../../theme';
 
 type PaymentScreenProps = StackScreenProps<POSStackParamList, 'Payment'> & {
   style?: StyleProp<ViewStyle>;
 };
+
+const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: 'cash-outline' | 'phone-portrait-outline' | 'wallet-outline' }> = [
+  { value: 'cash', label: 'Cash', icon: 'cash-outline' },
+  { value: 'gcash', label: 'GCash', icon: 'phone-portrait-outline' },
+  { value: 'maya', label: 'Maya', icon: 'wallet-outline' },
+];
 
 export function PaymentScreen({ navigation, route, style }: PaymentScreenProps): React.JSX.Element {
   const { paymentMode } = route.params;
@@ -41,70 +58,116 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
     }
   };
 
-  const modeTitle: Record<PaymentMode, string> = {
-    cash: 'Cash',
-    gcash: 'GCash',
-    maya: 'Maya',
-  };
-
   return (
-    <KeyboardAvoidingView
-      style={[paymentScreenStyles.container, style]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={paymentScreenStyles.summaryCard}>
-        <Text style={paymentScreenStyles.summaryLabel}>Total due ({modeTitle[paymentMode]})</Text>
-        <Text style={paymentScreenStyles.summaryValue}>₱{total.toFixed(2)}</Text>
+    <SafeAreaView style={[paymentScreenStyles.container, style]}>
+      <View style={paymentScreenStyles.topBar}>
+        <Pressable onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </Pressable>
+        <Text style={paymentScreenStyles.topBarTitle}>Payment</Text>
+        <View style={paymentScreenStyles.topBarBalance} />
       </View>
 
-      {isCash ? (
-        <View style={paymentScreenStyles.inputCard}>
-          <Text style={paymentScreenStyles.inputLabel}>Amount received</Text>
-          <TextInput
-            style={[
-              paymentScreenStyles.input,
-              amountIsValid && amountReceived < total ? paymentScreenStyles.inputError : null,
-            ]}
-            value={amountText}
-            onChangeText={setAmountText}
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            placeholderTextColor={colors.textSecondary}
-            editable={!isProcessing}
-          />
-          <View style={paymentScreenStyles.changeRow}>
-            <Text style={paymentScreenStyles.changeLabel}>Change</Text>
-            <Text style={paymentScreenStyles.changeValue}>
-              {change !== null && change >= 0 ? `₱${change.toFixed(2)}` : '—'}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={paymentScreenStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={paymentScreenStyles.totalSection}>
+          <Text style={paymentScreenStyles.totalLabel}>Total Amount Due</Text>
+          <Text style={paymentScreenStyles.totalValue}>₱{total.toFixed(2)}</Text>
+        </View>
+
+        <Text style={paymentScreenStyles.sectionLabel}>PAYMENT METHOD</Text>
+
+        <View style={paymentScreenStyles.methodList}>
+          {PAYMENT_METHODS.map((method) => {
+            const isSelected = paymentMode === method.value;
+            return (
+              <View
+                key={method.value}
+                style={[
+                  paymentScreenStyles.paymentOption,
+                  isSelected ? paymentScreenStyles.paymentOptionSelected : null,
+                ]}
+              >
+                <View style={paymentScreenStyles.iconCircle}>
+                  <Ionicons name={method.icon} size={18} color={colors.primary} />
+                </View>
+                <Text style={paymentScreenStyles.optionLabel}>{method.label}</Text>
+                {isSelected ? (
+                  <View style={paymentScreenStyles.selectIndicator}>
+                    <Ionicons name="checkmark" size={14} color={colors.surface} />
+                  </View>
+                ) : null}
+              </View>
+            );
+          })}
+        </View>
+
+        {isCash ? (
+          <View style={paymentScreenStyles.cashSection}>
+            <View style={paymentScreenStyles.amountGroup}>
+              <Text style={paymentScreenStyles.amountLabel}>AMOUNT RECEIVED</Text>
+              <View
+                style={[
+                  paymentScreenStyles.inputWrapper,
+                  amountIsValid && amountReceived < total ? paymentScreenStyles.inputError : null,
+                ]}
+              >
+                <TextInput
+                  style={paymentScreenStyles.input}
+                  value={amountText}
+                  onChangeText={setAmountText}
+                  keyboardType="decimal-pad"
+                  placeholder="0.00"
+                  placeholderTextColor={colors.textSecondary}
+                  editable={!isProcessing}
+                />
+              </View>
+            </View>
+
+            <View style={paymentScreenStyles.changeRow}>
+              <Text style={paymentScreenStyles.changeLabel}>CHANGE</Text>
+              <Text
+                style={[
+                  paymentScreenStyles.changeValue,
+                  change !== null && change < 0 ? paymentScreenStyles.changeNegative : null,
+                ]}
+              >
+                {change !== null && change >= 0 ? `₱${change.toFixed(2)}` : '—'}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={paymentScreenStyles.hint}>
+            <Ionicons name="qr-code-outline" size={20} color={colors.primary} />
+            <Text style={paymentScreenStyles.hintText}>
+              Ask customer to scan the QR code on the counter
             </Text>
           </View>
-        </View>
-      ) : (
-        <View style={paymentScreenStyles.inputCard}>
-          <Text style={paymentScreenStyles.inputLabel}>
-            {paymentMode === 'gcash' ? 'GCash' : 'Maya'} payment
-          </Text>
-          <Text style={paymentScreenStyles.summaryValue}>₱{total.toFixed(2)}</Text>
-        </View>
-      )}
-
-      {error ? <Text style={paymentScreenStyles.errorText}>{error}</Text> : null}
-
-      <Pressable
-        style={({ pressed }) => [
-          paymentScreenStyles.confirmButton,
-          pressed ? paymentScreenStyles.confirmButtonPressed : null,
-          !canConfirm ? paymentScreenStyles.confirmButtonDisabled : null,
-        ]}
-        disabled={!canConfirm}
-        onPress={handleConfirm}
-      >
-        {isProcessing ? (
-          <ActivityIndicator color={colors.surface} />
-        ) : (
-          <Text style={paymentScreenStyles.confirmButtonText}>Complete Sale</Text>
         )}
-      </Pressable>
-    </KeyboardAvoidingView>
+
+        {error ? <Text style={paymentScreenStyles.errorText}>{error}</Text> : null}
+
+        <Pressable
+          style={[
+            paymentScreenStyles.confirmButton,
+            !canConfirm ? paymentScreenStyles.confirmButtonDisabled : null,
+          ]}
+          disabled={!canConfirm}
+          onPress={handleConfirm}
+        >
+          {isProcessing ? (
+            <ActivityIndicator color={colors.surface} />
+          ) : (
+            <>
+              <Text style={paymentScreenStyles.confirmButtonText}>Confirm Payment</Text>
+              <Ionicons name="arrow-forward" size={18} color={colors.surface} />
+            </>
+          )}
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
