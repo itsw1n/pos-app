@@ -11,7 +11,7 @@ EXPO := npx expo
 NODE := node
 
 .PHONY: help setup dev prod seed reset typecheck build \
-        docker-up docker-seed docker-reset docker-typecheck docker-build docker-web
+        docker-seed docker-reset docker-typecheck docker-build
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -38,9 +38,6 @@ build: ## Produce a static export bundle (android; mobile-only app)
 	npx expo export --platform android
 
 # --- Docker tooling (backend is hosted Supabase; Docker runs the tooling) ---
-docker-up: ## Start Docker-based tooling network (no DB)
-	@docker compose up -d
-
 docker-seed: ## Seed the DB from a container
 	@docker compose run --rm seed
 
@@ -50,8 +47,5 @@ docker-reset: ## Reset + seed the DB from a container
 docker-typecheck: ## Type-check inside a container
 	@docker compose run --rm typecheck
 
-docker-build: ## Build static export inside a container
+docker-build: ## Build the static export bundle inside a container
 	@docker compose run --rm build
-
-docker-web: ## Serve the exported web bundle locally on :8081
-	@docker compose up -d web
