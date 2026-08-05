@@ -6,12 +6,81 @@ export const posScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing['6xl'],
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing['2xl'],
+    paddingTop: spacing['2xl'],
+    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
   },
-  gridColumn: {
-    gap: spacing.md,
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandName: {
+    ...typography.md,
+    color: colors.textPrimary,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing['2xl'],
+    marginVertical: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.md,
+    color: colors.textPrimary,
+    paddingVertical: 0,
+  },
+  categoryBar: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing['2xl'],
+    marginBottom: spacing.md,
+  },
+  categoryTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+  },
+  categoryTabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  categoryTabText: {
+    ...typography.sm,
+    color: colors.textSecondary,
+  },
+  categoryTabTextActive: {
+    fontWeight: '600' as const,
+    color: colors.surface,
   },
   loadingContainer: {
     flex: 1,
@@ -27,96 +96,91 @@ export const posScreenStyles = StyleSheet.create({
   errorText: {
     ...typography.md,
     color: colors.danger,
-    margin: spacing.lg,
+    marginHorizontal: spacing['2xl'],
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
-  categoryBar: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  categoryTab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    marginRight: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  categoryTabActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  categoryTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  categoryTabTextActive: {
-    color: colors.surface,
+  content: {
+    paddingHorizontal: spacing['2xl'],
+    paddingBottom: 80,
   },
   productCard: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     ...shadows.resting,
   },
-  productCardPressed: {
-    backgroundColor: colors.navActive,
+  productCardInCart: {
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  productCardDisabled: {
-    opacity: 0.5,
+  productImage: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.lg,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  productImageEmoji: {
+    fontSize: 28,
+  },
+  productInfo: {
+    flex: 1,
+    marginRight: spacing.md,
   },
   productName: {
-    ...typography.lg,
+    ...typography.md,
+    fontWeight: '600' as const,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
-  productCategory: {
-    ...typography.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
   productPrice: {
-    ...typography.xl,
-    color: colors.primary,
-  },
-  cartBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  cartBarInfo: {
-    flex: 1,
-  },
-  cartBarText: {
     ...typography.sm,
     color: colors.textSecondary,
   },
-  cartBarTotal: {
-    ...typography.xl,
-    color: colors.textPrimary,
-    marginTop: spacing.xs,
-  },
-  cartBarButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cartBarButtonPressed: {
-    backgroundColor: colors.secondary,
+  addButtonPressed: {
+    backgroundColor: colors.navActive,
   },
-  cartBarButtonText: {
+  addButtonDisabled: {
+    opacity: 0.5,
+  },
+  totalBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+    marginHorizontal: spacing['2xl'],
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    ...shadows.active,
+  },
+  totalBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  totalBarLabel: {
     ...typography.md,
+    color: colors.surface,
+  },
+  totalBarValue: {
+    ...typography.lg,
+    fontWeight: '700' as const,
     color: colors.surface,
   },
 });
