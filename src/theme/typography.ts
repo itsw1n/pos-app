@@ -1,12 +1,12 @@
 export const typography = {
-  xs: { fontSize: 10, fontWeight: '400' as const, lineHeight: 14 },
-  sm: { fontSize: 12, fontWeight: '400' as const, lineHeight: 16 },
-  md: { fontSize: 14, fontWeight: '400' as const, lineHeight: 18 },
-  lg: { fontSize: 16, fontWeight: '400' as const, lineHeight: 22 },
-  xl: { fontSize: 18, fontWeight: '500' as const, lineHeight: 24 },
-  '2xl': { fontSize: 20, fontWeight: '600' as const, lineHeight: 28 },
-  '3xl': { fontSize: 24, fontWeight: '700' as const, lineHeight: 32 },
-  '4xl': { fontSize: 32, fontWeight: '700' as const, lineHeight: 40 },
+  xs: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 14 },
+  sm: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 16 },
+  md: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 18 },
+  lg: { fontFamily: 'Inter_400Regular', fontSize: 16, lineHeight: 22 },
+  xl: { fontFamily: 'Inter_500Medium', fontSize: 18, lineHeight: 24 },
+  '2xl': { fontFamily: 'Inter_600SemiBold', fontSize: 20, lineHeight: 28 },
+  '3xl': { fontFamily: 'Inter_600SemiBold', fontSize: 24, lineHeight: 32 },
+  '4xl': { fontFamily: 'Inter_600SemiBold', fontSize: 32, lineHeight: 40 },
 } as const;
 
 export type TypographyName = keyof typeof typography;
