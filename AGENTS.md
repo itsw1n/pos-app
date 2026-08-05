@@ -1,3 +1,248 @@
-# Expo HAS CHANGED
+# AGENTS.md
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
+Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System for Cafe Elvira** — a mobile-only Point-of-Sale + inventory app built with React Native (Expo) + TypeScript + Supabase.
+
+> **Expo HAS CHANGED.** This project uses **Expo SDK 57 / React Native 0.86 / React 19**. Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code. Do not assume older Expo APIs exist (e.g. `expo-sqlite`'s legacy `SQLite.openDatabase` was removed — the modern `openDatabaseAsync`/`execAsync` API is used here).
+
+---
+
+## Tech Stack
+
+| Concern | Choice |
+|---|---|
+| Platform | Mobile-only (Expo Go / Android APK via EAS) |
+| Framework | Expo SDK 57, React Native 0.86, React 19 |
+| Language | TypeScript (~6.0, `strict: true`) |
+| UI styling | React Native `StyleSheet` + design tokens (no Tailwind, no inline style objects) |
+| Navigation | `@react-navigation/native` (Stack + Bottom Tabs), role-based |
+| Online DB / Auth | Supabase (`@supabase/supabase-js`) — Auth + Postgres |
+| Offline storage | `expo-sqlite` (modern async API) |
+| Connectivity | `@react-native-community/netinfo` |
+| Receipts | `expo-print`, `expo-sharing` (+ Bluetooth/WiFi printer skeleton) |
+| Charts | `victory-native` + `react-native-svg` |
+| IDs | `react-native-uuid` (transaction dedup) |
+
+### Key versions
+- `expo ~57.0.10`, `react-native 0.86.2`, `react 19.2.3`, `typescript ~6.0.3`
+- `@supabase/supabase-js ^2`, `@react-navigation/* ^7`
+
+---
+
+## Commands
+
+```bash
+npm install              # install deps
+npm start                # expo start (Metro)
+npm run android          # expo start --android
+npx tsc --noEmit         # typecheck (MUST pass before committing — zero errors, no `any`)
+npx expo export --platform android   # verify the Metro bundle actually builds
+```
+
+There is no configured linter — `tsc --noEmit` is the gate.
+
+---
+
+## Environment
+
+Create a `.env` (never commit it):
+
+```
+EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+Read via `process.env.EXPO_PUBLIC_*` (see `src/services/supabase.ts`).
+
+---
+
+## Architecture
+
+**3-layer, feature-based.** Screens never touch the DB.
+
+```
+Screen (UI only)
+  → Hook / Service (business logic)
+    → online?  → Supabase
+      offline? → SQLite (expo-sqlite)
+      → returns typed result to Screen
+```
+
+- **Layer 1 — UI/Screens:** React Native components only. No business logic.
+- **Layer 2 — Hooks + Services:** API calls, SQLite, sync, receipt generation.
+- **Layer 3 — Data:** Supabase (online) + SQLite (offline) via `src/services/*`.
+
+**Offline sync:** transaction saved to SQLite with `synced: false` → on reconnect `syncService.ts` pushes to Supabase → marks `synced: true`. UUID transaction IDs (`react-native-uuid`) prevent duplicates (`syncService.ts` checks remote id before insert).
+
+---
+
+## Folder Structure
+
+```
+src/
+├── app/                  # entry (index.tsx) + navigation shell (navigation.tsx/.styles.ts)
+├── components/
+│   └── common/           # shared UI: Button, Card, ProductCard, StockBadge, TextField
+│       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
+├── context/              # AuthContext (user+role), CartContext (cart state)
+├── features/             # grouped by feature: auth, pos, inventory, reports,
+│   │                     #   transactions, products, settings
+│   └── {feature}/        # Screen.tsx + Screen.styles.ts + use{Feature}.ts + {Feature}Navigator.tsx
+├── services/             # supabase.ts, sqlite.ts, syncService.ts,
+│   │                     #   receiptService.ts, printerService.ts
+├── styles/               # textStyles.ts (shared text styles)
+├── theme/                # design tokens: colors, spacing, typography, radius, shadows, index
+└── types/                # entities.ts (6 ERD entities), context.ts, entityNames.ts
+```
+
+`App.tsx` (root) → `src/app/index.tsx` (`App` named export) → providers → `Navigation`.
+
+---
+
+## Styling Architecture (design-token system)
+
+Single source of truth = theme tokens. **Never hardcode design values.**
+
+### Rules
+1. `StyleSheet.create()` for every component.
+2. Never hardcode colors/spacing/typography/radius/shadows — import from theme.
+3. Co-locate styles: `{Component}.styles.ts` next to `{Component}.tsx`.
+4. Named exports only; PascalCase component names.
+5. Reusable components expose a `style` prop and merge it (RN equivalent of `className`):
+   ```tsx
+   <Pressable style={[styles.root, style]} />
+   ```
+6. Conditional styling uses style arrays, never string concatenation:
+   ```tsx
+   style={[styles.root, disabled && styles.disabled, selected && styles.selected]}
+   ```
+7. Expose semantic props (`variant="primary" size="large"`) instead of forcing consumers to build styles manually.
+8. Styling separated from business logic.
+
+### Theme tokens (`src/theme/index.ts`)
+```ts
+import { colors, spacing, typography, radius, shadows } from '../theme';
+```
+- **colors** (`src/theme/colors.ts`): `primary #364C35`, `secondary #4D644B`, `navActive #ADC5AB`, `background #F5F5F5`, `surface #FFFFFF`, `success #4CAF72`, `warning #F5A623`, `danger #E8614A`, `disabled #C2C5C5`, `textPrimary #1A1A1A`, `textSecondary #6B6B6B`, `border #E0E0E0`.
+- **spacing**: 12-step scale, 4px base — `0, xs(4), sm(8), md(12), lg(16), xl(20), 2xl(24) … 7xl(80)`.
+- **typography**: 8 steps — `xs(10) … 4xl(32)`, each `{fontSize, fontWeight, lineHeight}`.
+- **radius**: `none, sm(2), md(4), lg(8), xl(12), full(9999)`.
+- **shadows**: `resting, hover, active, modal`.
+- **textStyles** (`src/styles/textStyles.ts`): `h1-h3, body, caption, label, error, success`.
+
+### Shared components (`src/components/common/`)
+`Button` (variant/size/disabled), `Card`, `ProductCard`, `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error). All named exports, all accept `style`.
+
+---
+
+## TypeScript Conventions
+
+- `strict: true`. No `any`. Explicit return types on hooks/services.
+- Every feature has a `use{Feature}` hook; screens call the hook and render only.
+- All imports are **relative** (e.g. `../../theme`, `../../services/supabase`). Do not introduce the `@/` alias unless every import is migrated consistently.
+- Type names: interfaces for shapes, `as const` for token objects, union types for enums.
+
+### Domain types (`src/types/entities.ts`)
+```ts
+UserRole = 'admin' | 'cashier'
+
+User            { user_id, username, password, role, is_active? }
+Product         { product_id, name, category, price, is_available }
+Transaction     { transaction_id, date, total_amount, payment_mode: 'cash'|'gcash'|'maya', user_id }
+TransactionItem { item_id, transaction_id, product_id, quantity, subtotal }
+Inventory       { stock_id, product_id, quantity, reorder_level }
+StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, supplier? }
+```
+
+### Context types (`src/types/context.ts`)
+`PaymentMode = 'cash' | 'gcash' | 'maya'`, `CartItem`, `CartContextType`, `POSTransaction` (has `id: string` UUID + `synced` flag).
+
+---
+
+## Auth & Role-Based Access
+
+- `src/context/AuthContext.tsx` — `AuthProvider` wraps the app; `useAuth()` returns `{ user, role, login, logout }`. Throws if used outside provider.
+- Login: `supabase.auth.signInWithPassword` → fetch role from `user` table.
+- Navigation (`src/app/navigation.tsx`):
+  - not logged in → `LoginScreen`
+  - `cashier` → Menu(POS) | Orders | Inventory(read-only) | Settings
+  - `admin` → Menu(POS) | Orders | Inventory(manage) | Dashboard | Settings
+
+---
+
+## Services (`src/services/`)
+
+| File | Purpose |
+|---|---|
+| `supabase.ts` | `createClient` from `EXPO_PUBLIC_*` env vars |
+| `sqlite.ts` | `initDb` (4 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced` — modern async `expo-sqlite` API |
+| `syncService.ts` | `syncPendingRecords()` pushes unsynced transactions, dedup via remote id check; `generateSyncId()` |
+| `receiptService.ts` | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)` |
+| `printerService.ts` | `printReceipt(html)` |
+
+**Local SQLite tables:** `transactions`, `transaction_items`, `inventory`, `stock_movements` (see `initDb`).
+
+---
+
+## POS Flow (core feature)
+
+Menu → Add to cart (global `CartContext`) → Checkout → Payment (Cash w/ change / GCash / Maya) → `processTransaction`:
+1. Build `POSTransaction` with UUID id, `synced: false`.
+2. Online: insert transaction + items into Supabase, auto-deduct inventory, log `stock_movements` (type `out`).
+3. Offline: save transaction + items to SQLite.
+4. Clear cart, return transaction.
+
+---
+
+## Inventory Rules
+
+- Stock status: `quantity <= 0` → critical (`danger`), `quantity <= reorder_level` → low (`warning`), else OK (`success`).
+- Admin: full management (Stock-In with supplier, reorder levels). Cashier: read-only view.
+- Stock-in logs `stock_movements` type `in`.
+
+---
+
+## Reports / Transactions
+
+- Reports: daily/weekly/monthly sales + inventory (admin).
+- Dashboard: revenue, order count, weekly Victory chart, low-stock, top products (admin).
+- Transaction history: cashier sees own, admin sees all.
+- Void: requires a non-empty reason; restores inventory on confirmation.
+
+---
+
+## Commit Rules
+
+Follow `type(scope):message` — **one commit = one layer, not one feature.**
+
+- Format: `type(scope):message` — lowercase, imperative, no space before colon.
+- Allowed types: `feat`, `fix`, `refactor`, `docs`, `style`, `chore`, `test`.
+- Scope = layer/module (e.g. `config`, `types`, `theme`, `api`, `auth`, `frontend`, `pos`, `inventory`, `reports`, `products`, `settings`, `navigation`, `docs`).
+- Never mix layers in one commit (e.g. split UI vs logic vs types).
+- Stage only related files; verify `npx tsc --noEmit` passes before committing.
+
+Examples:
+```
+feat(auth): add auth context and login screen
+feat(api): add supabase, sqlite, sync, and receipt services
+feat(pos): add point-of-sale transaction flow
+chore(config): scaffold Expo TypeScript project
+```
+
+---
+
+## Data Privacy (RA 10173)
+
+- No PII in logs. Passwords are hashed by Supabase Auth (never store plaintext).
+- Role-based access must strictly limit admin-only features from cashier accounts.
+
+---
+
+## Do / Don't
+
+- **Do** read the Expo SDK 57 docs before using an Expo API.
+- **Do** run `npx tsc --noEmit` before every commit.
+- **Do** use theme tokens and co-located `*.styles.ts`.
+- **Don't** hardcode colors/spacing/font sizes in components.
+- **Don't** use `any`; keep strict types.
+- **Don't** commit `.env` or Supabase keys.
+- **Don't** create commits that mix layers.
