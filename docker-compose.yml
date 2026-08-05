@@ -1,0 +1,61 @@
+name: ipos
+
+services:
+  # Tooling network only. The data layer is a hosted Supabase project
+  # configured via .env.local / .env.development (mounted).
+
+  builder:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    env_file:
+      - .env.local
+      - .env.development
+    volumes:
+      - .:/app:delegated
+    command: ["npm", "run", "typecheck"]
+
+  seed:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    env_file:
+      - .env.local
+      - .env.development
+    volumes:
+      - .:/app:delegated
+    command: ["npm", "run", "seed"]
+
+  reset:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    env_file:
+      - .env.local
+      - .env.development
+    volumes:
+      - .:/app:delegated
+    command: ["npm", "run", "reset"]
+
+  typecheck:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    volumes:
+      - .:/app:delegated
+    command: ["npm", "run", "typecheck"]
+
+  build:
+    build:
+      context: .
+      target: web
+    working_dir: /app
+    env_file:
+      - .env.development
+    volumes:
+      - .:/app:delegated
+    command: ["node", "/dev/null"]
