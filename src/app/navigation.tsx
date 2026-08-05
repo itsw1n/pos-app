@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -27,14 +27,37 @@ const tabScreenOptions = {
 function CashierNavigator(): React.JSX.Element {
   return (
     <CashierTabs.Navigator screenOptions={tabScreenOptions}>
-      <CashierTabs.Screen name="Menu" component={POSNavigator} options={{ headerShown: false }} />
+      <CashierTabs.Screen
+        name="Menu"
+        component={POSNavigator}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="restaurant" color={color} size={size} />,
+        }}
+      />
       <CashierTabs.Screen
         name="Orders"
         component={TransactionsNavigator}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="receipt" color={color} size={size} />,
+        }}
       />
-      <CashierTabs.Screen name="Inventory" component={InventoryViewScreen} />
-      <CashierTabs.Screen name="Settings" component={SettingsNavigator} options={{ headerShown: false }} />
+      <CashierTabs.Screen
+        name="Inventory"
+        component={InventoryViewScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Ionicons name="cube" color={color} size={size} />,
+        }}
+      />
+      <CashierTabs.Screen
+        name="Settings"
+        component={SettingsNavigator}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings" color={color} size={size} />,
+        }}
+      />
     </CashierTabs.Navigator>
   );
 }
@@ -42,23 +65,46 @@ function CashierNavigator(): React.JSX.Element {
 function AdminNavigator(): React.JSX.Element {
   return (
     <AdminTabs.Navigator screenOptions={tabScreenOptions}>
-      <AdminTabs.Screen name="Menu" component={POSNavigator} options={{ headerShown: false }} />
+      <AdminTabs.Screen
+        name="Menu"
+        component={POSNavigator}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="restaurant" color={color} size={size} />,
+        }}
+      />
       <AdminTabs.Screen
         name="Orders"
         component={TransactionsNavigator}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="receipt" color={color} size={size} />,
+        }}
       />
       <AdminTabs.Screen
         name="Inventory"
         component={InventoryNavigator}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="cube" color={color} size={size} />,
+        }}
       />
       <AdminTabs.Screen
         name="Dashboard"
         component={ReportsNavigator}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart" color={color} size={size} />,
+        }}
       />
-      <AdminTabs.Screen name="Settings" component={SettingsNavigator} options={{ headerShown: false }} />
+      <AdminTabs.Screen
+        name="Settings"
+        component={SettingsNavigator}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => <Ionicons name="settings" color={color} size={size} />,
+        }}
+      />
     </AdminTabs.Navigator>
   );
 }
