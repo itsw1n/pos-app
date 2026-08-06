@@ -6,9 +6,31 @@ export const addEditProductScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing['2xl'],
+    paddingTop: spacing['2xl'],
+    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.border,
+  },
+  topBarTitle: {
+    ...typography.xl,
+    fontWeight: '600' as const,
+    color: colors.textPrimary,
+  },
+  topBarSpacer: {
+    width: 22,
+  },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing['6xl'],
+  },
+  keyboardView: {
+    flex: 1,
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -25,38 +47,28 @@ export const addEditProductScreenStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
-  toggleRow: {
+  availabilityRow: {
     flexDirection: 'row',
-  },
-  toggleOption: {
-    flex: 1,
-    paddingVertical: spacing.sm,
+    justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    ...shadows.resting,
   },
-  toggleOptionLeft: {
-    borderTopLeftRadius: radius.lg,
-    borderBottomLeftRadius: radius.lg,
-    marginRight: spacing.xs,
+  availabilityTextBlock: {
+    flex: 1,
+    marginRight: spacing.md,
   },
-  toggleOptionRight: {
-    borderTopRightRadius: radius.lg,
-    borderBottomRightRadius: radius.lg,
-    marginLeft: spacing.xs,
-  },
-  toggleOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  toggleOptionText: {
+  availabilityTitle: {
     ...typography.md,
-    color: colors.textSecondary,
+    fontWeight: '500' as const,
+    color: colors.textPrimary,
   },
-  toggleOptionTextActive: {
-    color: colors.surface,
-    fontWeight: '600' as const,
+  availabilityCaption: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   errorText: {
     ...typography.sm,
@@ -64,7 +76,34 @@ export const addEditProductScreenStyles = StyleSheet.create({
     marginBottom: spacing.md,
     textAlign: 'center',
   },
-  submitButton: {
-    marginBottom: spacing.sm,
+  saveButton: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+    height: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    ...shadows.active,
+  },
+  saveButtonDisabled: {
+    backgroundColor: colors.disabled,
+  },
+  saveButtonText: {
+    ...typography.lg,
+    fontWeight: '600' as const,
+    color: colors.surface,
+  },
+  deleteButton: {
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: radius.full,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteButtonText: {
+    ...typography.lg,
+    fontWeight: '600' as const,
+    color: colors.danger,
   },
 });
