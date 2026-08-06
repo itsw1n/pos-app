@@ -9,6 +9,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
+import { ErrorBoundary } from '../components/common/ErrorBoundary/ErrorBoundary';
 import { Navigation } from './navigation';
 
 function FontGate({ children }: { children: React.ReactNode }): React.JSX.Element {
@@ -27,13 +28,15 @@ function FontGate({ children }: { children: React.ReactNode }): React.JSX.Elemen
 
 export function App(): React.JSX.Element {
   return (
-    <FontGate>
-      <AuthProvider>
-        <CartProvider>
-          <Navigation />
-          <StatusBar style="auto" />
-        </CartProvider>
-      </AuthProvider>
-    </FontGate>
+    <ErrorBoundary>
+      <FontGate>
+        <AuthProvider>
+          <CartProvider>
+            <Navigation />
+            <StatusBar style="auto" />
+          </CartProvider>
+        </AuthProvider>
+      </FontGate>
+    </ErrorBoundary>
   );
 }
