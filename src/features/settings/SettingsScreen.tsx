@@ -9,8 +9,20 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import {
+  Bell,
+  ChevronRight,
+  Lock,
+  LogOut,
+  Moon,
+  Printer,
+  RefreshCcw,
+  Tags,
+  User,
+  Users,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../transactions/useTransactions';
 import { colors } from '../../theme';
@@ -23,7 +35,7 @@ type SettingsScreenProps = StackScreenProps<SettingsStackParamList, 'SettingsHom
 
 interface SettingsRow {
   key: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: LucideIcon;
   title: string;
   caption?: string;
   onPress?: () => void;
@@ -47,13 +59,13 @@ export function SettingsScreen({
         const content = (
           <>
             <View style={styles.iconCircle}>
-              <Ionicons name={row.icon} size={16} color={colors.primary} />
+              <row.icon size={16} color={colors.primary} />
             </View>
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>{row.title}</Text>
               {row.caption ? <Text style={styles.rowCaption}>{row.caption}</Text> : null}
             </View>
-            {row.trailing ?? <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />}
+            {row.trailing ?? <ChevronRight size={18} color={colors.textSecondary} />}
           </>
         );
         if (row.onPress) {
@@ -83,13 +95,13 @@ export function SettingsScreen({
   const accountRows: SettingsRow[] = [
     {
       key: 'personal-info',
-      icon: 'person-outline',
+      icon: User,
       title: 'Personal Information',
       caption: 'Update your name, email, and phone',
     },
     {
       key: 'security',
-      icon: 'lock-closed-outline',
+      icon: Lock,
       title: 'Security & Password',
       caption: 'Change your password and enable 2FA',
     },
@@ -97,7 +109,7 @@ export function SettingsScreen({
   if (role === 'admin') {
     accountRows.push({
       key: 'products',
-      icon: 'pricetags-outline',
+      icon: Tags,
       title: 'Product Management',
       caption: 'Add, edit, and remove menu items',
       onPress: () => navigation.navigate('Products'),
@@ -107,13 +119,13 @@ export function SettingsScreen({
   const applicationRows: SettingsRow[] = [
     {
       key: 'notifications',
-      icon: 'notifications-outline',
+      icon: Bell,
       title: 'Notification Preferences',
       caption: 'Manage sales and stock notifications',
     },
     {
       key: 'dark-mode',
-      icon: 'moon-outline',
+      icon: Moon,
       title: 'Dark Mode',
       trailing: (
         <Switch
@@ -130,7 +142,7 @@ export function SettingsScreen({
   if (role === 'admin') {
     printerRows.push({
       key: 'connect-printer',
-      icon: 'print-outline',
+      icon: Printer,
       title: 'Connect Printer',
       caption: 'Pair a Bluetooth or WiFi printer',
       onPress: () => navigation.navigate('PrinterSettings'),
@@ -138,7 +150,7 @@ export function SettingsScreen({
   }
   printerRows.push({
     key: 'reconnect-test',
-    icon: 'refresh-outline',
+    icon: RefreshCcw,
     title: 'Reconnect & Test Print',
     caption: 'Reconnect and verify the receipt printer',
     onPress: () => navigation.navigate('PrinterSettings'),
@@ -191,13 +203,13 @@ export function SettingsScreen({
               onPress={() => navigation.navigate('UserManagement')}
             >
               <View style={styles.iconCircle}>
-                <Ionicons name="people-outline" size={16} color={colors.primary} />
+                <Users size={16} color={colors.primary} />
               </View>
               <View style={styles.rowText}>
                 <Text style={styles.rowTitle}>User Management</Text>
                 <Text style={styles.rowCaption}>Create and disable staff accounts</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              <ChevronRight size={18} color={colors.textSecondary} />
             </Pressable>
           </View>
         ) : null}
@@ -206,7 +218,7 @@ export function SettingsScreen({
           style={({ pressed }) => [styles.logout, pressed ? styles.logoutPressed : null]}
           onPress={() => void logout()}
         >
-          <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+          <LogOut size={18} color={colors.danger} />
           <Text style={styles.logoutText}>Log Out</Text>
         </Pressable>
 
