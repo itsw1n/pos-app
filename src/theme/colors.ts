@@ -11,6 +11,7 @@ export const colors = {
   textPrimary: '#1A1A1A',
   textSecondary: '#6B6B6B',
   border: '#E0E0E0',
+  iconCircle: '#E8F0E3',
 } as const;
 
 export type ColorName = keyof typeof colors;
