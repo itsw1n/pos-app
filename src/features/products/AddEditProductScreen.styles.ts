@@ -47,6 +47,30 @@ export const addEditProductScreenStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
+  categoryPicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  categoryPickerActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  categoryPickerText: {
+    ...typography.md,
+    color: colors.textPrimary,
+  },
+  categoryPickerPlaceholder: {
+    ...typography.md,
+    color: colors.textSecondary,
+  },
   availabilityRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

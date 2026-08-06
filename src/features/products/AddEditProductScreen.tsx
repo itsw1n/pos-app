@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,9 +13,12 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { TextField } from '../../components/common/TextField/TextField';
+import { CategoryPickerModal } from '../../components/category/CategoryPickerModal';
+import { useCategories } from '../../components/category/useCategories';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
 import { ProductsStackParamList } from './ProductsNavigator';
@@ -35,27 +38,34 @@ export function AddEditProductScreen({
   style,
 }: AddEditProductScreenProps): React.JSX.Element {
   const { role } = useAuth();
+  const { categories, loadCategories } = useCategories();
   const { createProduct, updateProduct, deleteProduct } = useProducts();
   const product = route.params?.product;
   const isEditing = product !== undefined;
 
   const [name, setName] = useState(product?.name ?? '');
-  const [category, setCategory] = useState(product?.category ?? '');
-  const [priceText, setPriceText] = useState(
-    product ? String(product.price) : ''
-  );
+  const [categoryId, setCategoryId] = useState(product?.category_id ?? '');
+  const [categoryName, setCategoryName] = useState(product?.category ?? '');
+  const [priceText, setPriceText] = useState(product ? String(product.price) : '');
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadCategories();
+    }, [loadCategories])
+  );
 
   const price = parseFloat(priceText);
   const formIsValid = useMemo(
     () =>
       name.trim().length > 0 &&
-      category.trim().length > 0 &&
+      categoryId.trim().length > 0 &&
       Number.isFinite(price) &&
       price >= 0,
-    [name, category, price]
+    [name, categoryId, price]
   );
 
   if (role !== 'admin') {
@@ -66,12 +76,18 @@ export function AddEditProductScreen({
     );
   }
 
+  const handleSelectCategory = (id: string, nameOfCategory: string): void => {
+    setCategoryId(id);
+    setCategoryName(nameOfCategory);
+    setCategoryPickerOpen(false);
+  };
+
   const handleSubmit = async (): Promise<void> => {
     if (!formIsValid || isSubmitting) return;
     setError('');
     setIsSubmitting(true);
     try {
-      const payload = { name, category, price, is_available: isAvailable };
+      const payload = { name, category_id: categoryId, price, is_available: isAvailable };
       if (isEditing && product) {
         await updateProduct(product.product_id, payload);
       } else {
@@ -108,7 +124,7 @@ export function AddEditProductScreen({
     <SafeAreaView style={[addEditProductScreenStyles.container, style]}>
       <View style={addEditProductScreenStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={addEditProductScreenStyles.topBarTitle}>
           {isEditing ? 'Edit' : 'Add'} Product
@@ -131,12 +147,25 @@ export function AddEditProductScreen({
               onChangeText={setName}
               style={addEditProductScreenStyles.fieldSpacing}
             />
-            <TextField
-              label="Category"
-              value={category}
-              onChangeText={setCategory}
-              style={addEditProductScreenStyles.fieldSpacing}
-            />
+            <Text style={addEditProductScreenStyles.sectionLabel}>Category</Text>
+            <Pressable
+              style={[
+                addEditProductScreenStyles.categoryPicker,
+                categoryPickerOpen ? addEditProductScreenStyles.categoryPickerActive : null,
+              ]}
+              onPress={() => setCategoryPickerOpen(true)}
+            >
+              <Text
+                style={
+                  categoryName
+                    ? addEditProductScreenStyles.categoryPickerText
+                    : addEditProductScreenStyles.categoryPickerPlaceholder
+                }
+              >
+                {categoryName || 'Select a category'}
+              </Text>
+              <ChevronDown size={18} color={colors.textSecondary} />
+            </Pressable>
             <TextField
               label="Price"
               value={priceText}
@@ -198,6 +227,14 @@ export function AddEditProductScreen({
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <CategoryPickerModal
+        visible={categoryPickerOpen}
+        categories={categories}
+        selectedCategoryId={categoryId}
+        onClose={() => setCategoryPickerOpen(false)}
+        onSelect={handleSelectCategory}
+      />
     </SafeAreaView>
   );
 }
