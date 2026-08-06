@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { supabase } from '../../services/supabase';
 import { saveToSQLite } from '../../services/sqlite';
+import { ProductRow, toProduct } from '../../services/catalog';
 import { Inventory, Product } from '../../types/entities';
 
 export type StockStatus = 'ok' | 'low' | 'critical';
@@ -41,10 +42,10 @@ export function useInventory(): UseInventoryResult {
     try {
       const [inventoryRes, productRes] = await Promise.all([
         supabase.from('inventory').select('*'),
-        supabase.from('product').select('*'),
+        supabase.from('product').select('*, category(name)'),
       ]);
       const inventory = (inventoryRes.data as Inventory[]) ?? [];
-      const products = (productRes.data as Product[]) ?? [];
+      const products = (((productRes.data as unknown) as ProductRow[]) ?? []).map(toProduct);
       const productById = new Map(products.map((p) => [p.product_id, p]));
       setItems(
         inventory.map((record) => {
