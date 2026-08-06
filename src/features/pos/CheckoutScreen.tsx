@@ -8,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft, Utensils, User } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '../../components/common/InputField/InputField';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
@@ -40,7 +40,7 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
     <SafeAreaView style={[checkoutScreenStyles.container, style]}>
       <View style={checkoutScreenStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={checkoutScreenStyles.topBarTitle}>Check Out</Text>
         <View style={checkoutScreenStyles.topBarBalance} />
@@ -53,7 +53,7 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
       >
         <View style={checkoutScreenStyles.infoCard}>
           <View style={checkoutScreenStyles.iconCircle}>
-            <Ionicons name="restaurant-outline" size={20} color={colors.primary} />
+            <Utensils size={20} color={colors.primary} />
           </View>
           <View style={checkoutScreenStyles.infoText}>
             <Text style={checkoutScreenStyles.infoLabel}>Order Type</Text>
@@ -63,7 +63,7 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
 
         <View style={[checkoutScreenStyles.infoCard, checkoutScreenStyles.infoCardCustomer]}>
           <View style={checkoutScreenStyles.iconCircle}>
-            <Ionicons name="person-outline" size={20} color={colors.primary} />
+            <User size={20} color={colors.primary} />
           </View>
           <View style={checkoutScreenStyles.infoText}>
             <Text style={checkoutScreenStyles.infoLabel}>Nama Customer</Text>

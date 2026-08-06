@@ -8,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Check, Coffee, Plus, Printer, Settings, Share } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { generateReceipt, shareReceipt } from '../../services/receiptService';
 import { printReceipt } from '../../services/printerService';
@@ -83,7 +83,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
         <View style={receiptScreenStyles.topBarBalance} />
         <Text style={receiptScreenStyles.topBarTitle}>Elvira Cafe</Text>
         <Pressable>
-          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+          <Settings size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -94,7 +94,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
       >
         <View style={receiptScreenStyles.successHeader}>
           <View style={receiptScreenStyles.successCircle}>
-            <Ionicons name="checkmark" size={28} color={colors.surface} />
+            <Check size={28} color={colors.surface} />
           </View>
           <Text style={receiptScreenStyles.successTitle}>Payment Successful</Text>
           <Text style={receiptScreenStyles.successSubtitle}>Thank you for your visit!</Text>
@@ -103,7 +103,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
         <View style={receiptScreenStyles.receiptCard}>
           <View style={receiptScreenStyles.receiptHeader}>
             <View style={receiptScreenStyles.receiptIconCircle}>
-              <Ionicons name="cafe-outline" size={22} color={colors.primary} />
+              <Coffee size={22} color={colors.primary} />
             </View>
             <Text style={receiptScreenStyles.receiptBrand}>Elvira Cafe</Text>
             <Text style={receiptScreenStyles.receiptAddress}>
@@ -171,7 +171,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
             style={receiptScreenStyles.newTransactionButton}
             onPress={() => navigation.popToTop()}
           >
-            <Ionicons name="add" size={18} color={colors.surface} />
+            <Plus size={18} color={colors.surface} />
             <Text style={receiptScreenStyles.newTransactionButtonText}>New Transaction</Text>
           </Pressable>
 
@@ -183,7 +183,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
               ]}
               onPress={handlePrint}
             >
-              <Ionicons name="print-outline" size={16} color={colors.textPrimary} />
+              <Printer size={16} color={colors.textPrimary} />
               <Text style={receiptScreenStyles.secondaryButtonText}>Print</Text>
             </Pressable>
             <Pressable
@@ -193,7 +193,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
               ]}
               onPress={handleShare}
             >
-              <Ionicons name="share-outline" size={16} color={colors.textPrimary} />
+              <Share size={16} color={colors.textPrimary} />
               <Text style={receiptScreenStyles.secondaryButtonText}>Send</Text>
             </Pressable>
           </View>
