@@ -27,7 +27,7 @@ const { Client } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 const ROOT = path.resolve(__dirname, '..');
-const SQL_FILE = path.join(ROOT, 'supabase/migrations/0001_init.sql');
+const MIGRATION_FILES = ['0001_init.sql', '0002_categories.sql'];
 
 function loadEnvFile(file) {
   const target = path.join(ROOT, file);
@@ -60,17 +60,27 @@ const TABLES = [
   'inventory',
   'user',
   'product',
+  'category',
 ];
 
 function readSql() {
-  return fs.readFileSync(SQL_FILE, 'utf8');
+  return MIGRATION_FILES.map((file) =>
+    fs.readFileSync(path.join(ROOT, 'supabase/migrations', file), 'utf8')
+  ).join('\n');
+}
+
+// pg 8.22+ treats `sslmode=require` in the connection string as `verify-full`,
+// which rejects Supabase's self-signed pooler certificate. Strip the query
+// string and rely on the explicit `ssl: { rejectUnauthorized: false }` below.
+function connectionString() {
+  return (DATABASE_URL ?? '').split('?')[0];
 }
 
 async function withDb(callback) {
   if (!DATABASE_URL) {
     throw new Error('DATABASE_URL is required (set in .env.development / .env.local)');
   }
-  const client = new Client({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  const client = new Client({ connectionString: connectionString(), ssl: { rejectUnauthorized: false } });
   try {
     await client.connect();
     await callback(client);
@@ -97,6 +107,17 @@ const authUsers = [
   { email: CASHIER_EMAIL, password: 'cashier123', role: 'cashier', username: 'cashier' },
 ];
 
+// Deterministic category UUIDs (stable across re-seeds).
+const CATEGORIES = [
+  { category_id: '9f5a3c3e-0000-4000-8000-000000000001', name: 'Coffee' },
+  { category_id: '9f5a3c3e-0000-4000-8000-000000000002', name: 'Non-Coffee' },
+  { category_id: '9f5a3c3e-0000-4000-8000-000000000003', name: 'Dessert' },
+];
+
+const CATEGORY_ID_BY_NAME = Object.fromEntries(
+  CATEGORIES.map((category) => [category.name, category.category_id])
+);
+
 const products = [
   { product_id: 1, name: 'Americano', category: 'Coffee', price: 100, is_available: true },
   { product_id: 2, name: 'Cappuccino', category: 'Coffee', price: 140, is_available: true },
@@ -107,7 +128,10 @@ const products = [
   { product_id: 7, name: 'Matcha Latte', category: 'Non-Coffee', price: 145, is_available: true },
   { product_id: 8, name: 'Chocolate Cake', category: 'Dessert', price: 120, is_available: true },
   { product_id: 9, name: 'Cheesecake', category: 'Dessert', price: 135, is_available: true },
-];
+].map((product) => ({
+  ...product,
+  category_id: CATEGORY_ID_BY_NAME[product.category],
+}));
 
 const inventory = [
   { stock_id: 1, product_id: 1, quantity: 40, reorder_level: 20 },
@@ -198,12 +222,18 @@ const transactionItems = [
   { id: '11111111-1111-1111-1111-100000000008', transaction_id: TX.iced, product_id: 1, quantity: 1, subtotal: 210 },
 ];
 
+const UPSERT_CATEGORIES = `
+insert into category (category_id, name)
+values $1
+on conflict (name) do update
+  set category_id = excluded.category_id;`;
+
 const UPSERT_PRODUCTS = `
-insert into product (product_id, name, category, price, is_available)
+insert into product (product_id, name, category_id, price, is_available)
 values $1
 on conflict (product_id) do update
   set name = excluded.name,
-      category = excluded.category,
+      category_id = excluded.category_id,
       price = excluded.price,
       is_available = excluded.is_available;`;
 
@@ -346,9 +376,15 @@ async function runSeed(mode) {
       await resetSchema(client);
     }
     await ensureSchema(client);
+    // PostgREST caches the schema; notify it to reload after DDL so the REST
+    // API immediately exposes the new `category` table and product FK.
+    await client.query("notify pgrst, 'reload schema';");
 
+    await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, [
+      'category_id', 'name',
+    ]);
     await upsertRows(client, UPSERT_PRODUCTS, products, [
-      'product_id', 'name', 'category', 'price', 'is_available',
+      'product_id', 'name', 'category_id', 'price', 'is_available',
     ]);
     await upsertRows(client, UPSERT_INVENTORY, inventory, [
       'stock_id', 'product_id', 'quantity', 'reorder_level',
