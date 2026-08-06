@@ -13,11 +13,11 @@ import {
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '../../components/common/InputField/InputField';
 import { colors } from '../../theme';
-import { InventoryStackParamList } from './InventoryNavigator';
+import { ReportsStackParamList } from '../reports/ReportsNavigator';
 import { useInventory } from './useInventory';
 import { stockInScreenStyles } from './StockInScreen.styles';
 
-type StockInScreenProps = StackScreenProps<InventoryStackParamList, 'StockIn'> & {
+type StockInScreenProps = StackScreenProps<ReportsStackParamList, 'StockIn'> & {
   style?: StyleProp<ViewStyle>;
 };
 

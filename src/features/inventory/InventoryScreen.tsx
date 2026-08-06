@@ -5,11 +5,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
-import { InventoryStackParamList } from './InventoryNavigator';
+import { ReportsStackParamList } from '../reports/ReportsNavigator';
 import { useInventory, InventoryItem, StockStatus } from './useInventory';
 import { inventoryScreenStyles } from './InventoryScreen.styles';
 
-type InventoryScreenProps = StackScreenProps<InventoryStackParamList, 'InventoryList'> & {
+type InventoryScreenProps = StackScreenProps<ReportsStackParamList, 'Inventory'> & {
   style?: StyleProp<ViewStyle>;
 };
 
