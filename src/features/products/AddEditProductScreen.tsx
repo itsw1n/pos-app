@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +15,7 @@ import {
 import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
 import { TextField } from '../../components/common/TextField/TextField';
 import { CategoryPickerModal } from '../../components/category/CategoryPickerModal';
 import { useCategories } from '../../components/category/useCategories';
@@ -51,6 +51,7 @@ export function AddEditProductScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -100,24 +101,15 @@ export function AddEditProductScreen({
     }
   };
 
-  const handleDelete = (): void => {
-    if (isSubmitting) return;
-    Alert.alert('Delete product', 'Remove this product from the menu?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async (): Promise<void> => {
-          if (!product) return;
-          try {
-            await deleteProduct(product.product_id);
-            navigation.goBack();
-          } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to delete product');
-          }
-        },
-      },
-    ]);
+  const handleDelete = async (): Promise<void> => {
+    setDeleteConfirmOpen(false);
+    if (isSubmitting || !product) return;
+    try {
+      await deleteProduct(product.product_id);
+      navigation.goBack();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete product');
+    }
   };
 
   return (
@@ -218,7 +210,7 @@ export function AddEditProductScreen({
             <Pressable
               style={addEditProductScreenStyles.deleteButton}
               disabled={isSubmitting}
-              onPress={handleDelete}
+              onPress={() => setDeleteConfirmOpen(true)}
             >
               <Text style={addEditProductScreenStyles.deleteButtonText}>
                 Delete Product
@@ -234,6 +226,16 @@ export function AddEditProductScreen({
         selectedCategoryId={categoryId}
         onClose={() => setCategoryPickerOpen(false)}
         onSelect={handleSelectCategory}
+      />
+
+      <ConfirmDialog
+        visible={deleteConfirmOpen}
+        title="Delete product"
+        message="Remove this product from the menu?"
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setDeleteConfirmOpen(false)}
       />
     </SafeAreaView>
   );
