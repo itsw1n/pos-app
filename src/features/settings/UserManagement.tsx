@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   StyleProp,
   Text,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Button } from '../../components/common/Button/Button';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
 import { TextField } from '../../components/common/TextField/TextField';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
@@ -34,6 +34,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [pendingToggle, setPendingToggle] = useState<User | null>(null);
+
+  const pendingWillDisable = pendingToggle !== null && pendingToggle.is_active !== false;
 
   useFocusEffect(
     useCallback(() => {
@@ -66,30 +69,17 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
     }
   };
 
-  const confirmToggle = (user: User): void => {
-    const willDisable = user.is_active !== false;
-    Alert.alert(
-      willDisable ? 'Disable user' : 'Enable user',
-      `Set "${user.username}" ${willDisable ? 'inactive' : 'active'}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: willDisable ? 'Disable' : 'Enable',
-          style: willDisable ? 'destructive' : 'default',
-          onPress: () => {
-            setTogglingId(user.user_id);
-            setUserActive(user.user_id, !willDisable)
-              .catch((err) => {
-                Alert.alert(
-                  'Update failed',
-                  err instanceof Error ? err.message : 'Could not update user'
-                );
-              })
-              .finally(() => setTogglingId(null));
-          },
-        },
-      ]
-    );
+  const confirmToggle = (): void => {
+    if (!pendingToggle) return;
+    const user = pendingToggle;
+    const willDisable = pendingWillDisable;
+    setPendingToggle(null);
+    setTogglingId(user.user_id);
+    setUserActive(user.user_id, !willDisable)
+      .catch((err) => {
+        setFormError(err instanceof Error ? err.message : 'Could not update user');
+      })
+      .finally(() => setTogglingId(null));
   };
 
   const renderItem = ({ item }: { item: User }): React.JSX.Element => {
@@ -118,7 +108,7 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
           variant={active ? 'outline' : 'secondary'}
           size="small"
           disabled={togglingId === item.user_id}
-          onPress={() => confirmToggle(item)}
+          onPress={() => setPendingToggle(item)}
           style={userManagementStyles.toggleButton}
         >
           {togglingId === item.user_id ? '...' : active ? 'Disable' : 'Enable'}
@@ -210,6 +200,19 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
             <Text style={userManagementStyles.emptyText}>No accounts yet</Text>
           </View>
         }
+      />
+      <ConfirmDialog
+        visible={pendingToggle !== null}
+        title={pendingWillDisable ? 'Disable user' : 'Enable user'}
+        message={
+          pendingToggle
+            ? `Set "${pendingToggle.username}" ${pendingWillDisable ? 'inactive' : 'active'}?`
+            : ''
+        }
+        confirmLabel={pendingWillDisable ? 'Disable' : 'Enable'}
+        destructive={pendingWillDisable}
+        onConfirm={confirmToggle}
+        onCancel={() => setPendingToggle(null)}
       />
     </View>
   );
