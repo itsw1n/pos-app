@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { FlatList, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { FlatList, SafeAreaView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
 import { useInventory, InventoryItem, StockStatus } from './useInventory';
@@ -69,7 +70,8 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
   }
 
   return (
-    <View style={[inventoryViewScreenStyles.container, style]}>
+    <SafeAreaView style={[inventoryViewScreenStyles.container, style]}>
+      <AppHeader pageTitle="Inventory" />
       <View style={inventoryViewScreenStyles.summaryCard}>
         <View style={inventoryViewScreenStyles.summaryRow}>
           <Text style={inventoryViewScreenStyles.summaryLabel}>Total items</Text>
@@ -106,6 +108,6 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
         contentContainerStyle={inventoryViewScreenStyles.content}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
