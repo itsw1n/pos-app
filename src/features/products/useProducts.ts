@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../../services/supabase';
+import { ProductRow, toProduct, UNCATEGORIZED } from '../../services/catalog';
 import { Product } from '../../types/entities';
 
 export interface ProductPayload {
   name: string;
-  category: string;
+  category_id: string;
   price: number;
   is_available: boolean;
 }
@@ -23,7 +24,7 @@ function validatePayload(payload: ProductPayload): void {
   if (!payload.name.trim()) {
     throw new Error('Product name is required');
   }
-  if (!payload.category.trim()) {
+  if (!payload.category_id.trim()) {
     throw new Error('Product category is required');
   }
   if (!Number.isFinite(payload.price) || payload.price < 0) {
@@ -42,10 +43,10 @@ export function useProducts(): UseProductsResult {
     try {
       const { data, error: loadError } = await supabase
         .from('product')
-        .select('*')
+        .select('*, category(name)')
         .order('name', { ascending: true });
       if (loadError) throw loadError;
-      setProducts((data as Product[]) ?? []);
+      setProducts(((data as unknown) as ProductRow[])?.map(toProduct) ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
@@ -59,14 +60,14 @@ export function useProducts(): UseProductsResult {
       .from('product')
       .insert({
         name: payload.name.trim(),
-        category: payload.category.trim(),
+        category_id: payload.category_id,
         price: payload.price,
         is_available: payload.is_available,
       })
       .select()
       .single();
     if (insertError) throw insertError;
-    const created = data as Product;
+    const created = toProduct(data as ProductRow);
     setProducts((prev) => [...prev, created]);
     return created;
   }, []);
@@ -78,7 +79,7 @@ export function useProducts(): UseProductsResult {
         .from('product')
         .update({
           name: payload.name.trim(),
-          category: payload.category.trim(),
+          category_id: payload.category_id,
           price: payload.price,
           is_available: payload.is_available,
         })
@@ -90,7 +91,9 @@ export function useProducts(): UseProductsResult {
             ? {
                 ...product,
                 name: payload.name.trim(),
-                category: payload.category.trim(),
+                category_id: payload.category_id,
+                category:
+                  product.category_id === payload.category_id ? product.category : UNCATEGORIZED,
                 price: payload.price,
                 is_available: payload.is_available,
               }
