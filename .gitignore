@@ -42,3 +42,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# editor / scratch
+.vscode/
+.superpowers/
+
+# editor lock files
+.~lock.*#
