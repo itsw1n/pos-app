@@ -28,7 +28,7 @@ export function SettingsNavigator(): React.JSX.Element {
       <Stack.Screen
         name="SettingsHome"
         component={SettingsScreen}
-        options={{ title: 'Settings' }}
+        options={{ title: 'Settings', headerShown: false }}
       />
       <Stack.Screen
         name="Products"

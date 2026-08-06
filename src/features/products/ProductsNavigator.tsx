@@ -21,11 +21,15 @@ export function ProductsNavigator(): React.JSX.Element {
         headerTintColor: colors.primary,
       }}
     >
-      <Stack.Screen name="Products" component={ProductsScreen} options={{ title: 'Products' }} />
+      <Stack.Screen
+        name="Products"
+        component={ProductsScreen}
+        options={{ title: 'Products', headerShown: false }}
+      />
       <Stack.Screen
         name="AddEditProduct"
         component={AddEditProductScreen}
-        options={{ title: 'Add Product' }}
+        options={{ title: 'Add Product', headerShown: false }}
       />
     </Stack.Navigator>
   );

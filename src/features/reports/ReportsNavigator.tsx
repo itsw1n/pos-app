@@ -20,7 +20,11 @@ export function ReportsNavigator(): React.JSX.Element {
         headerTintColor: colors.primary,
       }}
     >
-      <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
+      <Stack.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{ title: 'Dashboard', headerShown: false }}
+      />
       <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reports' }} />
     </Stack.Navigator>
   );

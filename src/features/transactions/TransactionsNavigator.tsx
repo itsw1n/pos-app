@@ -27,7 +27,7 @@ export function TransactionsNavigator(): React.JSX.Element {
       <Stack.Screen
         name="TransactionHistory"
         component={TransactionHistoryScreen}
-        options={{ title: 'Orders' }}
+        options={{ title: 'Orders', headerShown: false }}
       />
       <Stack.Screen name="Void" component={VoidScreen} options={{ title: 'Void Transaction' }} />
     </Stack.Navigator>
