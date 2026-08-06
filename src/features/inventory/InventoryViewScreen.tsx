@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { FlatList, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
@@ -88,7 +88,7 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
       {alertCount > 0 ? (
         <View style={inventoryViewScreenStyles.alertBanner}>
           <View style={inventoryViewScreenStyles.bannerIcon}>
-            <Ionicons name="warning-outline" size={18} color={colors.warning} />
+            <TriangleAlert size={18} color={colors.warning} />
           </View>
           <Text style={inventoryViewScreenStyles.alertText}>
             {criticalCount > 0 ? `${criticalCount} item(s) out of stock · ` : ''}

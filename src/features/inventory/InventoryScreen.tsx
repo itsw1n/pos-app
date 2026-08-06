@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
@@ -120,7 +120,7 @@ export function InventoryScreen({ navigation, style }: InventoryScreenProps): Re
       {alertCount > 0 ? (
         <View style={inventoryScreenStyles.alertBanner}>
           <View style={inventoryScreenStyles.bannerIcon}>
-            <Ionicons name="warning-outline" size={18} color={colors.warning} />
+            <TriangleAlert size={18} color={colors.warning} />
           </View>
           <Text style={inventoryScreenStyles.alertText}>
             {criticalCount > 0 ? `${criticalCount} item(s) out of stock · ` : ''}
