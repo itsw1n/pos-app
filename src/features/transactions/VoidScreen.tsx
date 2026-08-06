@@ -11,7 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
+import { CircleAlert } from 'lucide-react-native';
 import { InputField } from '../../components/common/InputField/InputField';
 import { colors, typography } from '../../theme';
 import { TransactionsStackParamList } from './TransactionsNavigator';
@@ -57,7 +57,7 @@ export function VoidScreen({ navigation, route, style }: VoidScreenProps): React
       <ScrollView contentContainerStyle={voidScreenStyles.content} keyboardShouldPersistTaps="handled">
         <View style={voidScreenStyles.warningBanner}>
           <View style={voidScreenStyles.bannerIcon}>
-            <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
+            <CircleAlert size={18} color={colors.danger} />
           </View>
           <View style={voidScreenStyles.bannerContent}>
             <Text style={voidScreenStyles.warningTitle}>Confirm Void</Text>
