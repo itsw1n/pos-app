@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { colors } from '../../theme';
 import { ReportsStackParamList } from './ReportsNavigator';
 import {
@@ -178,11 +179,13 @@ export function ReportsScreen({ style }: ReportsScreenProps): React.JSX.Element 
   );
 
   return (
-    <ScrollView
-      style={[reportsScreenStyles.container, style]}
-      contentContainerStyle={reportsScreenStyles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <SafeAreaView style={[reportsScreenStyles.container, style]}>
+      <AppHeader pageTitle="Reports" />
+      <ScrollView
+        style={reportsScreenStyles.scrollContainer}
+        contentContainerStyle={reportsScreenStyles.content}
+        showsVerticalScrollIndicator={false}
+      >
       <View style={reportsScreenStyles.filterBar}>
         {PERIODS.map((option) => {
           const isActive = period === option.key;
@@ -221,6 +224,7 @@ export function ReportsScreen({ style }: ReportsScreenProps): React.JSX.Element 
           {inventoryReport ? <InventorySummary report={inventoryReport} /> : null}
         </>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

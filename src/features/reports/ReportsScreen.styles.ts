@@ -6,6 +6,9 @@ export const reportsScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollContainer: {
+    flex: 1,
+  },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing['6xl'],
