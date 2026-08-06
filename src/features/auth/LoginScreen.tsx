@@ -10,7 +10,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Eye, EyeOff, Globe, Lock, User } from 'lucide-react-native';
 import { InputField } from '../../components/common/InputField/InputField';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
@@ -62,7 +62,7 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               <Text style={loginScreenStyles.brandName}>ElviraCafe</Text>
             </View>
             <Pressable style={loginScreenStyles.globeButton}>
-              <Ionicons name="globe-outline" size={18} color={colors.textSecondary} />
+              <Globe size={18} color={colors.textSecondary} />
             </Pressable>
           </View>
 
@@ -85,7 +85,7 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
                autoCorrect={false}
                disabled={isLoading}
                leftIcon={
-                 <Ionicons name="person-outline" size={18} color={colors.textSecondary} />
+                 <User size={18} color={colors.textSecondary} />
                }
                style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
              />
@@ -105,17 +105,17 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
                secureTextEntry={!showPassword}
                disabled={isLoading}
                leftIcon={
-                 <Ionicons name="lock-closed-outline" size={18} color={colors.textSecondary} />
+                 <Lock size={18} color={colors.textSecondary} />
                }
-               rightIcon={
-                 <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                   <Ionicons
-                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                     size={18}
-                     color={colors.textSecondary}
-                   />
-                 </Pressable>
-               }
+rightIcon={
+                  <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                    {showPassword ? (
+                      <EyeOff size={18} color={colors.textSecondary} />
+                    ) : (
+                      <Eye size={18} color={colors.textSecondary} />
+                    )}
+                  </Pressable>
+                }
                style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
              />
            </View>
