@@ -82,7 +82,7 @@ export function ReceiptScreen({ navigation, route, style }: ReceiptScreenProps):
       <View style={receiptScreenStyles.topBar}>
         <View style={receiptScreenStyles.topBarBalance} />
         <Text style={receiptScreenStyles.topBarTitle}>Elvira Cafe</Text>
-        <Pressable>
+        <Pressable onPress={() => navigation.getParent()?.navigate('Settings' as never)}>
           <Settings size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
