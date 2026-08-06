@@ -9,8 +9,17 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Banknote,
+  Check,
+  QrCode,
+  Smartphone,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { InputField } from '../../components/common/InputField/InputField';
 import { PaymentMode } from '../../types/context';
 import { colors, typography } from '../../theme';
@@ -22,10 +31,10 @@ type PaymentScreenProps = StackScreenProps<POSStackParamList, 'Payment'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: 'cash-outline' | 'phone-portrait-outline' | 'wallet-outline' }> = [
-  { value: 'cash', label: 'Cash', icon: 'cash-outline' },
-  { value: 'gcash', label: 'GCash', icon: 'phone-portrait-outline' },
-  { value: 'maya', label: 'Maya', icon: 'wallet-outline' },
+const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: LucideIcon }> = [
+  { value: 'cash', label: 'Cash', icon: Banknote },
+  { value: 'gcash', label: 'GCash', icon: Smartphone },
+  { value: 'maya', label: 'Maya', icon: Wallet },
 ];
 
 export function PaymentScreen({ navigation, route, style }: PaymentScreenProps): React.JSX.Element {
@@ -62,7 +71,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
     <SafeAreaView style={[paymentScreenStyles.container, style]}>
       <View style={paymentScreenStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={paymentScreenStyles.topBarTitle}>Payment</Text>
         <View style={paymentScreenStyles.topBarBalance} />
@@ -93,12 +102,12 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
                 onPress={() => setSelectedMethod(method.value)}
               >
                 <View style={paymentScreenStyles.iconCircle}>
-                  <Ionicons name={method.icon} size={18} color={colors.primary} />
+                  <method.icon size={18} color={colors.primary} />
                 </View>
                 <Text style={paymentScreenStyles.optionLabel}>{method.label}</Text>
                 {isSelected ? (
                   <View style={paymentScreenStyles.selectIndicator}>
-                    <Ionicons name="checkmark" size={14} color={colors.surface} />
+                    <Check size={14} color={colors.surface} />
                   </View>
                 ) : null}
               </Pressable>
@@ -139,7 +148,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
           </View>
         ) : (
           <View style={paymentScreenStyles.hint}>
-            <Ionicons name="qr-code-outline" size={20} color={colors.primary} />
+            <QrCode size={20} color={colors.primary} />
             <Text style={paymentScreenStyles.hintText}>
               Ask customer to scan the QR code on the counter
             </Text>
@@ -161,7 +170,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
           ) : (
             <>
               <Text style={paymentScreenStyles.confirmButtonText}>Confirm Payment</Text>
-              <Ionicons name="arrow-forward" size={18} color={colors.surface} />
+              <ArrowRight size={18} color={colors.surface} />
             </>
           )}
         </Pressable>
