@@ -7,6 +7,8 @@ export const colors = {
   success: '#4CAF72',
   warning: '#F5A623',
   danger: '#E8614A',
+  dangerSurface: '#FEF0F0',
+  dangerBorder: '#FECACA',
   disabled: '#C2C5C5',
   textPrimary: '#1A1A1A',
   textSecondary: '#6B6B6B',
