@@ -6,45 +6,6 @@ export const dashboardScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing['2xl'],
-    paddingBottom: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    ...typography.sm,
-    fontWeight: '700' as const,
-    color: colors.surface,
-  },
-  brandTextWrap: {
-    flexDirection: 'column',
-  },
-  brandName: {
-    ...typography.md,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-  },
-  brandSubtitle: {
-    ...typography.xs,
-    color: colors.textSecondary,
-  },
   scrollContainer: {
     flex: 1,
   },

@@ -10,14 +10,14 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native';
-import { DollarSign, Receipt, Settings } from 'lucide-react-native';
+import { DollarSign, Receipt } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { CartesianChart, Bar } from 'victory-native';
-import { useAuth } from '../../context/AuthContext';
+import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { colors, radius, spacing } from '../../theme';
 import { ReportsStackParamList } from './ReportsNavigator';
-import { useReports, LowStockItem, TopProduct } from './useReports';
+import { useReports, LowStockItem, TopProduct, DaySales } from './useReports';
 import { dashboardScreenStyles } from './DashboardScreen.styles';
 
 type DashboardScreenProps = StackScreenProps<ReportsStackParamList, 'Dashboard'> & {
@@ -31,13 +31,6 @@ function formatPeso(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-}
-
-function formatAxisLabel(value: number): string {
-  if (value >= 1000) {
-    return `${PAYMENT_CURRENCY}${(value / 1000).toFixed(1)}k`;
-  }
-  return `${PAYMENT_CURRENCY}${Math.round(value)}`;
 }
 
 function LowStockRow({ item }: { item: LowStockItem }): React.JSX.Element {
@@ -58,7 +51,58 @@ function LowStockRow({ item }: { item: LowStockItem }): React.JSX.Element {
   );
 }
 
-const CHART_HEIGHT = 140;
+const CHART_HEIGHT = 160;
+
+function WeeklySalesChart({ data, width }: { data: DaySales[]; width: number }): React.JSX.Element {
+  const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
+  const slotWidth = width / Math.max(data.length, 1);
+  const barWidth = Math.min(slotWidth * 0.55, 22);
+  const plotTop = spacing.lg;
+  const plotHeight = CHART_HEIGHT - plotTop - spacing['2xl'];
+
+  const bars = data.map((d, index) => {
+    const barHeight = d.revenue > 0 ? Math.max((d.revenue / maxRevenue) * plotHeight, 2) : 0;
+    const x = index * slotWidth + (slotWidth - barWidth) / 2;
+    const y = plotTop + plotHeight - barHeight;
+    return { ...d, x, y, barHeight };
+  });
+
+  return (
+    <Svg width={width} height={CHART_HEIGHT} viewBox={`0 0 ${width} ${CHART_HEIGHT}`}>
+      <Line
+        x1={0}
+        y1={plotTop + plotHeight}
+        x2={width}
+        y2={plotTop + plotHeight}
+        stroke={colors.border}
+        strokeWidth={1}
+      />
+      {bars.map((bar) => (
+        <Rect
+          key={bar.date}
+          x={bar.x}
+          y={bar.y}
+          width={barWidth}
+          height={bar.barHeight}
+          rx={radius.sm}
+          fill={colors.primary}
+        />
+      ))}
+      {bars.map((bar) => (
+        <SvgText
+          key={`${bar.date}-label`}
+          x={bar.x + barWidth / 2}
+          y={CHART_HEIGHT - spacing.sm}
+          fontSize={10}
+          fill={colors.textSecondary}
+          textAnchor="middle"
+        >
+          {bar.label}
+        </SvgText>
+      ))}
+    </Svg>
+  );
+}
 
 function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Element {
   return (
@@ -77,12 +121,9 @@ function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Eleme
 }
 
 export function DashboardScreen({ navigation, style }: DashboardScreenProps): React.JSX.Element {
-  const { user } = useAuth();
   const { dashboard, isLoading, error, loadDashboard } = useReports();
   const { width } = useWindowDimensions();
   const chartWidth = Math.max(width - spacing['2xl'] * 2 - spacing.lg * 2, 200);
-
-  const initials = (user?.username?.[0] ?? '').toUpperCase();
 
   useFocusEffect(
     useCallback(() => {
@@ -105,20 +146,7 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
 
   return (
     <SafeAreaView style={[dashboardScreenStyles.container, style]}>
-      <View style={dashboardScreenStyles.topBar}>
-        <View style={dashboardScreenStyles.brandRow}>
-          <View style={dashboardScreenStyles.avatar}>
-            <Text style={dashboardScreenStyles.avatarText}>{initials || '?'}</Text>
-          </View>
-          <View style={dashboardScreenStyles.brandTextWrap}>
-            <Text style={dashboardScreenStyles.brandName}>ElviraCafe POS</Text>
-            <Text style={dashboardScreenStyles.brandSubtitle}>Dashboard Overview</Text>
-          </View>
-        </View>
-        <Pressable onPress={() => navigation.getParent()?.navigate('Settings' as never)}>
-          <Settings size={22} color={colors.textSecondary} />
-        </Pressable>
-      </View>
+      <AppHeader pageTitle="Dashboard Overview" />
 
       <ScrollView
         style={[dashboardScreenStyles.scrollContainer, style]}
@@ -148,40 +176,13 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
 
         <View style={dashboardScreenStyles.card}>
           <Text style={dashboardScreenStyles.cardTitle}>Weekly Sales</Text>
-          <CartesianChart
-            data={weeklyBreakdown}
-            xKey="label"
-            yKeys={['revenue']}
-            orientation="vertical"
-            explicitSize={{ width: chartWidth, height: CHART_HEIGHT }}
-            xAxis={{
-              formatXLabel: (label) => String(label),
-              labelColor: colors.textSecondary,
-              lineColor: colors.border,
-            }}
-            yAxis={[
-              {
-                formatYLabel: (label) => formatAxisLabel(label),
-                labelColor: colors.textSecondary,
-                lineColor: colors.border,
-              },
-            ]}
-          >
-            {({ points, chartBounds }) => (
-              <Bar
-                points={points.revenue}
-                chartBounds={chartBounds}
-                color={colors.primary}
-                roundedCorners={{ topLeft: radius.sm, topRight: radius.sm }}
-              />
-            )}
-          </CartesianChart>
+          <WeeklySalesChart data={weeklyBreakdown} width={chartWidth} />
         </View>
 
         <View style={dashboardScreenStyles.section}>
           <View style={dashboardScreenStyles.sectionHeader}>
             <Text style={dashboardScreenStyles.sectionTitle}>Low Stock</Text>
-            <Pressable onPress={() => navigation.getParent()?.navigate('Inventory' as never)}>
+            <Pressable onPress={() => navigation.navigate('Inventory')}>
               <Text style={dashboardScreenStyles.viewAll}>View All</Text>
             </Pressable>
           </View>
