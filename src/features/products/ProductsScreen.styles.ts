@@ -9,26 +9,16 @@ export const productsScreenStyles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing['2xl'],
     paddingTop: spacing['2xl'],
     paddingBottom: spacing.md,
     backgroundColor: colors.surface,
   },
   topBarTitle: {
-    ...typography.lg,
+    ...typography.xl,
     fontWeight: '600' as const,
     color: colors.textPrimary,
-  },
-  topBarBack: {
-    position: 'absolute',
-    left: spacing['2xl'],
-    top: '50%',
-    marginTop: -18,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   avatar: {
     position: 'absolute',
@@ -51,32 +41,8 @@ export const productsScreenStyles = StyleSheet.create({
     marginHorizontal: spacing['2xl'],
     marginVertical: spacing.md,
   },
-  categoryBar: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing['2xl'],
+  categoryWrapper: {
     marginBottom: spacing.md,
-  },
-  categoryTab: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginRight: spacing.sm,
-  },
-  categoryTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  categoryTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  categoryTabTextActive: {
-    fontWeight: '600' as const,
-    color: colors.surface,
   },
   content: {
     flexGrow: 1,
@@ -172,5 +138,61 @@ export const productsScreenStyles = StyleSheet.create({
   },
   fabPressed: {
     opacity: 0.9,
+  },
+  fabMenuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  fabMenuSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing['4xl'],
+    paddingHorizontal: spacing['2xl'],
+    ...shadows.modal,
+  },
+  fabMenuTitle: {
+    ...typography.md,
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  fabMenuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.lg,
+    paddingVertical: spacing.md,
+  },
+  fabMenuOptionPressed: {
+    backgroundColor: colors.background,
+  },
+  fabMenuOptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.navActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  fabMenuOptionTextBlock: {
+    flex: 1,
+  },
+  fabMenuOptionTitle: {
+    ...typography.md,
+    fontWeight: '600' as const,
+    color: colors.textPrimary,
+  },
+  fabMenuOptionCaption: {
+    ...typography.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  fabMenuDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.sm,
   },
 });

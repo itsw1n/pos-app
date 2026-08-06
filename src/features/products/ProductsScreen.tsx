@@ -1,22 +1,25 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Modal,
   Pressable,
   SafeAreaView,
-  ScrollView,
   SectionList,
   StyleProp,
   Text,
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Pencil, Plus, Tags, UtensilsCrossed } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
+import { CategoryBar } from '../../components/category/CategoryBar';
+import { useCategories } from '../../components/category/useCategories';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
 import { Product } from '../../types/entities';
 import { ProductsStackParamList } from './ProductsNavigator';
+import { AddCategoryModal } from './AddCategoryModal';
 import { useProducts } from './useProducts';
 import { productsScreenStyles } from './ProductsScreen.styles';
 
@@ -41,21 +44,25 @@ function formatPeso(value: number): string {
 export function ProductsScreen({ navigation, style }: ProductsScreenProps): React.JSX.Element {
   const { user, role } = useAuth();
   const { products, isLoading, error, loadProducts } = useProducts();
+  const { categories, loadCategories, createCategory } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
+  const [fabMenuVisible, setFabMenuVisible] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void loadProducts();
-    }, [loadProducts])
+      void loadCategories();
+    }, [loadProducts, loadCategories])
   );
 
   const initials = (user?.username?.[0] ?? '').toUpperCase();
 
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(products.map((p) => p.category)));
-    return [ALL_CATEGORIES, ...unique];
-  }, [products]);
+  const categoryNames = useMemo(
+    () => categories.map((category) => category.name),
+    [categories]
+  );
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -79,6 +86,14 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
     }
     return Array.from(grouped.entries()).map(([title, data]) => ({ title, data }));
   }, [filteredProducts]);
+
+  const handleAddCategory = useCallback(
+    async (name: string): Promise<void> => {
+      const category = await createCategory(name);
+      setActiveCategory(category.name);
+    },
+    [createCategory]
+  );
 
   if (role !== 'admin') {
     return (
@@ -104,7 +119,7 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         style={productsScreenStyles.editButton}
         onPress={() => navigation.navigate('AddEditProduct', { product: item })}
       >
-        <Ionicons name="pencil-outline" size={16} color={colors.textSecondary} />
+        <Pencil size={16} color={colors.textSecondary} />
       </Pressable>
     </View>
   );
@@ -124,13 +139,7 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
   return (
     <SafeAreaView style={[productsScreenStyles.container, style]}>
       <View style={productsScreenStyles.topBar}>
-        <Pressable
-          style={productsScreenStyles.topBarBack}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </Pressable>
-        <Text style={productsScreenStyles.topBarTitle}>Elvira Cafe</Text>
+        <Text style={productsScreenStyles.topBarTitle}>Products</Text>
         <View style={productsScreenStyles.avatar}>
           <Text style={productsScreenStyles.avatarText}>{initials || '?'}</Text>
         </View>
@@ -143,34 +152,13 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         style={productsScreenStyles.searchBar}
       />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={productsScreenStyles.categoryBar}
-      >
-        {categories.map((category) => {
-          const isActive = category === activeCategory;
-          return (
-            <Pressable
-              key={category}
-              style={[
-                productsScreenStyles.categoryTab,
-                isActive ? productsScreenStyles.categoryTabActive : null,
-              ]}
-              onPress={() => setActiveCategory(category)}
-            >
-              <Text
-                style={[
-                  productsScreenStyles.categoryTabText,
-                  isActive ? productsScreenStyles.categoryTabTextActive : null,
-                ]}
-              >
-                {category}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View style={productsScreenStyles.categoryWrapper}>
+        <CategoryBar
+          categories={categoryNames}
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+        />
+      </View>
 
       {error ? <Text style={productsScreenStyles.errorText}>{error}</Text> : null}
 
@@ -194,10 +182,70 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
           productsScreenStyles.fab,
           pressed ? productsScreenStyles.fabPressed : null,
         ]}
-        onPress={() => navigation.navigate('AddEditProduct', undefined)}
+        onPress={() => setFabMenuVisible(true)}
       >
-        <Ionicons name="add" size={26} color={colors.surface} />
+        <Plus size={26} color={colors.surface} />
       </Pressable>
+
+      <Modal
+        visible={fabMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFabMenuVisible(false)}
+      >
+        <Pressable style={productsScreenStyles.fabMenuBackdrop} onPress={() => setFabMenuVisible(false)}>
+          <View style={productsScreenStyles.fabMenuSheet}>
+            <Text style={productsScreenStyles.fabMenuTitle}>Menu Options</Text>
+            <Pressable
+              style={({ pressed }) => [
+                productsScreenStyles.fabMenuOption,
+                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+              ]}
+              onPress={() => {
+                setFabMenuVisible(false);
+                navigation.navigate('AddEditProduct', undefined);
+              }}
+            >
+              <View style={productsScreenStyles.fabMenuOptionIcon}>
+                <UtensilsCrossed size={20} color={colors.primary} />
+              </View>
+              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
+                <Text style={productsScreenStyles.fabMenuOptionTitle}>Add Product</Text>
+                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+                  Create a new menu item
+                </Text>
+              </View>
+            </Pressable>
+            <View style={productsScreenStyles.fabMenuDivider} />
+            <Pressable
+              style={({ pressed }) => [
+                productsScreenStyles.fabMenuOption,
+                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+              ]}
+              onPress={() => {
+                setFabMenuVisible(false);
+                setCategoryModalVisible(true);
+              }}
+            >
+              <View style={productsScreenStyles.fabMenuOptionIcon}>
+                <Tags size={20} color={colors.primary} />
+              </View>
+              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
+                <Text style={productsScreenStyles.fabMenuOptionTitle}>Add Category</Text>
+                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+                  Create a new product category
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <AddCategoryModal
+        visible={categoryModalVisible}
+        onClose={() => setCategoryModalVisible(false)}
+        onSubmit={handleAddCategory}
+      />
     </SafeAreaView>
   );
 }
