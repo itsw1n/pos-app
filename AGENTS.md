@@ -261,6 +261,47 @@ chore(config): scaffold Expo TypeScript project
 
 ---
 
+## Branching & Release Policy (CI/CD)
+
+GitFlow-style model enforced by `.github/workflows`. `main` is always stable;
+all integration happens on `dev`.
+
+**Branches**
+- `main` — stable/releaseable only. Do not commit or push directly. Only merged
+  from `dev` via the promote PR (`--no-ff`).
+- `dev` — integration branch. All `feature/`, `refactor/`, `fix/`, `chore/`
+  branches branch **off `dev`** (never off `main`) and merge back into `dev`.
+- When `dev` is stable, open a PR `dev → main`. That merge is the release.
+
+**CI (`ci.yml`)** — runs on every PR to `main`/`dev` and on pushes to both:
+- `npm run typecheck` (`tsc --noEmit`) — must pass.
+- `npm run build` (`expo export --platform android`) — verifies the Metro
+  bundle. Uses dummy `EXPO_PUBLIC_*` values in CI; real values only ship via
+  git-ignored `.env.*` at runtime.
+
+**Tagging (`release.yml`)** — `googleapis/release-please-action` runs on push
+to `main`:
+- Derives a semantic version from conventional commits:
+  `feat` → minor, `fix` → patch, `BREAKING CHANGE`/`!` → major.
+- Opens a release PR and, once merged back to `main`, tags `vX.Y.Z`,
+  bumps `package.json`/`package-lock.json`, and updates `CHANGELOG.md`.
+- Because tags are driven by commit types, keep Commit Rules (above) accurate —
+  a mis-typed `feat` mis-bumps the version.
+
+**Branch protection (apply in GitHub UI — Settings → Branches → Add rule)**
+1. Add a rule for `main` and one for `dev`.
+2. Enable: "Require a pull request before merging" (1 approval, `dismiss stale`).
+3. Enable: "Require status checks to pass before merging" → select `Typecheck`
+   and `Android bundle`.
+4. Enable: "Do not allow bypassing"; set "Restrict who can push" to your team
+   (or keep admins as exception deliberately).
+5. Optionally enable "Do not allow force pushes" on `dev`.
+
+**No CI-driven secret access**: workflows never read `.env.*`. The app only
+receives `EXPO_PUBLIC_*` values, which are non-secret by design.
+
+---
+
 ## Data Privacy (RA 10173)
 
 - No PII in logs. Passwords are hashed by Supabase Auth (never store plaintext).
