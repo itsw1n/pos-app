@@ -12,6 +12,7 @@ import {
 import { Pencil, Plus, Tags, UtensilsCrossed } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { CategoryBar } from '../../components/category/CategoryBar';
 import { useCategories } from '../../components/category/useCategories';
@@ -42,7 +43,7 @@ function formatPeso(value: number): string {
 }
 
 export function ProductsScreen({ navigation, style }: ProductsScreenProps): React.JSX.Element {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const { products, isLoading, error, loadProducts } = useProducts();
   const { categories, loadCategories, createCategory } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
@@ -56,8 +57,6 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
       void loadCategories();
     }, [loadProducts, loadCategories])
   );
-
-  const initials = (user?.username?.[0] ?? '').toUpperCase();
 
   const categoryNames = useMemo(
     () => categories.map((category) => category.name),
@@ -138,12 +137,7 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
 
   return (
     <SafeAreaView style={[productsScreenStyles.container, style]}>
-      <View style={productsScreenStyles.topBar}>
-        <Text style={productsScreenStyles.topBarTitle}>Products</Text>
-        <View style={productsScreenStyles.avatar}>
-          <Text style={productsScreenStyles.avatarText}>{initials || '?'}</Text>
-        </View>
-      </View>
+      <AppHeader pageTitle="Products" />
 
       <SearchBar
         placeholder="Search menu items..."
