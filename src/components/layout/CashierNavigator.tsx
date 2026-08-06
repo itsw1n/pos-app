@@ -36,10 +36,6 @@ export function CashierNavigator(): React.JSX.Element {
         name="Inventory"
         component={InventoryViewScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Inventory',
-          headerTintColor: colors.primary,
-          headerTitleAlign: 'center',
           tabBarIcon: ({ color, size }) => <Box color={color} size={size} />,
         }}
       />
