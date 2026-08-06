@@ -1,8 +1,20 @@
 import React, { useCallback } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleProp, Text, View, ViewStyle, useWindowDimensions } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+  useWindowDimensions,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CartesianChart, Bar } from 'victory-native';
+import { useAuth } from '../../context/AuthContext';
 import { colors, radius, spacing } from '../../theme';
 import { ReportsStackParamList } from './ReportsNavigator';
 import { useReports, LowStockItem, TopProduct } from './useReports';
@@ -29,49 +41,46 @@ function formatAxisLabel(value: number): string {
 }
 
 function LowStockRow({ item }: { item: LowStockItem }): React.JSX.Element {
-  const isCritical = item.quantity <= 0;
   return (
     <View style={dashboardScreenStyles.lowStockRow}>
+      <View style={dashboardScreenStyles.lowStockTile}>
+        <Text style={dashboardScreenStyles.lowStockEmoji}>☕</Text>
+      </View>
       <View style={dashboardScreenStyles.lowStockInfo}>
-        <Text style={dashboardScreenStyles.rowName} numberOfLines={1}>
+        <Text style={dashboardScreenStyles.lowStockName} numberOfLines={1}>
           {item.product_name}
         </Text>
-        <Text style={dashboardScreenStyles.rowMeta}>
-          Reorder at {item.reorder_level}
+        <Text style={dashboardScreenStyles.lowStockMeta}>
+          Only {item.quantity} units left
         </Text>
       </View>
-      <Text
-        style={[
-          dashboardScreenStyles.rowValue,
-          isCritical ? dashboardScreenStyles.rowValueCritical : dashboardScreenStyles.rowValueLow,
-        ]}
-      >
-        {item.quantity}
+    </View>
+  );
+}
+
+function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Element {
+  return (
+    <View style={dashboardScreenStyles.topProductColumn}>
+      <View style={dashboardScreenStyles.topProductTile}>
+        <Text style={dashboardScreenStyles.topProductEmoji}>☕</Text>
+      </View>
+      <Text style={dashboardScreenStyles.topProductName} numberOfLines={1}>
+        {product.product_name}
+      </Text>
+      <Text style={dashboardScreenStyles.topProductSold}>
+        {product.quantity_sold} Sold Today
       </Text>
     </View>
   );
 }
 
-function TopProductRow({ product }: { product: TopProduct }): React.JSX.Element {
-  return (
-    <View style={dashboardScreenStyles.topProductRow}>
-      <View style={dashboardScreenStyles.topProductInfo}>
-        <Text style={dashboardScreenStyles.rowName} numberOfLines={1}>
-          {product.product_name}
-        </Text>
-        <Text style={dashboardScreenStyles.rowMeta}>
-          {product.quantity_sold} sold
-        </Text>
-      </View>
-      <Text style={dashboardScreenStyles.rowValue}>{formatPeso(product.revenue)}</Text>
-    </View>
-  );
-}
-
 export function DashboardScreen({ navigation, style }: DashboardScreenProps): React.JSX.Element {
+  const { user } = useAuth();
   const { dashboard, isLoading, error, loadDashboard } = useReports();
   const { width } = useWindowDimensions();
-  const chartWidth = Math.max(width - spacing.lg * 4, 200);
+  const chartWidth = Math.max(width - spacing['2xl'] * 2 - spacing.lg * 2, 200);
+
+  const initials = (user?.username?.[0] ?? '').toUpperCase();
 
   useFocusEffect(
     useCallback(() => {
@@ -93,33 +102,56 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
   const topProducts = dashboard?.topProducts ?? [];
 
   return (
-    <ScrollView
-      style={[dashboardScreenStyles.container, style]}
-      contentContainerStyle={dashboardScreenStyles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={dashboardScreenStyles.summaryRow}>
-        <View style={dashboardScreenStyles.summaryCard}>
-          <Text style={dashboardScreenStyles.summaryLabel}>Revenue</Text>
-          <Text style={dashboardScreenStyles.summaryValue}>{formatPeso(dashboard?.totalRevenue ?? 0)}</Text>
+    <SafeAreaView style={[dashboardScreenStyles.container, style]}>
+      <View style={dashboardScreenStyles.topBar}>
+        <View style={dashboardScreenStyles.brandRow}>
+          <View style={dashboardScreenStyles.avatar}>
+            <Text style={dashboardScreenStyles.avatarText}>{initials || '?'}</Text>
+          </View>
+          <View style={dashboardScreenStyles.brandTextWrap}>
+            <Text style={dashboardScreenStyles.brandName}>ElviraCafe POS</Text>
+            <Text style={dashboardScreenStyles.brandSubtitle}>Dashboard Overview</Text>
+          </View>
         </View>
-        <View style={dashboardScreenStyles.summaryCard}>
-          <Text style={dashboardScreenStyles.summaryLabel}>Orders</Text>
-          <Text style={dashboardScreenStyles.summaryValue}>{dashboard?.totalOrders ?? 0}</Text>
-        </View>
+        <Pressable onPress={() => navigation.getParent()?.navigate('Settings' as never)}>
+          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+        </Pressable>
       </View>
 
-      {error ? <Text style={dashboardScreenStyles.errorText}>{error}</Text> : null}
+      <ScrollView
+        style={[dashboardScreenStyles.scrollContainer, style]}
+        contentContainerStyle={dashboardScreenStyles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={dashboardScreenStyles.summaryRow}>
+          <View style={dashboardScreenStyles.summaryCard}>
+            <View style={dashboardScreenStyles.iconCircle}>
+              <Ionicons name="cash-outline" size={18} color={colors.primary} />
+            </View>
+            <Text style={dashboardScreenStyles.summaryLabel}>Total Revenue</Text>
+            <Text style={dashboardScreenStyles.summaryValue}>
+              {formatPeso(dashboard?.totalRevenue ?? 0)}
+            </Text>
+          </View>
+          <View style={dashboardScreenStyles.summaryCard}>
+            <View style={dashboardScreenStyles.iconCircle}>
+              <Ionicons name="receipt-outline" size={18} color={colors.primary} />
+            </View>
+            <Text style={dashboardScreenStyles.summaryLabel}>Total Orders</Text>
+            <Text style={dashboardScreenStyles.summaryValue}>{dashboard?.totalOrders ?? 0}</Text>
+          </View>
+        </View>
 
-      <View style={dashboardScreenStyles.card}>
-        <Text style={dashboardScreenStyles.cardTitle}>Weekly Revenue</Text>
-        <View style={dashboardScreenStyles.chart}>
+        {error ? <Text style={dashboardScreenStyles.errorText}>{error}</Text> : null}
+
+        <View style={dashboardScreenStyles.card}>
+          <Text style={dashboardScreenStyles.cardTitle}>Weekly Sales</Text>
           <CartesianChart
             data={weeklyBreakdown}
             xKey="label"
             yKeys={['revenue']}
             orientation="vertical"
-            explicitSize={{ width: chartWidth, height: 200 }}
+            explicitSize={{ width: chartWidth, height: 140 }}
             xAxis={{
               formatXLabel: (label) => String(label),
               labelColor: colors.textSecondary,
@@ -143,37 +175,50 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
             )}
           </CartesianChart>
         </View>
-      </View>
 
-      <Pressable
-        style={({ pressed }) => [
-          dashboardScreenStyles.reportsButton,
-          pressed ? dashboardScreenStyles.reportsButtonPressed : null,
-        ]}
-        onPress={() => navigation.navigate('Reports')}
-      >
-        <Text style={dashboardScreenStyles.reportsButtonText}>View Sales &amp; Inventory Reports</Text>
-      </Pressable>
+        <View style={dashboardScreenStyles.section}>
+          <View style={dashboardScreenStyles.sectionHeader}>
+            <Text style={dashboardScreenStyles.sectionTitle}>Low Stock</Text>
+            <Pressable onPress={() => navigation.getParent()?.navigate('Inventory' as never)}>
+              <Text style={dashboardScreenStyles.viewAll}>View All</Text>
+            </Pressable>
+          </View>
+          {lowStock.length > 0 ? (
+            lowStock.slice(0, 2).map((item) => <LowStockRow key={item.stock_id} item={item} />)
+          ) : (
+            <Text style={dashboardScreenStyles.emptyText}>All items are sufficiently stocked</Text>
+          )}
+        </View>
 
-      <View style={dashboardScreenStyles.card}>
-        <Text style={dashboardScreenStyles.cardTitle}>Low Stock</Text>
-        {lowStock.length > 0 ? (
-          lowStock.slice(0, 5).map((item) => <LowStockRow key={item.stock_id} item={item} />)
-        ) : (
-          <Text style={dashboardScreenStyles.emptyText}>All items are sufficiently stocked</Text>
-        )}
-      </View>
+        <View style={dashboardScreenStyles.section}>
+          <Text style={dashboardScreenStyles.topSellingTitle}>Top Selling</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={dashboardScreenStyles.topSellingRow}
+          >
+            {topProducts.length > 0 ? (
+              topProducts.map((product) => (
+                <TopProductColumn key={product.product_id} product={product} />
+              ))
+            ) : (
+              <Text style={dashboardScreenStyles.emptyText}>No sales recorded yet</Text>
+            )}
+          </ScrollView>
+        </View>
 
-      <View style={dashboardScreenStyles.card}>
-        <Text style={dashboardScreenStyles.cardTitle}>Top Products</Text>
-        {topProducts.length > 0 ? (
-          topProducts.map((product) => (
-            <TopProductRow key={product.product_id} product={product} />
-          ))
-        ) : (
-          <Text style={dashboardScreenStyles.emptyText}>No sales recorded yet</Text>
-        )}
-      </View>
-    </ScrollView>
+        <Pressable
+          style={({ pressed }) => [
+            dashboardScreenStyles.reportsButton,
+            pressed ? dashboardScreenStyles.reportsButtonPressed : null,
+          ]}
+          onPress={() => navigation.navigate('Reports')}
+        >
+          <Text style={dashboardScreenStyles.reportsButtonText}>
+            View Sales &amp; Inventory Reports
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
