@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Pressable,
+  StyleProp,
   Text,
   TextInput,
   View,
@@ -33,7 +34,7 @@ export interface InputFieldProps {
   multiline?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   inputStyle?: TextStyle;
   onSubmitEditing?: () => void;
 }
@@ -107,6 +108,8 @@ export function InputField({
           editable={!disabled}
           multiline={multiline}
           selectionColor={colors.primary}
+          cursorColor={colors.primary}
+          underlineColorAndroid="transparent"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onSubmitEditing={onSubmitEditing}

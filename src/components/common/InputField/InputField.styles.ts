@@ -42,6 +42,7 @@ export const inputFieldStyles = StyleSheet.create({
   input: {
     ...typography.md,
     color: colors.textPrimary,
+    backgroundColor: 'transparent',
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: 0,
@@ -51,6 +52,7 @@ export const inputFieldStyles = StyleSheet.create({
   inputMultiline: {
     ...typography.md,
     color: colors.textPrimary,
+    backgroundColor: 'transparent',
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: 0,
