@@ -55,17 +55,28 @@ export const inventoryViewScreenStyles = StyleSheet.create({
     color: colors.danger,
   },
   alertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.warning,
     padding: spacing.md,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.resting,
+  },
+  bannerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: colors.iconCircle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
   },
   alertText: {
     ...typography.sm,
     color: colors.warning,
+    flex: 1,
   },
   itemCard: {
     backgroundColor: colors.surface,
@@ -73,18 +84,6 @@ export const inventoryViewScreenStyles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     ...shadows.resting,
-  },
-  rowBorder: {
-    borderLeftWidth: 4,
-  },
-  rowOk: {
-    borderLeftColor: colors.success,
-  },
-  rowLow: {
-    borderLeftColor: colors.warning,
-  },
-  rowCritical: {
-    borderLeftColor: colors.danger,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -104,16 +103,6 @@ export const inventoryViewScreenStyles = StyleSheet.create({
     ...typography.sm,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-  },
-  badge: {
-    borderRadius: radius.full,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  badgeText: {
-    ...typography.xs,
-    fontWeight: '500' as const,
-    color: colors.surface,
   },
   statsRow: {
     flexDirection: 'row',

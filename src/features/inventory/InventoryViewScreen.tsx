@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import { FlatList, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
 import { useInventory, InventoryItem, StockStatus } from './useInventory';
 import { inventoryViewScreenStyles } from './InventoryViewScreen.styles';
@@ -13,12 +15,6 @@ const STATUS_LABEL: Record<StockStatus, string> = {
   ok: 'In Stock',
   low: 'Low Stock',
   critical: 'Critical',
-};
-
-const STATUS_COLOR: Record<StockStatus, string> = {
-  ok: colors.success,
-  low: colors.warning,
-  critical: colors.danger,
 };
 
 export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.JSX.Element {
@@ -36,17 +32,7 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
   const renderItem = ({ item }: { item: InventoryItem }): React.JSX.Element => {
     const status = getStatus(item);
     return (
-      <View
-        style={[
-          inventoryViewScreenStyles.itemCard,
-          inventoryViewScreenStyles.rowBorder,
-          status === 'critical'
-            ? inventoryViewScreenStyles.rowCritical
-            : status === 'low'
-              ? inventoryViewScreenStyles.rowLow
-              : inventoryViewScreenStyles.rowOk,
-        ]}
-      >
+      <View style={inventoryViewScreenStyles.itemCard}>
         <View style={inventoryViewScreenStyles.itemHeader}>
           <View style={inventoryViewScreenStyles.itemInfo}>
             <Text style={inventoryViewScreenStyles.itemName} numberOfLines={1}>
@@ -54,9 +40,7 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
             </Text>
             <Text style={inventoryViewScreenStyles.itemCategory}>{item.product_category}</Text>
           </View>
-          <View style={[inventoryViewScreenStyles.badge, { backgroundColor: STATUS_COLOR[status] }]}>
-            <Text style={inventoryViewScreenStyles.badgeText}>{STATUS_LABEL[status]}</Text>
-          </View>
+          <StockBadge status={status} label={STATUS_LABEL[status]} />
         </View>
         <View style={inventoryViewScreenStyles.statsRow}>
           <Text style={inventoryViewScreenStyles.statLabel}>On hand</Text>
@@ -103,6 +87,9 @@ export function InventoryViewScreen({ style }: InventoryViewScreenProps): React.
 
       {alertCount > 0 ? (
         <View style={inventoryViewScreenStyles.alertBanner}>
+          <View style={inventoryViewScreenStyles.bannerIcon}>
+            <Ionicons name="warning-outline" size={18} color={colors.warning} />
+          </View>
           <Text style={inventoryViewScreenStyles.alertText}>
             {criticalCount > 0 ? `${criticalCount} item(s) out of stock · ` : ''}
             {lowCount > 0 ? `${lowCount} item(s) low on stock` : ''}
