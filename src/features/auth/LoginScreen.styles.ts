@@ -33,14 +33,6 @@ export const loginScreenStyles = StyleSheet.create({
     fontWeight: '700' as const,
     color: colors.textPrimary,
   },
-  globeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.xl,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   heroContainer: {
     width: '100%',
     height: 180,
@@ -80,10 +72,6 @@ export const loginScreenStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   inputLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  forgotText: {
     fontSize: 13,
     color: colors.textSecondary,
   },

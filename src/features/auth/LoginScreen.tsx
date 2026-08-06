@@ -10,7 +10,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Eye, EyeOff, Globe, Lock, User } from 'lucide-react-native';
+import { Eye, EyeOff, Lock, User } from 'lucide-react-native';
 import { InputField } from '../../components/common/InputField/InputField';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme';
@@ -56,15 +56,12 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
           contentContainerStyle={loginScreenStyles.scrollView}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={loginScreenStyles.topBar}>
-            <View style={loginScreenStyles.brandRow}>
-              <Text style={loginScreenStyles.logoIcon}>🌿</Text>
-              <Text style={loginScreenStyles.brandName}>ElviraCafe</Text>
+<View style={loginScreenStyles.topBar}>
+              <View style={loginScreenStyles.brandRow}>
+                <Text style={loginScreenStyles.logoIcon}>🌿</Text>
+                <Text style={loginScreenStyles.brandName}>ElviraCafe</Text>
+              </View>
             </View>
-            <Pressable style={loginScreenStyles.globeButton}>
-              <Globe size={18} color={colors.textSecondary} />
-            </Pressable>
-          </View>
 
           <View style={loginScreenStyles.heroContainer}>
             <Text style={loginScreenStyles.heroPlaceholder}>☕</Text>
@@ -94,9 +91,6 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
            <View style={loginScreenStyles.inputGroupLarge}>
              <View style={loginScreenStyles.inputLabelRow}>
                <Text style={loginScreenStyles.inputLabel}>Password</Text>
-               <Pressable>
-                 <Text style={loginScreenStyles.forgotText}>Forgot?</Text>
-               </Pressable>
              </View>
              <InputField
                value={password}
