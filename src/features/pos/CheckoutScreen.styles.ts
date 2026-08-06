@@ -22,6 +22,9 @@ export const checkoutScreenStyles = StyleSheet.create({
     fontWeight: '600' as const,
     color: colors.textPrimary,
   },
+  topBarBalance: {
+    width: 22,
+  },
   scrollContent: {
     paddingHorizontal: spacing['2xl'],
     paddingTop: spacing.lg,
@@ -179,27 +182,5 @@ export const checkoutScreenStyles = StyleSheet.create({
     ...typography.lg,
     fontWeight: '600' as const,
     color: colors.surface,
-  },
-  modeCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 2,
-    borderColor: colors.border,
-    ...shadows.resting,
-  },
-  modeCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.navActive,
-  },
-  modeTitle: {
-    ...typography.md,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  modeSubtitle: {
-    ...typography.sm,
-    color: colors.textSecondary,
   },
 });

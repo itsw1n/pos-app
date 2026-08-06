@@ -72,7 +72,7 @@ export const receiptScreenStyles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: radius.full,
-    backgroundColor: colors.navActive,
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,

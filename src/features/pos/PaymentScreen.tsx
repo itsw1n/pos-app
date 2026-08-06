@@ -29,16 +29,16 @@ const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: 'cash-ou
 ];
 
 export function PaymentScreen({ navigation, route, style }: PaymentScreenProps): React.JSX.Element {
-  const { paymentMode } = route.params;
   const { getTotal, processTransaction } = usePOS();
   const total = getTotal();
 
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMode>(route.params.paymentMode ?? 'cash');
   const [amountText, setAmountText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
   const amountReceived = parseFloat(amountText);
-  const isCash = paymentMode === 'cash';
+  const isCash = selectedMethod === 'cash';
   const amountIsValid = !Number.isNaN(amountReceived) && amountReceived > 0;
   const cashIsSufficient = !isCash || (amountIsValid && amountReceived >= total);
   const change = isCash && amountIsValid ? amountReceived - total : null;
@@ -50,7 +50,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
     setIsProcessing(true);
     try {
       const finalAmount = isCash ? amountReceived : total;
-      const transaction = await processTransaction(paymentMode, finalAmount);
+      const transaction = await processTransaction(selectedMethod, finalAmount);
       navigation.replace('Receipt', { transaction });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
@@ -82,14 +82,15 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
 
         <View style={paymentScreenStyles.methodList}>
           {PAYMENT_METHODS.map((method) => {
-            const isSelected = paymentMode === method.value;
+            const isSelected = selectedMethod === method.value;
             return (
-              <View
+              <Pressable
                 key={method.value}
                 style={[
                   paymentScreenStyles.paymentOption,
                   isSelected ? paymentScreenStyles.paymentOptionSelected : null,
                 ]}
+                onPress={() => setSelectedMethod(method.value)}
               >
                 <View style={paymentScreenStyles.iconCircle}>
                   <Ionicons name={method.icon} size={18} color={colors.primary} />
@@ -100,7 +101,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
                     <Ionicons name="checkmark" size={14} color={colors.surface} />
                   </View>
                 ) : null}
-              </View>
+              </Pressable>
             );
           })}
         </View>
@@ -113,7 +114,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
                 value={amountText}
                 onChangeText={setAmountText}
                 keyboardType="decimal-pad"
-                placeholder="0.00"
+                placeholder="Php 0.000"
                 disabled={isProcessing}
                 inputStyle={{ ...typography.xl, fontWeight: '600' }}
                 error={

@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '../../components/common/InputField/InputField';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
-import { PaymentMode } from '../../types/context';
 import { colors } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
 import { usePOS } from './usePOS';
@@ -22,28 +21,19 @@ type CheckoutScreenProps = StackScreenProps<POSStackParamList, 'Checkout'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PAYMENT_MODES: Array<{ value: PaymentMode; title: string; subtitle: string }> = [
-  { value: 'cash', title: 'Cash', subtitle: 'Pay with bills and coins' },
-  { value: 'gcash', title: 'GCash', subtitle: 'Scan to pay with GCash' },
-  { value: 'maya', title: 'Maya', subtitle: 'Scan to pay with Maya' },
-];
-
 const PPN_RATE = 0.11;
 
 export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): React.JSX.Element {
   const { cart, addToCart, decrementItem, getTotal } = usePOS();
-  const [selectedMode, setSelectedMode] = useState<PaymentMode | null>(null);
   const [customerName, setCustomerName] = useState('');
   const subtotal = getTotal();
-  const totalItems = cart.reduce((sum, i) => sum + i.qty, 0);
 
   // TODO: confirm VAT with client
   const ppn = subtotal * PPN_RATE;
   const total = subtotal + ppn;
 
   const handleContinue = (): void => {
-    if (!selectedMode) return;
-    navigation.navigate('Payment', { paymentMode: selectedMode });
+    navigation.navigate('Payment', { paymentMode: 'cash' });
   };
 
   return (
@@ -53,9 +43,7 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={checkoutScreenStyles.topBarTitle}>Check Out</Text>
-        <Pressable>
-          <Ionicons name="information-circle-outline" size={22} color={colors.textSecondary} />
-        </Pressable>
+        <View style={checkoutScreenStyles.topBarBalance} />
       </View>
 
       <ScrollView
@@ -136,31 +124,8 @@ export function CheckoutScreen({ navigation, style }: CheckoutScreenProps): Reac
           <Text style={checkoutScreenStyles.totalValue}>₱{total.toFixed(2)}</Text>
         </View>
 
-        {PAYMENT_MODES.map((mode) => {
-          const isSelected = selectedMode === mode.value;
-          return (
-            <Pressable
-              key={mode.value}
-              style={[
-                checkoutScreenStyles.modeCard,
-                isSelected ? checkoutScreenStyles.modeCardSelected : null,
-              ]}
-              onPress={() => setSelectedMode(mode.value)}
-            >
-              <Text style={checkoutScreenStyles.modeTitle}>{mode.title}</Text>
-              <Text style={checkoutScreenStyles.modeSubtitle}>{mode.subtitle}</Text>
-            </Pressable>
-          );
-        })}
-
-        <Pressable
-          style={checkoutScreenStyles.processButton}
-          onPress={handleContinue}
-          disabled={!selectedMode}
-        >
-          <Text style={checkoutScreenStyles.processButtonText}>
-            {selectedMode ? 'Process CheckOut' : 'Select payment method'}
-          </Text>
+        <Pressable style={checkoutScreenStyles.processButton} onPress={handleContinue}>
+          <Text style={checkoutScreenStyles.processButtonText}>Process Check Out</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

@@ -72,7 +72,7 @@ export const paymentScreenStyles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.full,
-    backgroundColor: colors.navActive,
+    backgroundColor: colors.iconCircle,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -103,24 +103,6 @@ export const paymentScreenStyles = StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 0.8,
     marginBottom: spacing.sm,
-  },
-  inputWrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    height: 56,
-    justifyContent: 'center',
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  input: {
-    ...typography.xl,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-    paddingVertical: 0,
   },
   changeRow: {
     flexDirection: 'row',
