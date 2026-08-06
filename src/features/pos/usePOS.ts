@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { supabase } from '../../services/supabase';
 import { saveToSQLite } from '../../services/sqlite';
+import { ProductRow, toProduct } from '../../services/catalog';
 import { CartItem, PaymentMode, POSTransaction } from '../../types/context';
 import { Product } from '../../types/entities';
 
@@ -35,8 +36,11 @@ export function usePOS(): UsePOSResult {
     setIsLoading(true);
     setError('');
     try {
-      const { data } = await supabase.from('product').select('*');
-      setProducts((data as Product[]) ?? []);
+      const { data } = await supabase
+        .from('product')
+        .select('*, category(name)')
+        .order('name', { ascending: true });
+      setProducts(((data as unknown) as ProductRow[])?.map(toProduct) ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {

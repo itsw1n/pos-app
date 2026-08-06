@@ -3,17 +3,18 @@ import {
   FlatList,
   Pressable,
   SafeAreaView,
-  ScrollView,
   StyleProp,
   Text,
   TextInput,
   View,
   ViewStyle,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowRight, Settings, ShoppingCart, User } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
+import { CategoryBar } from '../../components/category/CategoryBar';
+import { useCategories } from '../../components/category/useCategories';
 import { Product } from '../../types/entities';
 import { colors, spacing } from '../../theme';
 import { POSStackParamList } from './POSNavigator';
@@ -28,13 +29,14 @@ const ALL_CATEGORIES = 'All';
 
 export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Element {
   const { cart, products, isLoading, error, addToCart, decrementItem, getTotal } = usePOS();
+  const { categories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(products.map((p) => p.category)));
-    return [ALL_CATEGORIES, ...unique];
-  }, [products]);
+  const categoryNames = useMemo(
+    () => categories.map((category) => category.name),
+    [categories]
+  );
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -86,7 +88,7 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
             disabled={!canAdd}
             onPress={() => canAdd && addToCart(item)}
           >
-            <Ionicons name="cart-outline" size={18} color={colors.textSecondary} />
+            <ShoppingCart size={18} color={colors.textSecondary} />
           </Pressable>
         )}
       </View>
@@ -106,12 +108,12 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
       <View style={posScreenStyles.topBar}>
         <View style={posScreenStyles.brandRow}>
           <View style={posScreenStyles.avatar}>
-            <Ionicons name="person" size={18} color={colors.surface} />
+            <User size={18} color={colors.surface} />
           </View>
           <Text style={posScreenStyles.brandName}>Ivory Dolina</Text>
         </View>
         <Pressable>
-          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+          <Settings size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -122,39 +124,13 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
           style={{ marginHorizontal: spacing['2xl'], marginVertical: spacing.md }}
         />
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={posScreenStyles.categoryBar}
-      >
-        {categories.map((category) => {
-          const isActive = category === activeCategory;
-          return (
-            <Pressable
-              key={category}
-              style={[
-                posScreenStyles.categoryTab,
-                isActive ? posScreenStyles.categoryTabActive : null,
-              ]}
-              onPress={() => setActiveCategory(category)}
-            >
-              <Ionicons
-                name="cafe-outline"
-                size={14}
-                color={isActive ? colors.surface : colors.textSecondary}
-              />
-              <Text
-                style={[
-                  posScreenStyles.categoryTabText,
-                  isActive ? posScreenStyles.categoryTabTextActive : null,
-                ]}
-              >
-                {category}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View style={posScreenStyles.categoryWrapper}>
+        <CategoryBar
+          categories={categoryNames}
+          activeCategory={activeCategory}
+          onSelect={setActiveCategory}
+        />
+      </View>
 
       {error ? <Text style={posScreenStyles.errorText}>{error}</Text> : null}
 
@@ -169,7 +145,7 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
       <Pressable style={posScreenStyles.totalBar} onPress={() => navigation.navigate('Cart')}>
         <View style={posScreenStyles.totalBarLeft}>
           <Text style={posScreenStyles.totalBarLabel}>Total</Text>
-          <Ionicons name="arrow-forward" size={16} color={colors.surface} />
+          <ArrowRight size={16} color={colors.surface} />
         </View>
         <Text style={posScreenStyles.totalBarValue}>₱{total.toFixed(2)}</Text>
       </Pressable>

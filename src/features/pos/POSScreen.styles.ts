@@ -53,34 +53,8 @@ export const posScreenStyles = StyleSheet.create({
     color: colors.textPrimary,
     paddingVertical: 0,
   },
-  categoryBar: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing['2xl'],
+  categoryWrapper: {
     marginBottom: spacing.md,
-  },
-  categoryTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginRight: spacing.sm,
-  },
-  categoryTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  categoryTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  categoryTabTextActive: {
-    fontWeight: '600' as const,
-    color: colors.surface,
   },
   loadingContainer: {
     flex: 1,
