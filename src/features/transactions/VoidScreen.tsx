@@ -11,6 +11,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
 import { InputField } from '../../components/common/InputField/InputField';
 import { colors, typography } from '../../theme';
 import { TransactionsStackParamList } from './TransactionsNavigator';
@@ -55,11 +56,16 @@ export function VoidScreen({ navigation, route, style }: VoidScreenProps): React
     >
       <ScrollView contentContainerStyle={voidScreenStyles.content} keyboardShouldPersistTaps="handled">
         <View style={voidScreenStyles.warningBanner}>
-          <Text style={voidScreenStyles.warningTitle}>Confirm Void</Text>
-          <Text style={voidScreenStyles.warningText}>
-            Voiding restores sold quantities back to inventory and excludes this sale from reports.
-            This action cannot be undone.
-          </Text>
+          <View style={voidScreenStyles.bannerIcon}>
+            <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
+          </View>
+          <View style={voidScreenStyles.bannerContent}>
+            <Text style={voidScreenStyles.warningTitle}>Confirm Void</Text>
+            <Text style={voidScreenStyles.warningText}>
+              Voiding restores sold quantities back to inventory and excludes this sale from reports.
+              This action cannot be undone.
+            </Text>
+          </View>
         </View>
 
         <View style={voidScreenStyles.summaryCard}>
