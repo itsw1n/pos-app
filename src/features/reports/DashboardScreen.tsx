@@ -10,7 +10,7 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { DollarSign, Receipt, Settings } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CartesianChart, Bar } from 'victory-native';
@@ -57,6 +57,8 @@ function LowStockRow({ item }: { item: LowStockItem }): React.JSX.Element {
     </View>
   );
 }
+
+const CHART_HEIGHT = 140;
 
 function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Element {
   return (
@@ -114,7 +116,7 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
           </View>
         </View>
         <Pressable onPress={() => navigation.getParent()?.navigate('Settings' as never)}>
-          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+          <Settings size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -126,7 +128,7 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
         <View style={dashboardScreenStyles.summaryRow}>
           <View style={dashboardScreenStyles.summaryCard}>
             <View style={dashboardScreenStyles.iconCircle}>
-              <Ionicons name="cash-outline" size={18} color={colors.primary} />
+              <DollarSign size={18} color={colors.primary} />
             </View>
             <Text style={dashboardScreenStyles.summaryLabel}>Total Revenue</Text>
             <Text style={dashboardScreenStyles.summaryValue}>
@@ -135,7 +137,7 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
           </View>
           <View style={dashboardScreenStyles.summaryCard}>
             <View style={dashboardScreenStyles.iconCircle}>
-              <Ionicons name="receipt-outline" size={18} color={colors.primary} />
+              <Receipt size={18} color={colors.primary} />
             </View>
             <Text style={dashboardScreenStyles.summaryLabel}>Total Orders</Text>
             <Text style={dashboardScreenStyles.summaryValue}>{dashboard?.totalOrders ?? 0}</Text>
@@ -151,7 +153,7 @@ export function DashboardScreen({ navigation, style }: DashboardScreenProps): Re
             xKey="label"
             yKeys={['revenue']}
             orientation="vertical"
-            explicitSize={{ width: chartWidth, height: 140 }}
+            explicitSize={{ width: chartWidth, height: CHART_HEIGHT }}
             xAxis={{
               formatXLabel: (label) => String(label),
               labelColor: colors.textSecondary,
