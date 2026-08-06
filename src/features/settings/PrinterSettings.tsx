@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleProp,
@@ -50,7 +49,6 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
       .then(() => setStatus('Test print sent'))
       .catch(() => {
         setStatus('Test print failed — check the printer connection');
-        Alert.alert('Test print failed', 'Could not reach the printer.');
       });
   };
 
