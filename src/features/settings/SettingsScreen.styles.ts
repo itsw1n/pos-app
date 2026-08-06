@@ -6,21 +6,6 @@ export const settingsScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  topBarSpacer: {
-    width: 22,
-  },
-  topBarTitle: {
-    ...typography.lg,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing['3xl'],

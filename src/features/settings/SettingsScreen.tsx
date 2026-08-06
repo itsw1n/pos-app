@@ -10,6 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import {
   Bell,
   ChevronRight,
@@ -158,11 +159,7 @@ export function SettingsScreen({
 
   return (
     <SafeAreaView style={[styles.container, style]}>
-      <View style={styles.topBar}>
-        <View style={styles.topBarSpacer} />
-        <Text style={styles.topBarTitle}>ElviraCafe POS</Text>
-        <View style={styles.topBarSpacer} />
-      </View>
+      <AppHeader pageTitle="Settings" />
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
