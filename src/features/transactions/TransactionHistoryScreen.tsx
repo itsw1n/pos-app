@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { colors } from '../../theme';
 import { TransactionsStackParamList } from './TransactionsNavigator';
 import { useTransactions, TransactionRecord } from './useTransactions';
@@ -169,9 +170,7 @@ export function TransactionHistoryScreen({
 
   return (
     <SafeAreaView style={[transactionHistoryScreenStyles.container, style]}>
-      <View style={transactionHistoryScreenStyles.topBar}>
-        <Text style={transactionHistoryScreenStyles.topBarTitle}>Transactions</Text>
-      </View>
+      <AppHeader pageTitle="Orders" />
 
       <SearchBar
         placeholder="Search by ID or user"

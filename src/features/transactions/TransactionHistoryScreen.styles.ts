@@ -6,22 +6,9 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  topBarTitle: {
-    ...typography.xl,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-  },
   searchBar: {
     marginHorizontal: spacing['2xl'],
-    marginBottom: spacing.md,
+    marginVertical: spacing.md,
   },
   filterTabs: {
     flexDirection: 'row',
