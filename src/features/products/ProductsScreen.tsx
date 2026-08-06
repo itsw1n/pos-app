@@ -1,9 +1,20 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, StyleProp, Text, View, ViewStyle } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  SectionList,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Button } from '../../components/common/Button/Button';
+import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../theme';
 import { Product } from '../../types/entities';
 import { ProductsStackParamList } from './ProductsNavigator';
 import { useProducts } from './useProducts';
@@ -13,6 +24,13 @@ type ProductsScreenProps = StackScreenProps<ProductsStackParamList, 'Products'> 
   style?: StyleProp<ViewStyle>;
 };
 
+type ProductSection = {
+  title: string;
+  data: Product[];
+};
+
+const ALL_CATEGORIES = 'All';
+
 function formatPeso(value: number): string {
   return `₱${value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -21,15 +39,46 @@ function formatPeso(value: number): string {
 }
 
 export function ProductsScreen({ navigation, style }: ProductsScreenProps): React.JSX.Element {
-  const { role } = useAuth();
-  const { products, isLoading, error, loadProducts, deleteProduct } = useProducts();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { user, role } = useAuth();
+  const { products, isLoading, error, loadProducts } = useProducts();
+  const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
       void loadProducts();
     }, [loadProducts])
   );
+
+  const initials = (user?.username?.[0] ?? '').toUpperCase();
+
+  const categories = useMemo(() => {
+    const unique = Array.from(new Set(products.map((p) => p.category)));
+    return [ALL_CATEGORIES, ...unique];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const byCategory =
+      activeCategory === ALL_CATEGORIES
+        ? products
+        : products.filter((p) => p.category === activeCategory);
+    if (!query) return byCategory;
+    return byCategory.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)
+    );
+  }, [products, activeCategory, searchQuery]);
+
+  const sections = useMemo<ProductSection[]>(() => {
+    const grouped = new Map<string, Product[]>();
+    for (const product of filteredProducts) {
+      const list = grouped.get(product.category) ?? [];
+      list.push(product);
+      grouped.set(product.category, list);
+    }
+    return Array.from(grouped.entries()).map(([title, data]) => ({ title, data }));
+  }, [filteredProducts]);
 
   if (role !== 'admin') {
     return (
@@ -39,80 +88,29 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
     );
   }
 
-  const confirmDelete = (product: Product): void => {
-    Alert.alert(
-      'Delete product',
-      `Remove "${product.name}" from the menu?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setDeletingId(product.product_id);
-            deleteProduct(product.product_id)
-              .catch((err) => {
-                Alert.alert(
-                  'Delete failed',
-                  err instanceof Error ? err.message : 'Could not delete product'
-                );
-              })
-              .finally(() => setDeletingId(null));
-          },
-        },
-      ]
-    );
-  };
-
   const renderItem = ({ item }: { item: Product }): React.JSX.Element => (
-    <View style={productsScreenStyles.itemCard}>
-      <View style={productsScreenStyles.itemHeader}>
-        <View style={productsScreenStyles.itemInfo}>
-          <Text style={productsScreenStyles.itemName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text style={productsScreenStyles.itemCategory}>{item.category}</Text>
-        </View>
-        <View
-          style={[
-            productsScreenStyles.badge,
-            item.is_available
-              ? productsScreenStyles.badgeAvailable
-              : productsScreenStyles.badgeUnavailable,
-          ]}
-        >
-          <Text style={productsScreenStyles.badgeText}>
-            {item.is_available ? 'Available' : 'Unavailable'}
-          </Text>
-        </View>
+    <View style={productsScreenStyles.productRow}>
+      <View style={productsScreenStyles.emojiTile}>
+        <Text style={productsScreenStyles.emojiText}>☕</Text>
       </View>
-      <View style={productsScreenStyles.itemFooter}>
-        <Text style={productsScreenStyles.itemPrice}>{formatPeso(item.price)}</Text>
+      <View style={productsScreenStyles.productInfo}>
+        <Text style={productsScreenStyles.productName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={productsScreenStyles.productPrice}>{formatPeso(item.price)}</Text>
       </View>
-      <View style={productsScreenStyles.actionsRow}>
-        <Button
-          variant="outline"
-          size="small"
-          style={productsScreenStyles.actionButton}
-          onPress={() =>
-            navigation.navigate('AddEditProduct', {
-              product: item,
-            })
-          }
-        >
-          Edit
-        </Button>
-        <Button
-          variant="danger"
-          size="small"
-          style={[productsScreenStyles.actionButton, productsScreenStyles.actionButtonLast]}
-          disabled={deletingId === item.product_id}
-          onPress={() => confirmDelete(item)}
-        >
-          {deletingId === item.product_id ? 'Deleting...' : 'Delete'}
-        </Button>
-      </View>
+      <Pressable
+        hitSlop={8}
+        style={productsScreenStyles.editButton}
+        onPress={() => navigation.navigate('AddEditProduct', { product: item })}
+      >
+        <Ionicons name="pencil-outline" size={16} color={colors.textSecondary} />
+      </Pressable>
     </View>
+  );
+
+  const renderSectionHeader = ({ section }: { section: ProductSection }): React.JSX.Element => (
+    <Text style={productsScreenStyles.sectionHeader}>{section.title}</Text>
   );
 
   if (isLoading && products.length === 0) {
@@ -124,30 +122,64 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
   }
 
   return (
-    <View style={[productsScreenStyles.container, style]}>
-      <View style={productsScreenStyles.content}>
-        <View style={productsScreenStyles.headerRow}>
-          <View>
-            <Text style={productsScreenStyles.headerTitle}>Manage Products</Text>
-            <Text style={productsScreenStyles.headerCaption}>
-              {products.length} product(s) on the menu
-            </Text>
-          </View>
-          <Button
-            size="small"
-            onPress={() => navigation.navigate('AddEditProduct', undefined)}
-          >
-            Add Product
-          </Button>
+    <SafeAreaView style={[productsScreenStyles.container, style]}>
+      <View style={productsScreenStyles.topBar}>
+        <Pressable
+          style={productsScreenStyles.topBarBack}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </Pressable>
+        <Text style={productsScreenStyles.topBarTitle}>Elvira Cafe</Text>
+        <View style={productsScreenStyles.avatar}>
+          <Text style={productsScreenStyles.avatarText}>{initials || '?'}</Text>
         </View>
-
-        {error ? <Text style={productsScreenStyles.errorText}>{error}</Text> : null}
       </View>
 
-      <FlatList
-        data={products}
+      <SearchBar
+        placeholder="Search menu items..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        style={productsScreenStyles.searchBar}
+      />
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={productsScreenStyles.categoryBar}
+      >
+        {categories.map((category) => {
+          const isActive = category === activeCategory;
+          return (
+            <Pressable
+              key={category}
+              style={[
+                productsScreenStyles.categoryTab,
+                isActive ? productsScreenStyles.categoryTabActive : null,
+              ]}
+              onPress={() => setActiveCategory(category)}
+            >
+              <Text
+                style={[
+                  productsScreenStyles.categoryTabText,
+                  isActive ? productsScreenStyles.categoryTabTextActive : null,
+                ]}
+              >
+                {category}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {error ? <Text style={productsScreenStyles.errorText}>{error}</Text> : null}
+
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => String(item.product_id)}
         renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={productsScreenStyles.content}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -156,6 +188,16 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
           </View>
         }
       />
-    </View>
+
+      <Pressable
+        style={({ pressed }) => [
+          productsScreenStyles.fab,
+          pressed ? productsScreenStyles.fabPressed : null,
+        ]}
+        onPress={() => navigation.navigate('AddEditProduct', undefined)}
+      >
+        <Ionicons name="add" size={26} color={colors.surface} />
+      </Pressable>
+    </SafeAreaView>
   );
 }
