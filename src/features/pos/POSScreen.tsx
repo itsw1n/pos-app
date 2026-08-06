@@ -9,8 +9,9 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { ArrowRight, Settings, ShoppingCart, User } from 'lucide-react-native';
+import { ArrowRight, ShoppingCart } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { CategoryBar } from '../../components/category/CategoryBar';
@@ -105,17 +106,7 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
 
   return (
     <SafeAreaView style={[posScreenStyles.container, style]}>
-      <View style={posScreenStyles.topBar}>
-        <View style={posScreenStyles.brandRow}>
-          <View style={posScreenStyles.avatar}>
-            <User size={18} color={colors.surface} />
-          </View>
-          <Text style={posScreenStyles.brandName}>Ivory Dolina</Text>
-        </View>
-        <Pressable>
-          <Settings size={22} color={colors.textSecondary} />
-        </Pressable>
-      </View>
+      <AppHeader pageTitle="Menu" />
 
         <SearchBar
           placeholder="Cari Menu"
@@ -142,7 +133,7 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
         showsVerticalScrollIndicator={false}
       />
 
-      <Pressable style={posScreenStyles.totalBar} onPress={() => navigation.navigate('Cart')}>
+      <Pressable style={posScreenStyles.totalBar} onPress={() => navigation.navigate('Checkout')}>
         <View style={posScreenStyles.totalBarLeft}>
           <Text style={posScreenStyles.totalBarLabel}>Total</Text>
           <ArrowRight size={16} color={colors.surface} />

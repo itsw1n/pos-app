@@ -6,32 +6,6 @@ export const posScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing['2xl'],
-    paddingTop: spacing['2xl'],
-    paddingBottom: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandName: {
-    ...typography.md,
-    color: colors.textPrimary,
-  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
