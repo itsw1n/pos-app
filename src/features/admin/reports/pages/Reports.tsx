@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { colors } from '@/theme';
-import { ReportsStackParamList } from '@/admin/reports/ReportsNavigator';
+import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import {
   useReports,
   ReportPeriod,
@@ -12,7 +12,7 @@ import {
   InventoryReport,
   PaymentModeBreakdown,
   StockLevel,
-} from '@/admin/reports/hooks/useReports';
+} from '@/features/admin/reports/hooks/useReports';
 import { reportsStyles } from './Reports.styles';
 
 type ReportsProps = StackScreenProps<ReportsStackParamList, 'Reports'> & {

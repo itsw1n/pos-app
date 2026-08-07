@@ -111,17 +111,18 @@ Screen (UI only)
 ```
 src/
 ├── app/                  # entry (index.tsx) + navigation (navigation/ + role navigators)
-├── shared/               # cross-role features: login, orders, settings
-│   ├── login/            # Login.tsx + Login.styles.ts
-│   ├── orders/           # Orders, VoidTransaction (pages/ + hooks/ + OrdersNavigator)
-│   └── settings/         # Settings, PrinterSettings, UserManagement (pages/ + hooks/ + SettingsNavigator)
-├── cashier/              # cashier-only features (user actions, not DB entities)
-│   ├── menu/             # Menu, Checkout, Payment, Receipt (pages/ + hooks/ + MenuNavigator)
-│   └── inventory/        # Inventory (view-only)
-├── admin/                # admin-only features
-│   ├── menu-management/  # MenuManagement, AddEditMenuItem (pages/ + components/ + hooks/ + MenuManagementNavigator)
-│   ├── inventory/        # InventoryManagement, StockIn (pages/)
-│   └── reports/          # Dashboard, Reports (pages/ + hooks/ + ReportsNavigator)
+├── features/             # all user-action features, grouped role-first
+│   ├── shared/           # cross-role features: login, orders, settings
+│   │   ├── login/        # Login.tsx + Login.styles.ts
+│   │   ├── orders/       # Orders, VoidTransaction (pages/ + hooks/ + OrdersNavigator)
+│   │   └── settings/     # Settings, PrinterSettings, UserManagement (pages/ + hooks/ + SettingsNavigator)
+│   ├── cashier/          # cashier-only features (user actions, not DB entities)
+│   │   ├── menu/         # Menu, Checkout, Payment, Receipt (pages/ + hooks/ + MenuNavigator)
+│   │   └── inventory/    # Inventory (view-only)
+│   └── admin/            # admin-only features
+│       ├── menu-management/  # MenuManagement, AddEditMenuItem (pages/ + components/ + hooks/ + MenuManagementNavigator)
+│       ├── inventory/        # InventoryManagement, StockIn (pages/)
+│       └── reports/          # Dashboard, Reports (pages/ + hooks/ + ReportsNavigator)
 ├── components/
 │   └── common/           # shared UI: Button, Card, ProductCard, StockBadge, TextField
 │       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
@@ -134,7 +135,7 @@ src/
 └── types/                # entities.ts (6 ERD entities), context.ts, entityNames.ts
 ```
 
-Features are grouped **role-first** (`shared` / `cashier` / `admin`) and named by **user action** (Login, Orders, Menu, MenuManagement, Dashboard), not by DB entity. Import alias `@/*` → `src/*` is configured via tsconfig `paths`. Feature-local hooks live under that feature's `hooks/`; hooks shared across roles live in `src/hooks/`. Navigators for nested feature stacks live alongside their feature (e.g. `admin/menu-management/MenuManagementNavigator.tsx`).
+Features are grouped **role-first** (`features/shared` / `features/cashier` / `features/admin`) and named by **user action** (Login, Orders, Menu, MenuManagement, Dashboard), not by DB entity. Import alias `@/*` → `src/*` is configured via tsconfig `paths`. Feature-local hooks live under that feature's `hooks/`; hooks shared across roles live in `src/hooks/`. Navigators for nested feature stacks live alongside their feature (e.g. `src/features/admin/menu-management/MenuManagementNavigator.tsx`).
 
 `App.tsx` (root) → `src/app/index.tsx` (`App` named export) → providers → `Navigation`.
 

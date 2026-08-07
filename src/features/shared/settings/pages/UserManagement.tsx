@@ -14,7 +14,7 @@ import { TextField } from '@/components/common/TextField/TextField';
 import { useAuth } from '@/context/AuthContext';
 import { colors } from '@/theme';
 import { User } from '@/types/entities';
-import { useUsers } from '@/shared/settings/hooks/useUsers';
+import { useUsers } from '@/features/shared/settings/hooks/useUsers';
 import { userManagementStyles } from './UserManagement.styles';
 
 type UserManagementProps = {

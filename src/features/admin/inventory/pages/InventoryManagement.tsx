@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { StockBadge } from '@/components/common/StockBadge/StockBadge';
 import { colors } from '@/theme';
-import { ReportsStackParamList } from '@/admin/reports/ReportsNavigator';
+import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
 import { inventoryManagementStyles } from './InventoryManagement.styles';
 

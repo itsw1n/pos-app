@@ -18,8 +18,8 @@ import { CategoryBar } from '@/components/common/Category/CategoryBar';
 import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/types/entities';
 import { colors, spacing } from '@/theme';
-import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
-import { useMenu } from '@/cashier/menu/hooks/useMenu';
+import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
+import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
 import { menuStyles } from './Menu.styles';
 
 type MenuProps = StackScreenProps<MenuStackParamList, 'Menu'> & {

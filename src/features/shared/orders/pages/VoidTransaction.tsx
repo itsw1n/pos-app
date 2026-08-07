@@ -14,8 +14,8 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { CircleAlert } from 'lucide-react-native';
 import { InputField } from '@/components/common/InputField/InputField';
 import { colors, typography } from '@/theme';
-import { OrdersStackParamList } from '@/shared/orders/OrdersNavigator';
-import { useOrders } from '@/shared/orders/hooks/useOrders';
+import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
+import { useOrders } from '@/features/shared/orders/hooks/useOrders';
 import { voidScreenStyles } from './VoidTransaction.styles';
 
 type VoidTransactionProps = StackScreenProps<OrdersStackParamList, 'Void'> & {

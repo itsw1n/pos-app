@@ -16,8 +16,8 @@ import { StackScreenProps } from '@react-navigation/stack';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { colors, radius, spacing } from '@/theme';
-import { ReportsStackParamList } from '@/admin/reports/ReportsNavigator';
-import { useReports, LowStockItem, TopProduct, DaySales } from '@/admin/reports/hooks/useReports';
+import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
+import { useReports, LowStockItem, TopProduct, DaySales } from '@/features/admin/reports/hooks/useReports';
 import { dashboardStyles } from './Dashboard.styles';
 
 type DashboardProps = StackScreenProps<ReportsStackParamList, 'Dashboard'> & {

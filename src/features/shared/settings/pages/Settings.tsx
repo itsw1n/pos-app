@@ -25,9 +25,9 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-import { useOrders } from '@/shared/orders/hooks/useOrders';
+import { useOrders } from '@/features/shared/orders/hooks/useOrders';
 import { colors } from '@/theme';
-import { SettingsStackParamList } from '@/shared/settings/SettingsNavigator';
+import { SettingsStackParamList } from '@/features/shared/settings/SettingsNavigator';
 import { settingsScreenStyles as styles } from './Settings.styles';
 
 type SettingsProps = StackScreenProps<SettingsStackParamList, 'SettingsHome'> & {

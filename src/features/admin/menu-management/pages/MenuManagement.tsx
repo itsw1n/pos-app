@@ -22,9 +22,9 @@ import { useAuth } from '@/context/AuthContext';
 import { toErrorMessage } from '@/services/errors';
 import { colors } from '@/theme';
 import { Category, Product } from '@/types/entities';
-import { MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
-import { AddCategoryModal } from '@/admin/menu-management/components/AddCategoryModal';
-import { useMenuManagement } from '@/admin/menu-management/hooks/useMenuManagement';
+import { MenuManagementStackParamList } from '@/features/admin/menu-management/MenuManagementNavigator';
+import { AddCategoryModal } from '@/features/admin/menu-management/components/AddCategoryModal';
+import { useMenuManagement } from '@/features/admin/menu-management/hooks/useMenuManagement';
 import { menuManagementStyles } from './MenuManagement.styles';
 
 type MenuManagementProps = StackScreenProps<MenuManagementStackParamList, 'MenuManagement'> & {

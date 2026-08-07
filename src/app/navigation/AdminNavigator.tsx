@@ -2,10 +2,10 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Box, ChartColumn, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
 import { TabBarIcon } from '@/components/common/TabBarIcon/TabBarIcon';
-import { MenuManagementNavigator } from '@/admin/menu-management/MenuManagementNavigator';
-import { OrdersNavigator } from '@/shared/orders/OrdersNavigator';
-import { ReportsNavigator } from '@/admin/reports/ReportsNavigator';
-import { SettingsNavigator } from '@/shared/settings/SettingsNavigator';
+import { MenuManagementNavigator } from '@/features/admin/menu-management/MenuManagementNavigator';
+import { OrdersNavigator } from '@/features/shared/orders/OrdersNavigator';
+import { ReportsNavigator } from '@/features/admin/reports/ReportsNavigator';
+import { SettingsNavigator } from '@/features/shared/settings/SettingsNavigator';
 import { colors } from '@/theme';
 
 const Tabs = createBottomTabNavigator();

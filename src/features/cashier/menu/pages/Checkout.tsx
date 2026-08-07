@@ -13,8 +13,8 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { QtyControls } from '@/components/common/QtyControls/QtyControls';
 import { colors } from '@/theme';
-import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
-import { useMenu } from '@/cashier/menu/hooks/useMenu';
+import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
+import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
 import { checkoutStyles } from './Checkout.styles';
 
 type CheckoutProps = StackScreenProps<MenuStackParamList, 'Checkout'> & {

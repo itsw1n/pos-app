@@ -14,7 +14,7 @@ import { generateReceipt, shareReceipt } from '@/services/receiptService';
 import { printReceipt } from '@/services/printerService';
 import { POSTransaction } from '@/types/context';
 import { colors } from '@/theme';
-import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
+import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
 import { receiptStyles } from './Receipt.styles';
 
 type ReceiptProps = StackScreenProps<MenuStackParamList, 'Receipt'> & {

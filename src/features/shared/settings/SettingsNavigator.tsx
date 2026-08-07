@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { colors, typography } from '@/theme';
-import { MenuManagementNavigator, MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
+import { MenuManagementNavigator, MenuManagementStackParamList } from '@/features/admin/menu-management/MenuManagementNavigator';
 import { Settings } from './pages/Settings';
 import { PrinterSettings } from './pages/PrinterSettings';
 import { UserManagement } from './pages/UserManagement';

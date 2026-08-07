@@ -23,8 +23,8 @@ import {
 import { InputField } from '@/components/common/InputField/InputField';
 import { PaymentMode } from '@/types/context';
 import { colors, typography } from '@/theme';
-import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
-import { useMenu } from '@/cashier/menu/hooks/useMenu';
+import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
+import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
 import { paymentStyles } from './Payment.styles';
 
 type PaymentProps = StackScreenProps<MenuStackParamList, 'Payment'> & {

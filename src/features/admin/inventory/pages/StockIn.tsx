@@ -13,7 +13,7 @@ import {
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { colors } from '@/theme';
-import { ReportsStackParamList } from '@/admin/reports/ReportsNavigator';
+import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import { useInventory } from '@/hooks/useInventory';
 import { stockInStyles } from './StockIn.styles';
 

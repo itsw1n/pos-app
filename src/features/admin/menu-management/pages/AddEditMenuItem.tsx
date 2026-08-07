@@ -22,8 +22,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
 import { toErrorMessage } from '@/services/errors';
 import { colors } from '@/theme';
-import { MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
-import { useMenuManagement } from '@/admin/menu-management/hooks/useMenuManagement';
+import { MenuManagementStackParamList } from '@/features/admin/menu-management/MenuManagementNavigator';
+import { useMenuManagement } from '@/features/admin/menu-management/hooks/useMenuManagement';
 import { addEditMenuItemStyles } from './AddEditMenuItem.styles';
 
 type AddEditMenuItemProps = StackScreenProps<
