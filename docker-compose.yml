@@ -49,6 +49,15 @@ services:
       - .:/app:delegated
     command: ['npm', 'run', 'typecheck']
 
+  lint:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    volumes:
+      - .:/app:delegated
+    command: ['npm', 'run', 'lint']
+
   build:
     build:
       context: .

@@ -36,10 +36,23 @@ npm install              # install deps
 npm start                # expo start (Metro)
 npm run android          # expo start --android
 npx tsc --noEmit         # typecheck (MUST pass before committing — zero errors, no `any`)
+npx expo lint            # ESLint (eslint-config-expo, flat config) + Prettier via eslint-plugin-prettier
+npx prettier --write .   # format the whole codebase
+npx prettier --check .   # verify formatting
 npx expo export --platform android   # verify the Metro bundle actually builds
 ```
 
-There is no configured linter — `tsc --noEmit` is the gate.
+**Quality gates (all must pass before committing):** `npm run typecheck`
+(`tsc --noEmit`), `npm run lint` (`expo lint`), and `npm run format:check`
+(`prettier --check`). Config lives in `eslint.config.js`, `.prettierrc`
+(`singleQuote: true`), and `.prettierignore`.
+
+> Two React 19 hooks rules are intentionally scoped-off with per-line
+> `eslint-disable` comments where the code uses canonical patterns the new
+> rules can't express: initial async data loads in effects
+> (`react-hooks/set-state-in-effect` in `useOrders`/`useMenu`/`useReports`) and
+> the `AddCategoryModal` form reset. Keep new code rule-clean; only add a
+> disable when the pattern is genuinely load-on-mount/UI-reset.
 
 ---
 
@@ -73,6 +86,9 @@ make dev          # expo start against the development env
 make seed         # apply schema + upsert demo data into the configured DB
 make reset        # drop + recreate schema, then seed
 make typecheck    # npx tsc --noEmit
+make lint         # npx expo lint
+make format       # npx prettier --write .
+make format-check # npx prettier --check .
 make build        # npx expo export --platform android (mobile-only)
 ```
 
@@ -85,7 +101,7 @@ AuthContext signs in with `email: username`.
 The database is NOT containerized; Docker runs the Node tooling:
 
 ```
-make docker-seed / docker-reset / docker-typecheck / docker-build
+make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
 ```
 
 ---
@@ -301,6 +317,8 @@ all integration happens on `dev`.
 **CI (`ci.yml`)** — runs on every PR to `main`/`dev` and on pushes to both:
 
 - `npm run typecheck` (`tsc --noEmit`) — must pass.
+- `npm run lint` (`expo lint`) and `npm run format:check` (`prettier --check`)
+  — must pass.
 - `npm run build` (`expo export --platform android`) — verifies the Metro
   bundle. Uses dummy `EXPO_PUBLIC_*` values in CI; real values only ship via
   git-ignored `.env.*` at runtime.
@@ -319,8 +337,8 @@ to `main`:
 
 1. Add a rule for `main` and one for `dev`.
 2. Enable: "Require a pull request before merging" (1 approval, `dismiss stale`).
-3. Enable: "Require status checks to pass before merging" → select `Typecheck`
-   and `Android bundle`.
+3. Enable: "Require status checks to pass before merging" → select `Typecheck`,
+   `Lint & format`, and `Android bundle`.
 4. Enable: "Do not allow bypassing"; set "Restrict who can push" to your team
    (or keep admins as exception deliberately).
 5. Optionally enable "Do not allow force pushes" on `dev`.
