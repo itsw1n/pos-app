@@ -10,32 +10,6 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     marginHorizontal: spacing['2xl'],
     marginVertical: spacing.md,
   },
-  filterTabs: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing['2xl'],
-    marginBottom: spacing.md,
-  },
-  filterTab: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginRight: spacing.sm,
-  },
-  filterTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  filterTabTextActive: {
-    fontWeight: '600' as const,
-    color: colors.surface,
-  },
   summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',

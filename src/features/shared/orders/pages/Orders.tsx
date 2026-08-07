@@ -20,6 +20,11 @@ import {
 } from '@/features/shared/orders/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
+import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
+import {
+  DateFilter,
+  matchesDateFilter,
+} from '@/components/common/DateFilter/types';
 import { transactionHistoryScreenStyles } from './Orders.styles';
 
 type OrdersProps = StackScreenProps<OrdersStackParamList, 'OrdersHome'> & {
@@ -32,15 +37,6 @@ const PAYMENT_MODE_LABEL: Record<TransactionRecord['payment_mode'], string> = {
   maya: 'Maya',
 };
 
-const DATE_FILTERS: { key: string; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'today', label: 'Today' },
-  { key: 'week', label: 'This Week' },
-  { key: 'month', label: 'This Month' },
-];
-
-type DateFilterKey = 'all' | 'today' | 'week' | 'month';
-
 function formatDate(date: string): string {
   return new Date(date).toLocaleString();
 }
@@ -52,28 +48,11 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-function getDateBoundary(filter: DateFilterKey): number {
-  const now = new Date();
-  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (filter === 'today') return day.getTime();
-  if (filter === 'week') {
-    const offset = (day.getDay() + 6) % 7;
-    return new Date(
-      day.getFullYear(),
-      day.getMonth(),
-      day.getDate() - offset,
-    ).getTime();
-  }
-  if (filter === 'month')
-    return new Date(day.getFullYear(), day.getMonth(), 1).getTime();
-  return 0;
-}
-
 export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
   const { transactions, isLoading, error, loadTransactions } = useOrders();
   const { role } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState<DateFilterKey>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilter>({ type: 'all' });
 
   useFocusEffect(
     useCallback(() => {
@@ -83,13 +62,9 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
 
   const filteredTransactions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const boundary = getDateBoundary(dateFilter);
-    const dateFiltered =
-      dateFilter === 'all'
-        ? transactions
-        : transactions.filter(
-            (item) => new Date(item.date).getTime() >= boundary,
-          );
+    const dateFiltered = transactions.filter((item) =>
+      matchesDateFilter(dateFilter, new Date(item.date)),
+    );
     if (!query) return dateFiltered;
     return dateFiltered.filter(
       (item) =>
@@ -204,34 +179,7 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
         style={transactionHistoryScreenStyles.searchBar}
       />
 
-      <View style={transactionHistoryScreenStyles.filterTabs}>
-        {DATE_FILTERS.map((filter) => {
-          const isActive = filter.key === dateFilter;
-          return (
-            <Pressable
-              key={filter.key}
-              style={[
-                transactionHistoryScreenStyles.filterTab,
-                isActive
-                  ? transactionHistoryScreenStyles.filterTabActive
-                  : null,
-              ]}
-              onPress={() => setDateFilter(filter.key as DateFilterKey)}
-            >
-              <Text
-                style={[
-                  transactionHistoryScreenStyles.filterTabText,
-                  isActive
-                    ? transactionHistoryScreenStyles.filterTabTextActive
-                    : null,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <DateFilterPicker value={dateFilter} onChange={setDateFilter} />
 
       <View style={transactionHistoryScreenStyles.summaryBar}>
         <View style={transactionHistoryScreenStyles.summaryBlock}>
