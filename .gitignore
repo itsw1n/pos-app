@@ -47,5 +47,8 @@ yarn-error.*
 .vscode/
 .superpowers/
 
+# Supabase CLI link cache
+supabase/.temp/
+
 # editor lock files
 .~lock.*#
