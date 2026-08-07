@@ -154,6 +154,9 @@ export const productsScreenStyles = StyleSheet.create({
     fontWeight: '600' as const,
     color: colors.textPrimary,
   },
+  fabMenuOptionTitleDanger: {
+    color: colors.danger,
+  },
   fabMenuOptionCaption: {
     ...typography.sm,
     color: colors.textSecondary,

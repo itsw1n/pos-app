@@ -9,16 +9,19 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Pencil, Plus, Tags, UtensilsCrossed } from 'lucide-react-native';
+import { Pencil, Plus, Tags, Trash2, UtensilsCrossed } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '../../components/common/AppHeader/AppHeader';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { CategoryBar } from '../../components/common/Category/CategoryBar';
+import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
 import { useCategories } from '../../components/common/Category/useCategories';
 import { useAuth } from '../../context/AuthContext';
+import { toErrorMessage } from '../../services/errors';
 import { colors } from '../../theme';
-import { Product } from '../../types/entities';
+import { Category, Product } from '../../types/entities';
 import { ProductsStackParamList } from './ProductsNavigator';
 import { AddCategoryModal } from './AddCategoryModal';
 import { useProducts } from './useProducts';
@@ -45,11 +48,15 @@ function formatPeso(value: number): string {
 export function ProductsScreen({ navigation, style }: ProductsScreenProps): React.JSX.Element {
   const { role } = useAuth();
   const { products, isLoading, error, loadProducts } = useProducts();
-  const { categories, loadCategories, createCategory } = useCategories();
+  const { categories, loadCategories, createCategory, deleteCategory } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
   const [fabMenuVisible, setFabMenuVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [deletePickerVisible, setDeletePickerVisible] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -93,6 +100,36 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
     },
     [createCategory]
   );
+
+  const handleCategorySelectedToDelete = useCallback(
+    (categoryId: string, _name: string): void => {
+      setDeletePickerVisible(false);
+      const category = categories.find((item) => item.category_id === categoryId);
+      if (category) {
+        setCategoryToDelete(category);
+        setDeleteError('');
+      }
+    },
+    [categories]
+  );
+
+  const handleConfirmDelete = useCallback(async (): Promise<void> => {
+    if (!categoryToDelete || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      await deleteCategory(categoryToDelete.category_id);
+      setCategoryToDelete(null);
+      setActiveCategory((current) =>
+        current === categoryToDelete.name ? ALL_CATEGORIES : current
+      );
+      void loadProducts();
+    } catch (err) {
+      setDeleteError(toErrorMessage(err, 'Failed to delete category'));
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [categoryToDelete, isDeleting, deleteCategory, loadProducts]);
 
   if (role !== 'admin') {
     return (
@@ -231,6 +268,34 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
                 </Text>
               </View>
             </Pressable>
+            <View style={productsScreenStyles.fabMenuDivider} />
+            <Pressable
+              style={({ pressed }) => [
+                productsScreenStyles.fabMenuOption,
+                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+              ]}
+              onPress={() => {
+                setFabMenuVisible(false);
+                setDeletePickerVisible(true);
+              }}
+            >
+              <View style={productsScreenStyles.fabMenuOptionIcon}>
+                <Trash2 size={20} color={colors.danger} />
+              </View>
+              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
+                <Text
+                  style={[
+                    productsScreenStyles.fabMenuOptionTitle,
+                    productsScreenStyles.fabMenuOptionTitleDanger,
+                  ]}
+                >
+                  Delete Category
+                </Text>
+                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+                  Remove a category and unlink its products
+                </Text>
+              </View>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>
@@ -239,6 +304,32 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         visible={categoryModalVisible}
         onClose={() => setCategoryModalVisible(false)}
         onSubmit={handleAddCategory}
+      />
+
+      <CategoryPickerModal
+        visible={deletePickerVisible}
+        categories={categories}
+        title="Delete Category"
+        onClose={() => setDeletePickerVisible(false)}
+        onSelect={handleCategorySelectedToDelete}
+      />
+
+      <ConfirmDialog
+        visible={categoryToDelete !== null}
+        title={categoryToDelete ? `Delete "${categoryToDelete.name}"?` : ''}
+        message={
+          deleteError
+            ? deleteError
+            : 'Products in this category will move to "Uncategorized".'
+        }
+        confirmLabel="Delete"
+        destructive
+        isLoading={isDeleting}
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          setCategoryToDelete(null);
+          setDeleteError('');
+        }}
       />
     </SafeAreaView>
   );
