@@ -96,27 +96,12 @@ export function useInventory(): UseInventoryResult {
       const date = new Date().toISOString();
       const { isConnected } = await NetInfo.fetch();
       if (isConnected) {
-        const { data: current } = await supabase
-          .from('inventory')
-          .select('quantity')
-          .eq('stock_id', payload.stockId)
-          .maybeSingle();
-        const currentQuantity = (current?.quantity as number | undefined) ?? 0;
-        const { error: updateError } = await supabase
-          .from('inventory')
-          .update({ quantity: currentQuantity + payload.quantity })
-          .eq('stock_id', payload.stockId);
-        if (updateError) throw updateError;
-        const { error: movementError } = await supabase
-          .from('stock_movements')
-          .insert({
-            stock_id: payload.stockId,
-            type: 'in',
-            quantity: payload.quantity,
-            date,
-            supplier: payload.supplier ?? null,
-          });
-        if (movementError) throw movementError;
+        const { error: adjustError } = await supabase.rpc('adjust_stock', {
+          p_stock_id: payload.stockId,
+          p_quantity: payload.quantity,
+          p_supplier: payload.supplier ?? null,
+        });
+        if (adjustError) throw adjustError;
       } else {
         await saveToSQLite('stock_movements', {
           stock_id: payload.stockId,
@@ -124,6 +109,7 @@ export function useInventory(): UseInventoryResult {
           quantity: payload.quantity,
           date,
           supplier: payload.supplier ?? '',
+          synced: false,
         });
       }
       await loadInventory();

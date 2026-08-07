@@ -168,43 +168,10 @@ export function useOrders(): UseTransactionsResult {
       setIsVoiding(true);
       setError('');
       try {
-        const { data: items, error: itemsError } = await supabase
-          .from('transaction_items')
-          .select('*')
-          .eq('transaction_id', transactionId);
-        if (itemsError) throw itemsError;
-
-        for (const item of (items as TransactionItem[]) ?? []) {
-          const { data: inventory, error: inventoryError } = await supabase
-            .from('inventory')
-            .select('stock_id, quantity')
-            .eq('product_id', item.product_id)
-            .maybeSingle();
-          if (inventoryError) throw inventoryError;
-          if (!inventory) continue;
-
-          const currentQuantity = (inventory.quantity as number) ?? 0;
-          const { error: updateError } = await supabase
-            .from('inventory')
-            .update({ quantity: currentQuantity + item.quantity })
-            .eq('stock_id', inventory.stock_id);
-          if (updateError) throw updateError;
-
-          const { error: movementError } = await supabase
-            .from('stock_movements')
-            .insert({
-              stock_id: inventory.stock_id,
-              type: 'in',
-              quantity: item.quantity,
-              date: new Date().toISOString(),
-            });
-          if (movementError) throw movementError;
-        }
-
-        const { error: voidError } = await supabase
-          .from('transactions')
-          .update({ status: 'voided', void_reason: trimmedReason })
-          .eq('id', transactionId);
+        const { error: voidError } = await supabase.rpc('void_sale', {
+          p_transaction_id: transactionId,
+          p_reason: trimmedReason,
+        });
         if (voidError) throw voidError;
 
         await loadTransactions();
