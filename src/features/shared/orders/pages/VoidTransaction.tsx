@@ -16,6 +16,7 @@ import { InputField } from '@/components/common/InputField/InputField';
 import { colors, typography } from '@/theme';
 import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
 import { useOrders } from '@/features/shared/orders/hooks/useOrders';
+import { formatOrderNumber } from '@/utils/orderNumber';
 import { voidScreenStyles } from './VoidTransaction.styles';
 
 type VoidTransactionProps = StackScreenProps<OrdersStackParamList, 'Void'> & {
@@ -34,8 +35,13 @@ export function VoidTransaction({
   route,
   style,
 }: VoidTransactionProps): React.JSX.Element {
-  const { transactionId, date, total } = route.params;
+  const { transactionId, order_number, date, total } = route.params;
   const { isVoiding, voidTransaction } = useOrders();
+
+  const orderLabel = useMemo(
+    () => formatOrderNumber(order_number, transactionId),
+    [order_number, transactionId],
+  );
 
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
@@ -69,7 +75,7 @@ export function VoidTransaction({
             <CircleAlert size={18} color={colors.danger} />
           </View>
           <View style={voidScreenStyles.bannerContent}>
-            <Text style={voidScreenStyles.warningTitle}>Confirm Void</Text>
+            <Text style={voidScreenStyles.warningTitle}>Void {orderLabel}</Text>
             <Text style={voidScreenStyles.warningText}>
               Voiding restores sold quantities back to inventory and excludes
               this sale from reports. This action cannot be undone.

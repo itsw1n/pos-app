@@ -23,6 +23,7 @@ import { printReceipt } from '@/services/printerService';
 import { POSTransaction } from '@/types/context';
 import { colors } from '@/theme';
 import { BUSINESS } from '@/constants/business';
+import { formatOrderNumber } from '@/utils/orderNumber';
 import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
 import { receiptStyles } from './Receipt.styles';
 
@@ -149,7 +150,7 @@ export function Receipt({
 
           <View style={receiptStyles.receiptMeta}>
             <Text style={receiptStyles.receiptMetaText}>
-              Order #{transaction.id.slice(0, 4).toUpperCase()}
+              {formatOrderNumber(transaction.order_number, transaction.id)}
             </Text>
             <Text style={receiptStyles.receiptMetaText}>
               {formatDate(transaction.date)}
