@@ -6,7 +6,6 @@ const eslintPluginPrettierRecommended = require('eslint-plugin-prettier/recommen
 module.exports = defineConfig([
   globalIgnores([
     'dist/*',
-    'IPSS_CodingGuide.jsx',
     '.superpowers/**',
     'supabase/functions/**',
   ]),
