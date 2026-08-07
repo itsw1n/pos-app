@@ -7,7 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Reports } from './pages/Reports';
 
 export type ReportsStackParamList = {
-  Dashboard: undefined;
+  DashboardHome: undefined;
   Reports: undefined;
   Inventory: undefined;
   StockIn: {
@@ -30,7 +30,7 @@ export function ReportsNavigator(): React.JSX.Element {
       }}
     >
       <Stack.Screen
-        name="Dashboard"
+        name="DashboardHome"
         component={Dashboard}
         options={{ title: 'Dashboard', headerShown: false }}
       />

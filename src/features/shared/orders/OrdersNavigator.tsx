@@ -5,7 +5,7 @@ import { Orders } from './pages/Orders';
 import { VoidTransaction } from './pages/VoidTransaction';
 
 export type OrdersStackParamList = {
-  Orders: undefined;
+  OrdersHome: undefined;
   Void: {
     transactionId: string;
     date: string;
@@ -25,7 +25,7 @@ export function OrdersNavigator(): React.JSX.Element {
       }}
     >
       <Stack.Screen
-        name="Orders"
+        name="OrdersHome"
         component={Orders}
         options={{ title: 'Orders', headerShown: false }}
       />

@@ -21,7 +21,7 @@ import { transactionHistoryScreenStyles } from './Orders.styles';
 
 type OrdersProps = StackScreenProps<
   OrdersStackParamList,
-  'Orders'
+  'OrdersHome'
 > & {
   style?: StyleProp<ViewStyle>;
 };

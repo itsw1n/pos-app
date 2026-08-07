@@ -22,7 +22,7 @@ import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
 import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
 import { menuStyles } from './Menu.styles';
 
-type MenuProps = StackScreenProps<MenuStackParamList, 'Menu'> & {
+type MenuProps = StackScreenProps<MenuStackParamList, 'MenuHome'> & {
   style?: StyleProp<ViewStyle>;
 };
 

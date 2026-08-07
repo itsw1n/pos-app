@@ -20,7 +20,7 @@ import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator
 import { useReports, LowStockItem, TopProduct, DaySales } from '@/features/admin/reports/hooks/useReports';
 import { dashboardStyles } from './Dashboard.styles';
 
-type DashboardProps = StackScreenProps<ReportsStackParamList, 'Dashboard'> & {
+type DashboardProps = StackScreenProps<ReportsStackParamList, 'DashboardHome'> & {
   style?: StyleProp<ViewStyle>;
 };
 

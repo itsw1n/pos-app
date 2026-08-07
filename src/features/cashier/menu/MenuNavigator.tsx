@@ -8,7 +8,7 @@ import { Menu } from './pages/Menu';
 import { Receipt } from './pages/Receipt';
 
 export type MenuStackParamList = {
-  Menu: undefined;
+  MenuHome: undefined;
   Checkout: undefined;
   Payment: { paymentMode: PaymentMode };
   Receipt: { transaction: POSTransaction };
@@ -25,7 +25,7 @@ export function MenuNavigator(): React.JSX.Element {
         headerTintColor: colors.primary,
       }}
     >
-      <Stack.Screen name="Menu" component={Menu} options={{ title: 'Menu', headerShown: false }} />
+      <Stack.Screen name="MenuHome" component={Menu} options={{ title: 'Menu', headerShown: false }} />
       <Stack.Screen name="Checkout" component={Checkout} options={{ title: 'Checkout', headerShown: false }} />
       <Stack.Screen name="Payment" component={Payment} options={{ title: 'Payment', headerShown: false }} />
       <Stack.Screen name="Receipt" component={Receipt} options={{ title: 'Receipt', headerShown: false }} />
