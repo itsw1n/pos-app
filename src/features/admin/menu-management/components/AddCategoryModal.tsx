@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { TextField } from '@/components/common/TextField/TextField';
-import { colors } from '@/theme';
 import { addCategoryModalStyles } from './AddCategoryModal.styles';
 
 interface AddCategoryModalProps {
@@ -21,6 +20,7 @@ export function AddCategoryModal({
 
   useEffect(() => {
     if (visible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset form when the modal opens
       setName('');
       setError('');
       setIsSubmitting(false);

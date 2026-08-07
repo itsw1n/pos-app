@@ -361,6 +361,7 @@ export function useReports(): UseReportsResult {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial async data load from Supabase
     void loadDashboard();
   }, [loadDashboard]);
 

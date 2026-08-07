@@ -25,7 +25,7 @@ type InventoryManagementProps = StackScreenProps<
 
 type FilterKey = 'all' | 'low' | 'critical';
 
-const FILTERS: Array<{ key: FilterKey; label: string }> = [
+const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'low', label: 'Low Stock' },
   { key: 'critical', label: 'Critical' },

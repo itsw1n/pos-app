@@ -32,7 +32,7 @@ const PAYMENT_MODE_LABEL: Record<TransactionRecord['payment_mode'], string> = {
   maya: 'Maya',
 };
 
-const DATE_FILTERS: Array<{ key: string; label: string }> = [
+const DATE_FILTERS: { key: string; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'today', label: 'Today' },
   { key: 'week', label: 'This Week' },

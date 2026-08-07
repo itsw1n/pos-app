@@ -3,7 +3,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { supabase } from '@/services/supabase';
 import { saveToSQLite } from '@/services/sqlite';
 import { ProductRow, toProduct } from '@/services/catalog';
-import { Inventory, Product } from '@/types/entities';
+import { Inventory } from '@/types/entities';
 
 export type StockStatus = 'ok' | 'low' | 'critical';
 

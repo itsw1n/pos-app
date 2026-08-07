@@ -80,8 +80,7 @@ export function useOrders(): UseTransactionsResult {
           );
         if (!itemsError) {
           itemsCount = new Map<string, number>();
-          for (const item of (items as Array<{ transaction_id: string }>) ??
-            []) {
+          for (const item of (items as { transaction_id: string }[]) ?? []) {
             itemsCount.set(
               item.transaction_id,
               (itemsCount.get(item.transaction_id) ?? 0) + 1,
@@ -94,7 +93,7 @@ export function useOrders(): UseTransactionsResult {
         .from('user')
         .select('user_id, username');
       const userById = new Map(
-        ((users as Array<{ user_id: number; username: string }>) ?? []).map(
+        ((users as { user_id: number; username: string }[]) ?? []).map(
           (row) => [row.user_id, row.username],
         ),
       );
@@ -222,6 +221,7 @@ export function useOrders(): UseTransactionsResult {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial async data load from Supabase
     void loadTransactions();
   }, [loadTransactions]);
 

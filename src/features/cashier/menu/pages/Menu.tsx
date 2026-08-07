@@ -5,7 +5,6 @@ import {
   SafeAreaView,
   StyleProp,
   Text,
-  TextInput,
   View,
   ViewStyle,
 } from 'react-native';

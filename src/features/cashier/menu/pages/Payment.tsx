@@ -31,11 +31,11 @@ type PaymentProps = StackScreenProps<MenuStackParamList, 'Payment'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PAYMENT_METHODS: Array<{
+const PAYMENT_METHODS: {
   value: PaymentMode;
   label: string;
   icon: LucideIcon;
-}> = [
+}[] = [
   { value: 'cash', label: 'Cash', icon: Banknote },
   { value: 'gcash', label: 'GCash', icon: Smartphone },
   { value: 'maya', label: 'Maya', icon: Wallet },

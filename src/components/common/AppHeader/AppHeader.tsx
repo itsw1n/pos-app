@@ -7,7 +7,7 @@ import {
 } from '@react-navigation/native';
 import { Coffee } from 'lucide-react-native';
 import { useAuth } from '../../../context/AuthContext';
-import { colors, spacing, typography } from '../../../theme';
+import { colors } from '../../../theme';
 import { appHeaderStyles as styles } from './AppHeader.styles';
 
 interface AppHeaderProps {

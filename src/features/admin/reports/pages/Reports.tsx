@@ -28,7 +28,7 @@ type ReportsProps = StackScreenProps<ReportsStackParamList, 'Reports'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PERIODS: Array<{ key: ReportPeriod; label: string }> = [
+const PERIODS: { key: ReportPeriod; label: string }[] = [
   { key: 'daily', label: 'Daily' },
   { key: 'weekly', label: 'Weekly' },
   { key: 'monthly', label: 'Monthly' },

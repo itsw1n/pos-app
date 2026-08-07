@@ -6,7 +6,7 @@ export interface ReceiptData {
   total_amount: number;
   payment_mode: string;
   date: string;
-  items: Array<{ name: string; quantity: number; subtotal: number }>;
+  items: { name: string; quantity: number; subtotal: number }[];
 }
 
 export async function generateReceipt(

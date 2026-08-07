@@ -13,8 +13,7 @@ import {
 import { Eye, EyeOff, Lock, User } from 'lucide-react-native';
 import { InputField } from '@/components/common/InputField/InputField';
 import { useAuth } from '@/context/AuthContext';
-import { colors } from '@/theme';
-import { radius } from '@/theme';
+import { colors, radius } from '@/theme';
 import { loginScreenStyles } from './Login.styles';
 
 interface LoginScreenProps {

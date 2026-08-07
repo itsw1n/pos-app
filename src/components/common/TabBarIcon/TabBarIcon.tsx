@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, StyleProp, View, ViewStyle } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { tabBarIconStyles as styles } from './TabBarIcon.styles';
@@ -18,7 +18,7 @@ export function TabBarIcon({
   size,
   style,
 }: TabBarIconProps): React.JSX.Element {
-  const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const [progress] = useState(() => new Animated.Value(focused ? 1 : 0));
 
   useEffect(() => {
     Animated.timing(progress, {
