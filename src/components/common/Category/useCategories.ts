@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '../../../services/supabase';
-import { CategoryRow, toCategory } from '../../../services/catalog';
+import { CategoryRow, toCategory, UNCATEGORIZED } from '../../../services/catalog';
 import { Category } from '../../../types/entities';
 
 let sharedCache: Category[] | null = null;
@@ -11,6 +11,7 @@ export interface UseCategoriesResult {
   error: string;
   loadCategories: (force?: boolean) => Promise<void>;
   createCategory: (name: string) => Promise<Category>;
+  deleteCategory: (categoryId: string) => Promise<void>;
   invalidate: () => void;
 }
 
@@ -63,5 +64,61 @@ export function useCategories(): UseCategoriesResult {
     return category;
   }, []);
 
-  return { categories, isLoading, error, loadCategories, createCategory, invalidate };
+  const deleteCategory = useCallback(async (categoryId: string): Promise<void> => {
+    const target = sharedCache?.find((category) => category.category_id === categoryId);
+    if (!target) return;
+    if (target.name === UNCATEGORIZED) {
+      throw new Error(`The ${UNCATEGORIZED} category cannot be deleted`);
+    }
+
+    let { data: uncategorized, error: uncatError } = await supabase
+      .from('category')
+      .select('*')
+      .eq('name', UNCATEGORIZED)
+      .maybeSingle();
+    if (uncatError) throw uncatError;
+
+    if (!uncategorized) {
+      const insert = await supabase
+        .from('category')
+        .insert({ name: UNCATEGORIZED })
+        .select()
+        .single();
+      if (insert.error) throw insert.error;
+      uncategorized = insert.data;
+    }
+
+    const uncategorizedId = (uncategorized as CategoryRow).category_id;
+
+    const { error: reassignError } = await supabase
+      .from('product')
+      .update({ category_id: uncategorizedId })
+      .eq('category_id', categoryId);
+    if (reassignError) throw reassignError;
+
+    const { error: deleteError } = await supabase
+      .from('category')
+      .delete()
+      .eq('category_id', categoryId);
+    if (deleteError) throw deleteError;
+
+    const remaining = (sharedCache ?? []).filter(
+      (category) => category.category_id !== categoryId
+    );
+    if (!remaining.some((category) => category.category_id === uncategorizedId)) {
+      remaining.unshift(toCategory(uncategorized as CategoryRow));
+    }
+    sharedCache = remaining;
+    setCategories(sharedCache);
+  }, []);
+
+  return {
+    categories,
+    isLoading,
+    error,
+    loadCategories,
+    createCategory,
+    deleteCategory,
+    invalidate,
+  };
 }
