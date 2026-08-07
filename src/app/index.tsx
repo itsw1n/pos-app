@@ -10,7 +10,13 @@ import {
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary/ErrorBoundary';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Navigation } from '@/app/navigation/Navigation';
+
+function OfflineSyncGate(): null {
+  useOfflineSync();
+  return null;
+}
 
 function FontGate({
   children,
@@ -36,6 +42,7 @@ export function App(): React.JSX.Element {
       <FontGate>
         <AuthProvider>
           <CartProvider>
+            <OfflineSyncGate />
             <Navigation />
             <StatusBar style="auto" />
           </CartProvider>

@@ -43,9 +43,34 @@ export async function initDb(): Promise<void> {
       type TEXT NOT NULL,
       quantity INTEGER NOT NULL,
       date TEXT NOT NULL,
-      supplier TEXT
+      supplier TEXT,
+      synced INTEGER DEFAULT 0
     );
   `);
+  try {
+    await db.execAsync(
+      'ALTER TABLE stock_movements ADD COLUMN synced INTEGER DEFAULT 0;',
+    );
+  } catch {
+    // Column already exists on newer local DBs.
+  }
+}
+
+const pkColumn: Record<LocalTableName, string> = {
+  transactions: 'id',
+  transaction_items: 'id',
+  inventory: 'stock_id',
+  stock_movements: 'movement_id',
+};
+
+export async function getTransactionItemsLocal(
+  transactionId: string,
+): Promise<{ product_id: number; quantity: number }[]> {
+  const db = await getDb();
+  return db.getAllAsync<{ product_id: number; quantity: number }>(
+    `SELECT product_id, quantity FROM transaction_items WHERE transaction_id = ?`,
+    transactionId,
+  );
 }
 
 export async function saveToSQLite<
@@ -70,8 +95,11 @@ export async function getUnsyncedRecords<T>(
 
 export async function markSynced(
   table: LocalTableName,
-  id: string,
+  id: string | number,
 ): Promise<void> {
   const db = await getDb();
-  await db.runAsync(`UPDATE ${table} SET synced = 1 WHERE id = ?`, id);
+  await db.runAsync(
+    `UPDATE ${table} SET synced = 1 WHERE ${pkColumn[table]} = ?`,
+    id,
+  );
 }
