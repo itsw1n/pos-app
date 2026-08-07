@@ -21,19 +21,13 @@ type CheckoutProps = StackScreenProps<MenuStackParamList, 'Checkout'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PPN_RATE = 0.11;
-
 export function Checkout({
   navigation,
   style,
 }: CheckoutProps): React.JSX.Element {
   const { cart, addToCart, decrementItem, getTotal } = useMenu();
   const [customerName, setCustomerName] = useState('');
-  const subtotal = getTotal();
-
-  // TODO: confirm VAT with client
-  const ppn = subtotal * PPN_RATE;
-  const total = subtotal + ppn;
+  const total = getTotal();
 
   const handleContinue = (): void => {
     navigation.navigate('Payment', { paymentMode: 'cash' });
@@ -114,23 +108,7 @@ export function Checkout({
           <Text style={checkoutStyles.paymentTitle}>PAYMENT DETAIL</Text>
           <View style={checkoutStyles.detailRow}>
             <Text style={checkoutStyles.detailLabel}>Subtotal</Text>
-            <Text style={checkoutStyles.detailValue}>
-              ₱{subtotal.toFixed(2)}
-            </Text>
-          </View>
-          {/*
-            TODO: confirm VAT with client before enabling
-          */}
-          <View style={checkoutStyles.detailRow}>
-            <Text style={checkoutStyles.detailLabel}>PPN 11%</Text>
-            <Text
-              style={[
-                checkoutStyles.detailValue,
-                checkoutStyles.detailValueSecondary,
-              ]}
-            >
-              ₱{ppn.toFixed(2)}
-            </Text>
+            <Text style={checkoutStyles.detailValue}>₱{total.toFixed(2)}</Text>
           </View>
         </View>
 

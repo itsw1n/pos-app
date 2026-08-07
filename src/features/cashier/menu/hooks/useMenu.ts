@@ -88,50 +88,18 @@ export function useMenu(): UseMenuResult {
 
       const { isConnected } = await NetInfo.fetch();
       if (isConnected) {
-        const { error: txError } = await supabase.from('transactions').insert({
-          id: transaction.id,
-          total_amount: transaction.total_amount,
-          payment_mode: transaction.payment_mode,
-          user_id: transaction.user_id,
-          date: transaction.date,
+        const { error: processError } = await supabase.rpc('process_sale', {
+          p_transaction_id: transaction.id,
+          p_payment_mode: transaction.payment_mode,
+          p_amount_received: transaction.amount_received,
+          p_change_given: transaction.change_given,
+          p_items: cart.map((item) => ({
+            product_id: item.product_id,
+            quantity: item.qty,
+          })),
+          p_date: transaction.date,
         });
-        if (txError) throw txError;
-
-        for (const item of cart) {
-          const { error: itemError } = await supabase
-            .from('transaction_items')
-            .insert({
-              id: uuid.v4(),
-              transaction_id: transaction.id,
-              product_id: item.product_id,
-              quantity: item.qty,
-              subtotal: item.price * item.qty,
-            });
-          if (itemError) throw itemError;
-
-          const { data: inventory } = await supabase
-            .from('inventory')
-            .select('stock_id, quantity')
-            .eq('product_id', item.product_id)
-            .maybeSingle();
-          if (inventory) {
-            await supabase
-              .from('inventory')
-              .update({
-                quantity: Math.max(
-                  0,
-                  (inventory.quantity as number) - item.qty,
-                ),
-              })
-              .eq('stock_id', inventory.stock_id);
-            await supabase.from('stock_movements').insert({
-              stock_id: inventory.stock_id,
-              type: 'out',
-              quantity: item.qty,
-              date: transaction.date,
-            });
-          }
-        }
+        if (processError) throw processError;
       } else {
         await saveToSQLite('transactions', {
           id: transaction.id,

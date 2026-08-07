@@ -4,7 +4,12 @@ const expoConfig = require('eslint-config-expo/flat');
 const eslintPluginPrettierRecommended = require('eslint-plugin-prettier/recommended');
 
 module.exports = defineConfig([
-  globalIgnores(['dist/*', 'IPSS_CodingGuide.jsx', '.superpowers/**']),
+  globalIgnores([
+    'dist/*',
+    'IPSS_CodingGuide.jsx',
+    '.superpowers/**',
+    'supabase/functions/**',
+  ]),
   expoConfig,
   eslintPluginPrettierRecommended,
   {

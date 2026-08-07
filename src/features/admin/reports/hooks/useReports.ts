@@ -298,12 +298,14 @@ export function useReports(): UseReportsResult {
 
   const getSalesReport = useCallback(
     async (period: ReportPeriod): Promise<SalesReport> => {
+      const { start, end } = getPeriodRange(period);
       const { data, error } = await supabase
         .from('transactions')
-        .select('id, date, total_amount, payment_mode, user_id, status');
+        .select('id, date, total_amount, payment_mode, user_id, status')
+        .gte('date', start.toISOString())
+        .lte('date', end.toISOString());
       if (error) throw error;
       const transactions = (data as StoredTransaction[]) ?? [];
-      const { start, end } = getPeriodRange(period);
       return buildSalesReport(period, transactions, start, end);
     },
     [],

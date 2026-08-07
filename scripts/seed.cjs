@@ -27,7 +27,11 @@ const { Client } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 const ROOT = path.resolve(__dirname, '..');
-const MIGRATION_FILES = ['0001_init.sql', '0002_categories.sql'];
+const MIGRATION_FILES = [
+  '0001_init.sql',
+  '0002_categories.sql',
+  '0003_rbac.sql',
+];
 
 function loadEnvFile(file) {
   const target = path.join(ROOT, file);
