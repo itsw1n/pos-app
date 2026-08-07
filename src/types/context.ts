@@ -9,6 +9,7 @@ export interface CartItem {
 
 export interface CartContextType {
   cart: CartItem[];
+  total: number;
   addToCart: (product: {
     product_id: number;
     name: string;

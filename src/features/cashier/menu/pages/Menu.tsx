@@ -19,6 +19,7 @@ import { Product } from '@/types/entities';
 import { colors, spacing } from '@/theme';
 import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
 import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
+import { useCart } from '@/context/CartContext';
 import { menuStyles } from './Menu.styles';
 
 type MenuProps = StackScreenProps<MenuStackParamList, 'MenuHome'> & {
@@ -32,16 +33,64 @@ type ProductSection = {
   data: Product[];
 };
 
+type ProductRowProps = {
+  product: Product;
+  qty: number;
+  onAdd: (product: Product) => void;
+  onDecrement: (productId: number) => void;
+};
+
+const MenuProductRow = React.memo(function MenuProductRow({
+  product,
+  qty,
+  onAdd,
+  onDecrement,
+}: ProductRowProps): React.JSX.Element {
+  const inCart = qty > 0;
+  const canAdd = product.is_available;
+  return (
+    <View
+      style={[
+        menuStyles.productCard,
+        inCart ? menuStyles.productCardInCart : null,
+      ]}
+    >
+      <View style={menuStyles.productImage}>
+        <Text style={menuStyles.productImageEmoji}>☕</Text>
+      </View>
+      <View style={menuStyles.productInfo}>
+        <Text style={menuStyles.productName} numberOfLines={1}>
+          {product.name}
+        </Text>
+        <Text style={menuStyles.productPrice}>₱{product.price.toFixed(2)}</Text>
+      </View>
+      {inCart ? (
+        <QtyControls
+          qty={qty}
+          onDecrement={() => onDecrement(product.product_id)}
+          onIncrement={() => onAdd(product)}
+        />
+      ) : (
+        <Pressable
+          style={({ pressed }) => [
+            menuStyles.addButton,
+            pressed ? menuStyles.addButtonPressed : null,
+            !canAdd ? menuStyles.addButtonDisabled : null,
+          ]}
+          disabled={!canAdd}
+          onPress={() => canAdd && onAdd(product)}
+        >
+          <ShoppingCart size={18} color={colors.textSecondary} />
+        </Pressable>
+      )}
+    </View>
+  );
+});
+
 export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
-  const {
-    cart,
-    products,
-    isLoading,
-    error,
-    addToCart,
-    decrementItem,
-    getTotal,
-  } = useMenu();
+  const { cart, products, isLoading, error, addToCart, decrementItem } =
+    useMenu();
+  const { total } = useCart();
   const { categories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,10 +110,13 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
     return byCategory.filter((p) => p.name.toLowerCase().includes(query));
   }, [products, activeCategory, searchQuery]);
 
-  const cartQty = (productId: number): number => {
-    const item = cart.find((i) => i.product_id === productId);
-    return item ? item.qty : 0;
-  };
+  const qtyByProduct = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const item of cart) {
+      map.set(item.product_id, item.qty);
+    }
+    return map;
+  }, [cart]);
 
   const sections = useMemo<ProductSection[]>(() => {
     const grouped = new Map<string, Product[]>();
@@ -79,47 +131,14 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
     }));
   }, [filteredProducts]);
 
-  const total = getTotal();
-
   const renderProduct = ({ item }: { item: Product }): React.JSX.Element => {
-    const inCart = cartQty(item.product_id) > 0;
-    const canAdd = item.is_available;
     return (
-      <View
-        style={[
-          menuStyles.productCard,
-          inCart ? menuStyles.productCardInCart : null,
-        ]}
-      >
-        <View style={menuStyles.productImage}>
-          <Text style={menuStyles.productImageEmoji}>☕</Text>
-        </View>
-        <View style={menuStyles.productInfo}>
-          <Text style={menuStyles.productName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          <Text style={menuStyles.productPrice}>₱{item.price.toFixed(2)}</Text>
-        </View>
-        {inCart ? (
-          <QtyControls
-            qty={cartQty(item.product_id)}
-            onDecrement={() => decrementItem(item.product_id)}
-            onIncrement={() => addToCart(item)}
-          />
-        ) : (
-          <Pressable
-            style={({ pressed }) => [
-              menuStyles.addButton,
-              pressed ? menuStyles.addButtonPressed : null,
-              !canAdd ? menuStyles.addButtonDisabled : null,
-            ]}
-            disabled={!canAdd}
-            onPress={() => canAdd && addToCart(item)}
-          >
-            <ShoppingCart size={18} color={colors.textSecondary} />
-          </Pressable>
-        )}
-      </View>
+      <MenuProductRow
+        product={item}
+        qty={qtyByProduct.get(item.product_id) ?? 0}
+        onAdd={addToCart}
+        onDecrement={decrementItem}
+      />
     );
   };
 
