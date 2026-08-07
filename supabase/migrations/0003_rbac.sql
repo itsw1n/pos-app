@@ -111,6 +111,29 @@ create policy "user_read_admin" on "user"
   for select using (get_app_role() = 'admin');
 
 -- ---------------------------------------------------------------------------
+-- 3b) Daily sequential order numbers.
+-- ---------------------------------------------------------------------------
+alter table transactions
+  add column if not exists order_number int;
+
+-- Backfill existing rows (seeded/demo) deterministically per day, newest-first
+-- ordering by date so each calendar day has its own 1..N sequence.
+with numbered as (
+  select
+    id,
+    row_number() over (
+      partition by date_trunc('day', date)
+      order by date
+    ) as n
+  from transactions
+  where order_number is null
+)
+update transactions t
+set order_number = numbered.n
+from numbered
+where t.id = numbered.id;
+
+-- ---------------------------------------------------------------------------
 -- 4) Integrity / CHECK constraints.
 -- ---------------------------------------------------------------------------
 alter table transactions
@@ -165,6 +188,7 @@ declare
   v_user_id  uuid     := auth.uid();
   v_role     text     := get_app_role();
   v_total    numeric  := 0;
+  v_order_no int;
   v_row      record;
   v_item     jsonb;
   v_product_id bigint;
@@ -185,10 +209,16 @@ begin
     return p_transaction_id;
   end if;
 
+  -- Assign this calendar day's next sequential order number (1, 2, 3, ...).
+  select coalesce(max(order_number), 0) + 1 into v_order_no
+  from transactions
+  where date_trunc('day', date) = date_trunc('day', p_date);
+
   insert into transactions (id, user_id, total_amount, payment_mode,
-                            date, status, amount_received, change_given)
+                            date, status, amount_received, change_given,
+                            order_number)
   values (p_transaction_id, v_user_id, 0, p_payment_mode,
-          p_date, 'completed', p_amount_received, p_change_given);
+          p_date, 'completed', p_amount_received, p_change_given, v_order_no);
 
   for v_row in
     select value from jsonb_array_elements(p_items)

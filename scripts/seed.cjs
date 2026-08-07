@@ -451,20 +451,29 @@ async function upsertTransactions(client) {
     transactions.map((t) => t.id),
   ]);
 
-  const txRows = transactions.map((t) => ({
-    id: t.id,
-    total_amount: t.total_amount,
-    payment_mode: t.payment_mode,
-    user_id: t.user_id,
-    date: t.date,
-    status: t.status,
-    void_reason: t.void_reason,
-    amount_received: t.amount_received,
-    change_given: t.change_given,
-  }));
+  // Assign daily sequential order numbers (1, 2, 3 ... per calendar day),
+  // mirroring the process_sale RPC so seeded rows look like real ones.
+  const dayCounters = {};
+  const txRows = transactions.map((t) => {
+    const day = new Date(t.date).toISOString().slice(0, 10);
+    const n = (dayCounters[day] ?? 0) + 1;
+    dayCounters[day] = n;
+    return {
+      id: t.id,
+      total_amount: t.total_amount,
+      payment_mode: t.payment_mode,
+      user_id: t.user_id,
+      date: t.date,
+      status: t.status,
+      void_reason: t.void_reason,
+      amount_received: t.amount_received,
+      change_given: t.change_given,
+      order_number: n,
+    };
+  });
   await upsertRows(
     client,
-    'insert into transactions (id, total_amount, payment_mode, user_id, date, status, void_reason, amount_received, change_given) values',
+    'insert into transactions (id, total_amount, payment_mode, user_id, date, status, void_reason, amount_received, change_given, order_number) values',
     txRows,
     [
       'id',
@@ -476,6 +485,7 @@ async function upsertTransactions(client) {
       'void_reason',
       'amount_received',
       'change_given',
+      'order_number',
     ],
   );
 
