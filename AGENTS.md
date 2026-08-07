@@ -110,20 +110,31 @@ Screen (UI only)
 
 ```
 src/
-├── app/                  # entry (index.tsx) + navigation shell (navigation.tsx/.styles.ts)
+├── app/                  # entry (index.tsx) + navigation (navigation/ + role navigators)
+├── shared/               # cross-role features: login, orders, settings
+│   ├── login/            # Login.tsx + Login.styles.ts
+│   ├── orders/           # Orders, VoidTransaction (pages/ + hooks/ + OrdersNavigator)
+│   └── settings/         # Settings, PrinterSettings, UserManagement (pages/ + hooks/ + SettingsNavigator)
+├── cashier/              # cashier-only features (user actions, not DB entities)
+│   ├── menu/             # Menu, Checkout, Payment, Receipt (pages/ + hooks/ + MenuNavigator)
+│   └── inventory/        # Inventory (view-only)
+├── admin/                # admin-only features
+│   ├── menu-management/  # MenuManagement, AddEditMenuItem (pages/ + components/ + hooks/ + MenuManagementNavigator)
+│   ├── inventory/        # InventoryManagement, StockIn (pages/)
+│   └── reports/          # Dashboard, Reports (pages/ + hooks/ + ReportsNavigator)
 ├── components/
 │   └── common/           # shared UI: Button, Card, ProductCard, StockBadge, TextField
 │       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
 ├── context/              # AuthContext (user+role), CartContext (cart state)
-├── features/             # grouped by feature: auth, pos, inventory, reports,
-│   │                     #   transactions, products, settings
-│   └── {feature}/        # Screen.tsx + Screen.styles.ts + use{Feature}.ts + {Feature}Navigator.tsx
+├── hooks/                # cross-role hooks: useInventory, useCategories
 ├── services/             # supabase.ts, sqlite.ts, syncService.ts,
 │   │                     #   receiptService.ts, printerService.ts
 ├── styles/               # textStyles.ts (shared text styles)
 ├── theme/                # design tokens: colors, spacing, typography, radius, shadows, index
 └── types/                # entities.ts (6 ERD entities), context.ts, entityNames.ts
 ```
+
+Features are grouped **role-first** (`shared` / `cashier` / `admin`) and named by **user action** (Login, Orders, Menu, MenuManagement, Dashboard), not by DB entity. Import alias `@/*` → `src/*` is configured via tsconfig `paths`. Feature-local hooks live under that feature's `hooks/`; hooks shared across roles live in `src/hooks/`. Navigators for nested feature stacks live alongside their feature (e.g. `admin/menu-management/MenuManagementNavigator.tsx`).
 
 `App.tsx` (root) → `src/app/index.tsx` (`App` named export) → providers → `Navigation`.
 
@@ -193,8 +204,8 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 
 - `src/context/AuthContext.tsx` — `AuthProvider` wraps the app; `useAuth()` returns `{ user, role, login, logout }`. Throws if used outside provider.
 - Login: `supabase.auth.signInWithPassword` → fetch role from `user` table.
-- Navigation (`src/app/navigation.tsx`):
-  - not logged in → `LoginScreen`
+- Navigation (`src/app/navigation/`):
+  - not logged in → `Login`
   - `cashier` → Menu(POS) | Orders | Inventory(read-only) | Settings
   - `admin` → Menu(POS) | Orders | Inventory(manage) | Dashboard | Settings
 
