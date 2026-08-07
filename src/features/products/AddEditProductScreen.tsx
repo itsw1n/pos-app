@@ -20,6 +20,7 @@ import { TextField } from '../../components/common/TextField/TextField';
 import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
 import { useCategories } from '../../components/common/Category/useCategories';
 import { useAuth } from '../../context/AuthContext';
+import { toErrorMessage } from '../../services/errors';
 import { colors } from '../../theme';
 import { ProductsStackParamList } from './ProductsNavigator';
 import { useProducts } from './useProducts';
@@ -55,7 +56,7 @@ export function AddEditProductScreen({
 
   useFocusEffect(
     useCallback(() => {
-      void loadCategories();
+      void loadCategories(true);
     }, [loadCategories])
   );
 
@@ -96,7 +97,7 @@ export function AddEditProductScreen({
       }
       navigation.goBack();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save product');
+      setError(toErrorMessage(err, 'Failed to save product'));
       setIsSubmitting(false);
     }
   };
@@ -108,7 +109,7 @@ export function AddEditProductScreen({
       await deleteProduct(product.product_id);
       navigation.goBack();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete product');
+      setError(toErrorMessage(err, 'Failed to delete product'));
     }
   };
 
