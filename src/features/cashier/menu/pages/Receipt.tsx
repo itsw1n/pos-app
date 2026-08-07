@@ -28,8 +28,6 @@ type ReceiptProps = StackScreenProps<MenuStackParamList, 'Receipt'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const TAX_RATE = 0.11;
-
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -50,7 +48,6 @@ export function Receipt({
   }));
 
   const subtotal = receiptItems.reduce((sum, i) => sum + i.subtotal, 0);
-  const tax = subtotal * TAX_RATE;
 
   const paymentLabel: Record<POSTransaction['payment_mode'], string> = {
     cash: 'Cash',
@@ -154,13 +151,6 @@ export function Receipt({
               <Text style={receiptStyles.itemSubtotal}>
                 ₱{subtotal.toFixed(2)}
               </Text>
-            </View>
-            {/*
-              TODO: confirm Tax with client
-            */}
-            <View style={receiptStyles.itemRow}>
-              <Text style={receiptStyles.itemName}>Tax (11%)</Text>
-              <Text style={receiptStyles.itemSubtotal}>₱{tax.toFixed(2)}</Text>
             </View>
           </View>
 
