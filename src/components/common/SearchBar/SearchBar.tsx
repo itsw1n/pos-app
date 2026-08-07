@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { colors } from '../../../theme';
 import { InputField } from '../InputField/InputField';
 import { searchBarStyles } from './SearchBar.styles';
@@ -27,8 +27,8 @@ export function SearchBar({
       placeholder={placeholder}
       autoCorrect={false}
       disabled={disabled}
-      leftIcon={<Ionicons name="search-outline" size={18} color={colors.textSecondary} />}
-      rightIcon={<Ionicons name="options-outline" size={18} color={colors.textSecondary} />}
+      leftIcon={<Search size={18} color={colors.textSecondary} />}
+      rightIcon={<SlidersHorizontal size={18} color={colors.textSecondary} />}
       style={[searchBarStyles.container, style]}
     />
   );

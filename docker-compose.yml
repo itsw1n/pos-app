@@ -14,7 +14,7 @@ services:
       - .env.development
     volumes:
       - .:/app:delegated
-    command: ["npm", "run", "typecheck"]
+    command: ['npm', 'run', 'typecheck']
 
   seed:
     build:
@@ -26,7 +26,7 @@ services:
       - .env.development
     volumes:
       - .:/app:delegated
-    command: ["npm", "run", "seed"]
+    command: ['npm', 'run', 'seed']
 
   reset:
     build:
@@ -38,7 +38,7 @@ services:
       - .env.development
     volumes:
       - .:/app:delegated
-    command: ["npm", "run", "reset"]
+    command: ['npm', 'run', 'reset']
 
   typecheck:
     build:
@@ -47,7 +47,16 @@ services:
     working_dir: /app
     volumes:
       - .:/app:delegated
-    command: ["npm", "run", "typecheck"]
+    command: ['npm', 'run', 'typecheck']
+
+  lint:
+    build:
+      context: .
+      target: runner
+    working_dir: /app
+    volumes:
+      - .:/app:delegated
+    command: ['npm', 'run', 'lint']
 
   build:
     build:
@@ -58,4 +67,4 @@ services:
       - .env.development
     volumes:
       - .:/app:delegated
-    command: ["node", "/dev/null"]
+    command: ['node', '/dev/null']

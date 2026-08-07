@@ -24,9 +24,11 @@
 ## Task 1: Initialize Expo TypeScript Project
 
 **Files:**
+
 - Create: `package.json`, `app.json`, `tsconfig.json`, `App.tsx`
 
 **Interfaces:**
+
 - Produces: Working Expo + TypeScript project that compiles with `npx expo start`
 
 - [ ] **Step 1: Initialize Expo with TypeScript template**
@@ -55,9 +57,11 @@ git commit -m "feat: initialize Expo TypeScript project"
 ## Task 2: Install All Dependencies
 
 **Files:**
+
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Produces: All dependencies installed and importable
 
 - [ ] **Step 1: Install navigation dependencies**
@@ -115,9 +119,11 @@ git commit -m "feat: install all dependencies with TypeScript types"
 ## Task 3: Create Entity Type Definitions
 
 **Files:**
+
 - Create: `src/types/entities.ts`
 
 **Interfaces:**
+
 - Consumes: None (standalone type file)
 - Produces: All 6 entity interfaces used by every other task
 
@@ -177,7 +183,13 @@ export interface StockMovement {
 - [ ] **Step 2: Create a union type for all entity names**
 
 ```typescript
-export type EntityName = 'user' | 'product' | 'transaction' | 'transaction_item' | 'inventory' | 'stock_movement';
+export type EntityName =
+  | 'user'
+  | 'product'
+  | 'transaction'
+  | 'transaction_item'
+  | 'inventory'
+  | 'stock_movement';
 ```
 
 - [ ] **Step 3: Verify compilation**
@@ -200,11 +212,13 @@ git commit -m "feat: add TypeScript entity type definitions"
 ## Task 4: Create Constants and Context Types
 
 **Files:**
+
 - Create: `src/constants/colors.ts`
 - Create: `src/constants/roles.ts`
 - Create: `src/types/context.ts`
 
 **Interfaces:**
+
 - Consumes: `UserRole` from `src/types/entities.ts`
 - Produces: Color constants, role constants, and context type interfaces used by all screens
 
@@ -237,7 +251,7 @@ export const ROLES = {
   CASHIER: 'cashier',
 } as const;
 
-export type Role = typeof ROLES[keyof typeof ROLES];
+export type Role = (typeof ROLES)[keyof typeof ROLES];
 ```
 
 - [ ] **Step 3: Create context types**
@@ -261,7 +275,11 @@ export interface CartItem {
 
 export interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: { product_id: number; name: string; price: number }) => void;
+  addToCart: (product: {
+    product_id: number;
+    name: string;
+    price: number;
+  }) => void;
   removeFromCart: (productId: number) => void;
   getTotal: () => number;
   clearCart: () => void;
@@ -286,6 +304,7 @@ git commit -m "feat: add constants and context type definitions"
 ## Task 5: Create Service Layer Types and Skeletons
 
 **Files:**
+
 - Create: `src/services/supabase.ts`
 - Create: `src/services/sqlite.ts`
 - Create: `src/services/syncService.ts`
@@ -293,6 +312,7 @@ git commit -m "feat: add constants and context type definitions"
 - Create: `src/services/printerService.ts`
 
 **Interfaces:**
+
 - Consumes: Entity types from `src/types/entities.ts`, `Colors` from `src/constants/colors.ts`
 - Produces: Typed service modules that all feature hooks import from
 
@@ -303,7 +323,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
 );
 ```
 
@@ -311,7 +331,12 @@ export const supabase = createClient(
 
 ```typescript
 import * as SQLite from 'expo-sqlite';
-import { Transaction, TransactionItem, Inventory, StockMovement } from '../types/entities';
+import {
+  Transaction,
+  TransactionItem,
+  Inventory,
+  StockMovement,
+} from '../types/entities';
 
 const db = SQLite.openDatabase('ipss.db');
 
@@ -325,7 +350,7 @@ export function initDb(): void {
         user_id INTEGER NOT NULL,
         date TEXT NOT NULL,
         synced INTEGER DEFAULT 0
-      );`
+      );`,
     );
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS transaction_items (
@@ -335,7 +360,7 @@ export function initDb(): void {
         quantity INTEGER NOT NULL,
         subtotal REAL NOT NULL,
         FOREIGN KEY (transaction_id) REFERENCES transactions(id)
-      );`
+      );`,
     );
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS inventory (
@@ -343,7 +368,7 @@ export function initDb(): void {
         product_id INTEGER NOT NULL,
         quantity INTEGER NOT NULL,
         reorder_level INTEGER NOT NULL
-      );`
+      );`,
     );
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS stock_movements (
@@ -353,7 +378,7 @@ export function initDb(): void {
         quantity INTEGER NOT NULL,
         date TEXT NOT NULL,
         supplier TEXT
-      );`
+      );`,
     );
   });
 }
@@ -362,13 +387,13 @@ export function saveToSQLite<T>(table: string, data: T): Promise<void> {
   return new Promise((resolve, reject) => {
     db.transaction((tx) => {
       const keys = Object.keys(data) as (keyof T)[];
-      const values = keys.map((k) => (data[k] as unknown) as string | number);
+      const values = keys.map((k) => data[k] as unknown as string | number);
       const placeholders = keys.map(() => '?').join(', ');
       tx.executeSql(
         `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`,
         values,
         () => resolve(),
-        (_, error) => reject(error)
+        (_, error) => reject(error),
       );
     });
   });
@@ -381,7 +406,7 @@ export function getUnsyncedRecords(table: string): Promise<T[]> {
         `SELECT * FROM ${table} WHERE synced = 0`,
         [],
         (_, { rows }) => resolve(rows._array as T[]),
-        (_, error) => reject(error)
+        (_, error) => reject(error),
       );
     });
   });
@@ -394,7 +419,7 @@ export function markSynced(table: string, id: string): Promise<void> {
         `UPDATE ${table} SET synced = 1 WHERE id = ?`,
         [id],
         () => resolve(),
-        (_, error) => reject(error)
+        (_, error) => reject(error),
       );
     });
   });
@@ -443,7 +468,7 @@ export async function generateReceipt(transaction: {
       <p>Date: ${transaction.date}</p>
       <p>Payment: ${transaction.payment_mode}</p>
       <hr />
-      ${transaction.items.map(i => `<p>${i.name} x${i.quantity} = ${i.subtotal}</p>`).join('')}
+      ${transaction.items.map((i) => `<p>${i.name} x${i.quantity} = ${i.subtotal}</p>`).join('')}
       <hr />
       <p><strong>Total: ${transaction.total_amount}</strong></p>
     </body></html>
@@ -486,11 +511,13 @@ git commit -m "feat: add typed service layer skeletons"
 ## Task 6: Create Auth Context and Hook
 
 **Files:**
+
 - Create: `src/context/AuthContext.tsx`
 - Create: `src/features/auth/useAuth.ts`
 - Create: `src/features/auth/LoginScreen.tsx`
 
 **Interfaces:**
+
 - Consumes: `AuthContextType` from `src/types/context.ts`, `User` from `src/types/entities.ts`, `supabase` from `src/services/supabase.ts`
 - Produces: Global auth state, login/logout functions, role-based navigation
 
@@ -614,10 +641,12 @@ git commit -m "feat: add AuthContext, useAuth hook, and LoginScreen"
 ## Task 7: Create Navigation Shell
 
 **Files:**
+
 - Create: `src/app/navigation.tsx`
 - Create: `src/app/index.tsx`
 
 **Interfaces:**
+
 - Consumes: `AuthProvider` from `src/context/AuthContext.tsx`, role constants
 - Produces: Root navigation with role-based tab navigators (cashier vs admin)
 
@@ -716,6 +745,7 @@ git commit -m "feat: add navigation shell with role-based routing"
 ## Task 8: Create POS Feature (Hook + Screens)
 
 **Files:**
+
 - Create: `src/features/pos/usePOS.ts`
 - Create: `src/features/pos/POSScreen.tsx`
 - Create: `src/features/pos/CartScreen.tsx`
@@ -724,6 +754,7 @@ git commit -m "feat: add navigation shell with role-based routing"
 - Create: `src/features/pos/ReceiptScreen.tsx`
 
 **Interfaces:**
+
 - Consumes: `CartContextType` from `src/types/context.ts`, `supabase` and `saveToSQLite` from services, `Colors` from constants
 - Produces: Full POS workflow — add to cart, checkout, payment, receipt, inventory deduction
 
@@ -740,15 +771,20 @@ import { CartItem } from '../../types/context';
 export function usePOS() {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const addToCart = useCallback((product: { product_id: number; name: string; price: number }): void => {
-    setCart((prev) => {
-      const exists = prev.find((i) => i.product_id === product.product_id);
-      if (exists) {
-        return prev.map((i) => (i.product_id === product.product_id ? { ...i, qty: i.qty + 1 } : i));
-      }
-      return [...prev, { ...product, qty: 1 }];
-    });
-  }, []);
+  const addToCart = useCallback(
+    (product: { product_id: number; name: string; price: number }): void => {
+      setCart((prev) => {
+        const exists = prev.find((i) => i.product_id === product.product_id);
+        if (exists) {
+          return prev.map((i) =>
+            i.product_id === product.product_id ? { ...i, qty: i.qty + 1 } : i,
+          );
+        }
+        return [...prev, { ...product, qty: 1 }];
+      });
+    },
+    [],
+  );
 
   const removeFromCart = useCallback((productId: number): void => {
     setCart((prev) => prev.filter((i) => i.product_id !== productId));
@@ -758,28 +794,39 @@ export function usePOS() {
     return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   }, [cart]);
 
-  const processTransaction = useCallback(async (paymentMode: 'cash' | 'gcash' | 'maya', amountReceived?: number): Promise<unknown> => {
-    const total = getTotal();
-    const transaction = {
-      id: uuid.v4(),
-      total_amount: total,
-      payment_mode: paymentMode,
-      amount_received: amountReceived ?? null,
-      change_given: paymentMode === 'cash' && amountReceived ? amountReceived - total : null,
-      status: 'completed',
-      items: cart,
-      synced: false,
-    };
-    const { isConnected } = await NetInfo.fetch();
-    if (isConnected) {
-      const { error } = await supabase.from('transaction').insert(transaction);
-      if (error) throw error;
-    } else {
-      await saveToSQLite('transactions', transaction);
-    }
-    setCart([]);
-    return transaction;
-  }, [cart, getTotal]);
+  const processTransaction = useCallback(
+    async (
+      paymentMode: 'cash' | 'gcash' | 'maya',
+      amountReceived?: number,
+    ): Promise<unknown> => {
+      const total = getTotal();
+      const transaction = {
+        id: uuid.v4(),
+        total_amount: total,
+        payment_mode: paymentMode,
+        amount_received: amountReceived ?? null,
+        change_given:
+          paymentMode === 'cash' && amountReceived
+            ? amountReceived - total
+            : null,
+        status: 'completed',
+        items: cart,
+        synced: false,
+      };
+      const { isConnected } = await NetInfo.fetch();
+      if (isConnected) {
+        const { error } = await supabase
+          .from('transaction')
+          .insert(transaction);
+        if (error) throw error;
+      } else {
+        await saveToSQLite('transactions', transaction);
+      }
+      setCart([]);
+      return transaction;
+    },
+    [cart, getTotal],
+  );
 
   return { cart, addToCart, removeFromCart, getTotal, processTransaction };
 }
@@ -808,12 +855,14 @@ git commit -m "feat: add POS feature with typed hooks and screens"
 ## Task 9: Create Inventory Feature
 
 **Files:**
+
 - Create: `src/features/inventory/InventoryScreen.tsx`
 - Create: `src/features/inventory/InventoryViewScreen.tsx`
 - Create: `src/features/inventory/StockInScreen.tsx`
 - Create: `src/features/inventory/useInventory.ts`
 
 **Interfaces:**
+
 - Consumes: `Product`, `Inventory`, `StockMovement` from `src/types/entities.ts`, `supabase` and `saveToSQLite` from services, `Colors` from constants
 - Produces: Full inventory management — stock tracking, low-stock alerts, stock-in/stock-out
 
@@ -839,6 +888,7 @@ git commit -m "feat: add inventory feature with typed hooks and screens"
 ## Task 10: Create Reports and Dashboard Features
 
 **Files:**
+
 - Create: `src/features/reports/ReportsScreen.tsx`
 - Create: `src/features/reports/DashboardScreen.tsx`
 - Create: `src/features/reports/useReports.ts`
@@ -847,6 +897,7 @@ git commit -m "feat: add inventory feature with typed hooks and screens"
 - Create: `src/features/transactions/useTransactions.ts`
 
 **Interfaces:**
+
 - Consumes: `Transaction`, `TransactionItem`, `Product`, `Inventory` from entity types, `supabase` from services, `Colors` from constants, `Victory` from victory-native
 - Produces: Sales/inventory reports, dashboard analytics, transaction history with void capability
 
@@ -874,12 +925,14 @@ git commit -m "feat: add reports, dashboard, and transaction history features"
 ## Task 11: Create Shared Components
 
 **Files:**
+
 - Create: `src/components/Button.tsx`
 - Create: `src/components/ProductCard.tsx`
 - Create: `src/components/StockBadge.tsx`
 - Create: `src/components/ReceiptView.tsx`
 
 **Interfaces:**
+
 - Consumes: `Colors` from `src/constants/colors.ts`, `Product` from entity types, `Inventory` from entity types
 - Produces: Reusable typed UI components used across all screens
 
@@ -905,6 +958,7 @@ git commit -m "feat: add shared typed UI components"
 ## Task 12: Create Product Management and Settings Features
 
 **Files:**
+
 - Create: `src/features/products/ProductsScreen.tsx`
 - Create: `src/features/products/AddEditProductScreen.tsx`
 - Create: `src/features/products/useProducts.ts`
@@ -913,6 +967,7 @@ git commit -m "feat: add shared typed UI components"
 - Create: `src/features/settings/UserManagement.tsx`
 
 **Interfaces:**
+
 - Consumes: `Product` from entity types, `supabase` from services, `Colors` from constants
 - Produces: Admin product CRUD, settings screen, printer pairing, user management
 
@@ -940,9 +995,11 @@ git commit -m "feat: add product management and settings features"
 ## Task 13: Configure tsconfig.json and Final Verification
 
 **Files:**
+
 - Modify: `tsconfig.json`
 
 **Interfaces:**
+
 - Consumes: All created TypeScript files
 - Produces: Strict TypeScript configuration with no type errors
 

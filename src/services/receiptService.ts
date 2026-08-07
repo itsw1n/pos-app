@@ -6,10 +6,12 @@ export interface ReceiptData {
   total_amount: number;
   payment_mode: string;
   date: string;
-  items: Array<{ name: string; quantity: number; subtotal: number }>;
+  items: { name: string; quantity: number; subtotal: number }[];
 }
 
-export async function generateReceipt(transaction: ReceiptData): Promise<string> {
+export async function generateReceipt(
+  transaction: ReceiptData,
+): Promise<string> {
   const html = `
     <html><body style="font-family: monospace; padding: 20px;">
       <h3>IPSS - Cafe Elvira</h3>

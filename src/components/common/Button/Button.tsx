@@ -12,7 +12,10 @@ import { buttonStyles } from './Button.styles';
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
 export type ButtonSize = 'small' | 'medium' | 'large';
 
-export interface ButtonProps extends Omit<PressableProps, 'style' | 'disabled' | 'onPress'> {
+export interface ButtonProps extends Omit<
+  PressableProps,
+  'style' | 'disabled' | 'onPress'
+> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   disabled?: boolean;

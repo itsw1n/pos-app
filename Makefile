@@ -10,8 +10,8 @@
 EXPO := npx expo
 NODE := node
 
-.PHONY: help setup dev prod seed reset typecheck build \
-        docker-seed docker-reset docker-typecheck docker-build
+.PHONY: help setup dev prod seed reset typecheck lint format format-check build \
+        docker-seed docker-reset docker-typecheck docker-build docker-lint
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -34,6 +34,15 @@ reset: ## Drop + recreate schema, then seed demo data
 typecheck: ## Type-check the project
 	npx tsc --noEmit
 
+lint: ## Lint the project (ESLint via Expo)
+	npx expo lint
+
+format: ## Format the codebase with Prettier
+	npx prettier --write .
+
+format-check: ## Verify Prettier formatting
+	npx prettier --check .
+
 build: ## Produce a static export bundle (android; mobile-only app)
 	npx expo export --platform android
 
@@ -46,6 +55,9 @@ docker-reset: ## Reset + seed the DB from a container
 
 docker-typecheck: ## Type-check inside a container
 	@docker compose run --rm typecheck
+
+docker-lint: ## Lint inside a container
+	@docker compose run --rm lint
 
 docker-build: ## Build the static export bundle inside a container
 	@docker compose run --rm build

@@ -16,6 +16,7 @@
     "expo-sharing": "~57.0.8",
     "expo-sqlite": "~57.0.1",
     "expo-status-bar": "~57.0.1",
+    "lucide-react-native": "^1.29.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.2",
@@ -25,13 +26,17 @@
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-uuid": "^2.0.4",
-    "react-native-web": "^0.21.2",
-    "victory-native": "^41.26.0"
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "@types/react-native": "^0.72.8",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
     "pg": "^8.22.0",
+    "prettier": "^3.9.6",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -42,6 +47,9 @@
     "seed": "node scripts/seed.cjs seed",
     "reset": "node scripts/seed.cjs reset",
     "typecheck": "tsc --noEmit",
+    "lint": "expo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "build": "expo export --platform android"
   },
   "private": true
