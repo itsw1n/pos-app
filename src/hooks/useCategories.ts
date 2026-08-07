@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { supabase } from '../../../services/supabase';
-import { CategoryRow, toCategory, UNCATEGORIZED } from '../../../services/catalog';
-import { Category } from '../../../types/entities';
+import { supabase } from '@/services/supabase';
+import { CategoryRow, toCategory, UNCATEGORIZED } from '@/services/catalog';
+import { Category } from '@/types/entities';
 
 let sharedCache: Category[] | null = null;
 

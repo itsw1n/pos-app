@@ -17,7 +17,7 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDial
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { CategoryBar } from '../../components/common/Category/CategoryBar';
 import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
-import { useCategories } from '../../components/common/Category/useCategories';
+import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '../../context/AuthContext';
 import { toErrorMessage } from '../../services/errors';
 import { colors } from '../../theme';

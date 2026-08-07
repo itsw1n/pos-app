@@ -18,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
 import { TextField } from '../../components/common/TextField/TextField';
 import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
-import { useCategories } from '../../components/common/Category/useCategories';
+import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '../../context/AuthContext';
 import { toErrorMessage } from '../../services/errors';
 import { colors } from '../../theme';

@@ -6,7 +6,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
 import { ReportsStackParamList } from '../reports/ReportsNavigator';
-import { useInventory, InventoryItem, StockStatus } from './useInventory';
+import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
 import { inventoryScreenStyles } from './InventoryScreen.styles';
 
 type InventoryScreenProps = StackScreenProps<ReportsStackParamList, 'Inventory'> & {

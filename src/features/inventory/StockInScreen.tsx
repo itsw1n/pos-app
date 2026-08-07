@@ -14,7 +14,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '../../components/common/InputField/InputField';
 import { colors } from '../../theme';
 import { ReportsStackParamList } from '../reports/ReportsNavigator';
-import { useInventory } from './useInventory';
+import { useInventory } from '@/hooks/useInventory';
 import { stockInScreenStyles } from './StockInScreen.styles';
 
 type StockInScreenProps = StackScreenProps<ReportsStackParamList, 'StockIn'> & {

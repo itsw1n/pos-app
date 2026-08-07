@@ -15,7 +15,7 @@ import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { QtyControls } from '../../components/common/QtyControls/QtyControls';
 import { SearchBar } from '../../components/common/SearchBar/SearchBar';
 import { CategoryBar } from '../../components/common/Category/CategoryBar';
-import { useCategories } from '../../components/common/Category/useCategories';
+import { useCategories } from '@/hooks/useCategories';
 import { Product } from '../../types/entities';
 import { colors, spacing } from '../../theme';
 import { POSStackParamList } from './POSNavigator';

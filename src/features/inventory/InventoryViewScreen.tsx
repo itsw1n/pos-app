@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { AppHeader } from '../../components/common/AppHeader/AppHeader';
 import { StockBadge } from '../../components/common/StockBadge/StockBadge';
 import { colors } from '../../theme';
-import { useInventory, InventoryItem, StockStatus } from './useInventory';
+import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
 import { inventoryViewScreenStyles } from './InventoryViewScreen.styles';
 
 interface InventoryViewScreenProps {
