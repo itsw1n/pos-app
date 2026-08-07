@@ -1,10 +1,10 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { colors, typography } from '../../theme';
-import { InventoryScreen } from '../inventory/InventoryScreen';
-import { StockInScreen } from '../inventory/StockInScreen';
-import { DashboardScreen } from './DashboardScreen';
-import { ReportsScreen } from './ReportsScreen';
+import { colors, typography } from '@/theme';
+import { InventoryManagement } from '@/admin/inventory/pages/InventoryManagement';
+import { StockIn } from '@/admin/inventory/pages/StockIn';
+import { Dashboard } from './pages/Dashboard';
+import { Reports } from './pages/Reports';
 
 export type ReportsStackParamList = {
   Dashboard: undefined;
@@ -31,12 +31,12 @@ export function ReportsNavigator(): React.JSX.Element {
     >
       <Stack.Screen
         name="Dashboard"
-        component={DashboardScreen}
+        component={Dashboard}
         options={{ title: 'Dashboard', headerShown: false }}
       />
-      <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reports', headerShown: false }} />
-      <Stack.Screen name="Inventory" component={InventoryScreen} options={{ title: 'Inventory' }} />
-      <Stack.Screen name="StockIn" component={StockInScreen} options={{ title: 'Stock In' }} />
+      <Stack.Screen name="Reports" component={Reports} options={{ title: 'Reports', headerShown: false }} />
+      <Stack.Screen name="Inventory" component={InventoryManagement} options={{ title: 'Inventory' }} />
+      <Stack.Screen name="StockIn" component={StockIn} options={{ title: 'Stock In' }} />
     </Stack.Navigator>
   );
 }

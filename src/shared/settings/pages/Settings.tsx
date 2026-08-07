@@ -113,7 +113,7 @@ export function Settings({
       icon: Tags,
       title: 'Product Management',
       caption: 'Add, edit, and remove menu items',
-      onPress: () => navigation.navigate('Products'),
+      onPress: () => navigation.navigate('MenuManagement'),
     });
   }
 

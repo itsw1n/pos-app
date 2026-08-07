@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../../services/supabase';
-import { PaymentMode } from '../../types/context';
-import { Inventory, Product, TransactionItem } from '../../types/entities';
+import { supabase } from '@/services/supabase';
+import { PaymentMode } from '@/types/context';
+import { Inventory, Product, TransactionItem } from '@/types/entities';
 
 export type ReportPeriod = 'daily' | 'weekly' | 'monthly';
 

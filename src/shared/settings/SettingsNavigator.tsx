@@ -2,14 +2,14 @@ import React from 'react';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { colors, typography } from '@/theme';
-import { ProductsNavigator, ProductsStackParamList } from '@/features/products/ProductsNavigator';
+import { MenuManagementNavigator, MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
 import { Settings } from './pages/Settings';
 import { PrinterSettings } from './pages/PrinterSettings';
 import { UserManagement } from './pages/UserManagement';
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
-  Products: NavigatorScreenParams<ProductsStackParamList> | undefined;
+  MenuManagement: NavigatorScreenParams<MenuManagementStackParamList> | undefined;
   PrinterSettings: undefined;
   UserManagement: undefined;
 };
@@ -31,8 +31,8 @@ export function SettingsNavigator(): React.JSX.Element {
         options={{ title: 'Settings', headerShown: false }}
       />
       <Stack.Screen
-        name="Products"
-        component={ProductsNavigator}
+        name="MenuManagement"
+        component={MenuManagementNavigator}
         options={{ headerShown: false }}
       />
       <Stack.Screen

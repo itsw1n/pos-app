@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, spacing, typography } from '../../theme';
+import { colors, radius, shadows, spacing, typography } from '@/theme';
 
-export const inventoryScreenStyles = StyleSheet.create({
+export const inventoryManagementStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

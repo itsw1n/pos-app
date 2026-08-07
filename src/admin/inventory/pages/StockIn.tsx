@@ -11,17 +11,17 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { InputField } from '../../components/common/InputField/InputField';
-import { colors } from '../../theme';
-import { ReportsStackParamList } from '../reports/ReportsNavigator';
+import { InputField } from '@/components/common/InputField/InputField';
+import { colors } from '@/theme';
+import { ReportsStackParamList } from '@/admin/reports/ReportsNavigator';
 import { useInventory } from '@/hooks/useInventory';
-import { stockInScreenStyles } from './StockInScreen.styles';
+import { stockInStyles } from './StockIn.styles';
 
-type StockInScreenProps = StackScreenProps<ReportsStackParamList, 'StockIn'> & {
+type StockInProps = StackScreenProps<ReportsStackParamList, 'StockIn'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-export function StockInScreen({ navigation, route, style }: StockInScreenProps): React.JSX.Element {
+export function StockIn({ navigation, route, style }: StockInProps): React.JSX.Element {
   const { stockId, productName, currentQuantity, reorderLevel } = route.params;
   const { addStock } = useInventory();
 
@@ -48,23 +48,23 @@ export function StockInScreen({ navigation, route, style }: StockInScreenProps):
 
   return (
     <KeyboardAvoidingView
-      style={[stockInScreenStyles.container, style]}
+      style={[stockInStyles.container, style]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={stockInScreenStyles.content} keyboardShouldPersistTaps="handled">
-        <View style={stockInScreenStyles.productCard}>
-          <Text style={stockInScreenStyles.productName}>{productName}</Text>
-          <View style={stockInScreenStyles.statsRow}>
-            <Text style={stockInScreenStyles.statLabel}>On hand</Text>
-            <Text style={stockInScreenStyles.statValue}>{currentQuantity}</Text>
-            <Text style={stockInScreenStyles.statDivider}>•</Text>
-            <Text style={stockInScreenStyles.statLabel}>Reorder at</Text>
-            <Text style={stockInScreenStyles.statValue}>{reorderLevel}</Text>
+      <ScrollView contentContainerStyle={stockInStyles.content} keyboardShouldPersistTaps="handled">
+        <View style={stockInStyles.productCard}>
+          <Text style={stockInStyles.productName}>{productName}</Text>
+          <View style={stockInStyles.statsRow}>
+            <Text style={stockInStyles.statLabel}>On hand</Text>
+            <Text style={stockInStyles.statValue}>{currentQuantity}</Text>
+            <Text style={stockInStyles.statDivider}>•</Text>
+            <Text style={stockInStyles.statLabel}>Reorder at</Text>
+            <Text style={stockInStyles.statValue}>{reorderLevel}</Text>
           </View>
         </View>
 
-        <View style={stockInScreenStyles.formCard}>
-          <Text style={stockInScreenStyles.inputLabel}>Quantity to add</Text>
+        <View style={stockInStyles.formCard}>
+          <Text style={stockInStyles.inputLabel}>Quantity to add</Text>
           <InputField
             value={quantityText}
             onChangeText={setQuantityText}
@@ -73,7 +73,7 @@ export function StockInScreen({ navigation, route, style }: StockInScreenProps):
             disabled={!quantityIsValid || isSubmitting}
           />
 
-          <Text style={stockInScreenStyles.inputLabel}>Supplier (optional)</Text>
+          <Text style={stockInStyles.inputLabel}>Supplier (optional)</Text>
           <InputField
             value={supplier}
             onChangeText={setSupplier}
@@ -84,13 +84,13 @@ export function StockInScreen({ navigation, route, style }: StockInScreenProps):
           />
         </View>
 
-        {error ? <Text style={stockInScreenStyles.errorText}>{error}</Text> : null}
+        {error ? <Text style={stockInStyles.errorText}>{error}</Text> : null}
 
         <Pressable
           style={({ pressed }) => [
-            stockInScreenStyles.submitButton,
-            pressed ? stockInScreenStyles.submitButtonPressed : null,
-            !quantityIsValid || isSubmitting ? stockInScreenStyles.submitButtonDisabled : null,
+            stockInStyles.submitButton,
+            pressed ? stockInStyles.submitButtonPressed : null,
+            !quantityIsValid || isSubmitting ? stockInStyles.submitButtonDisabled : null,
           ]}
           disabled={!quantityIsValid || isSubmitting}
           onPress={handleSubmit}
@@ -98,7 +98,7 @@ export function StockInScreen({ navigation, route, style }: StockInScreenProps):
           {isSubmitting ? (
             <ActivityIndicator color={colors.surface} />
           ) : (
-            <Text style={stockInScreenStyles.submitButtonText}>Add Stock</Text>
+            <Text style={stockInStyles.submitButtonText}>Add Stock</Text>
           )}
         </Pressable>
       </ScrollView>

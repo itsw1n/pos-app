@@ -12,22 +12,22 @@ import {
 import { Pencil, Plus, Tags, Trash2, UtensilsCrossed } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '../../components/common/AppHeader/AppHeader';
-import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
-import { SearchBar } from '../../components/common/SearchBar/SearchBar';
-import { CategoryBar } from '../../components/common/Category/CategoryBar';
-import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
+import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
+import { SearchBar } from '@/components/common/SearchBar/SearchBar';
+import { CategoryBar } from '@/components/common/Category/CategoryBar';
+import { CategoryPickerModal } from '@/components/common/Category/CategoryPickerModal';
 import { useCategories } from '@/hooks/useCategories';
-import { useAuth } from '../../context/AuthContext';
-import { toErrorMessage } from '../../services/errors';
-import { colors } from '../../theme';
-import { Category, Product } from '../../types/entities';
-import { ProductsStackParamList } from './ProductsNavigator';
-import { AddCategoryModal } from './AddCategoryModal';
-import { useProducts } from './useProducts';
-import { productsScreenStyles } from './ProductsScreen.styles';
+import { useAuth } from '@/context/AuthContext';
+import { toErrorMessage } from '@/services/errors';
+import { colors } from '@/theme';
+import { Category, Product } from '@/types/entities';
+import { MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
+import { AddCategoryModal } from '@/admin/menu-management/components/AddCategoryModal';
+import { useMenuManagement } from '@/admin/menu-management/hooks/useMenuManagement';
+import { menuManagementStyles } from './MenuManagement.styles';
 
-type ProductsScreenProps = StackScreenProps<ProductsStackParamList, 'Products'> & {
+type MenuManagementProps = StackScreenProps<MenuManagementStackParamList, 'MenuManagement'> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -45,9 +45,9 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-export function ProductsScreen({ navigation, style }: ProductsScreenProps): React.JSX.Element {
+export function MenuManagement({ navigation, style }: MenuManagementProps): React.JSX.Element {
   const { role } = useAuth();
-  const { products, isLoading, error, loadProducts } = useProducts();
+  const { products, isLoading, error, loadProducts } = useMenuManagement();
   const { categories, loadCategories, createCategory, deleteCategory } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,27 +133,27 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
 
   if (role !== 'admin') {
     return (
-      <View style={[productsScreenStyles.container, productsScreenStyles.loadingContainer, style]}>
-        <Text style={productsScreenStyles.loadingText}>Admin access required</Text>
+      <View style={[menuManagementStyles.container, menuManagementStyles.loadingContainer, style]}>
+        <Text style={menuManagementStyles.loadingText}>Admin access required</Text>
       </View>
     );
   }
 
   const renderItem = ({ item }: { item: Product }): React.JSX.Element => (
-    <View style={productsScreenStyles.productRow}>
-      <View style={productsScreenStyles.emojiTile}>
-        <Text style={productsScreenStyles.emojiText}>☕</Text>
+    <View style={menuManagementStyles.productRow}>
+      <View style={menuManagementStyles.emojiTile}>
+        <Text style={menuManagementStyles.emojiText}>☕</Text>
       </View>
-      <View style={productsScreenStyles.productInfo}>
-        <Text style={productsScreenStyles.productName} numberOfLines={1}>
+      <View style={menuManagementStyles.productInfo}>
+        <Text style={menuManagementStyles.productName} numberOfLines={1}>
           {item.name}
         </Text>
-        <Text style={productsScreenStyles.productPrice}>{formatPeso(item.price)}</Text>
+        <Text style={menuManagementStyles.productPrice}>{formatPeso(item.price)}</Text>
       </View>
       <Pressable
         hitSlop={8}
-        style={productsScreenStyles.editButton}
-        onPress={() => navigation.navigate('AddEditProduct', { product: item })}
+        style={menuManagementStyles.editButton}
+        onPress={() => navigation.navigate('AddEditMenuItem', { product: item })}
       >
         <Pencil size={16} color={colors.textSecondary} />
       </Pressable>
@@ -161,29 +161,29 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
   );
 
   const renderSectionHeader = ({ section }: { section: ProductSection }): React.JSX.Element => (
-    <Text style={productsScreenStyles.sectionHeader}>{section.title}</Text>
+    <Text style={menuManagementStyles.sectionHeader}>{section.title}</Text>
   );
 
   if (isLoading && products.length === 0) {
     return (
-      <View style={[productsScreenStyles.container, productsScreenStyles.loadingContainer, style]}>
-        <Text style={productsScreenStyles.loadingText}>Loading products...</Text>
+      <View style={[menuManagementStyles.container, menuManagementStyles.loadingContainer, style]}>
+        <Text style={menuManagementStyles.loadingText}>Loading products...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[productsScreenStyles.container, style]}>
+    <SafeAreaView style={[menuManagementStyles.container, style]}>
       <AppHeader pageTitle="Products" />
 
       <SearchBar
         placeholder="Search menu items..."
         value={searchQuery}
         onChangeText={setSearchQuery}
-        style={productsScreenStyles.searchBar}
+        style={menuManagementStyles.searchBar}
       />
 
-      <View style={productsScreenStyles.categoryWrapper}>
+      <View style={menuManagementStyles.categoryWrapper}>
         <CategoryBar
           categories={categoryNames}
           activeCategory={activeCategory}
@@ -191,7 +191,7 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         />
       </View>
 
-      {error ? <Text style={productsScreenStyles.errorText}>{error}</Text> : null}
+      {error ? <Text style={menuManagementStyles.errorText}>{error}</Text> : null}
 
       <SectionList
         sections={sections}
@@ -199,19 +199,19 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         stickySectionHeadersEnabled={false}
-        contentContainerStyle={productsScreenStyles.content}
+        contentContainerStyle={menuManagementStyles.content}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={productsScreenStyles.emptyContainer}>
-            <Text style={productsScreenStyles.emptyText}>No products yet — add your first one</Text>
+          <View style={menuManagementStyles.emptyContainer}>
+            <Text style={menuManagementStyles.emptyText}>No products yet — add your first one</Text>
           </View>
         }
       />
 
       <Pressable
         style={({ pressed }) => [
-          productsScreenStyles.fab,
-          pressed ? productsScreenStyles.fabPressed : null,
+          menuManagementStyles.fab,
+          pressed ? menuManagementStyles.fabPressed : null,
         ]}
         onPress={() => setFabMenuVisible(true)}
       >
@@ -224,74 +224,74 @@ export function ProductsScreen({ navigation, style }: ProductsScreenProps): Reac
         animationType="fade"
         onRequestClose={() => setFabMenuVisible(false)}
       >
-        <Pressable style={productsScreenStyles.fabMenuBackdrop} onPress={() => setFabMenuVisible(false)}>
-          <View style={productsScreenStyles.fabMenuSheet}>
-            <Text style={productsScreenStyles.fabMenuTitle}>Menu Options</Text>
+        <Pressable style={menuManagementStyles.fabMenuBackdrop} onPress={() => setFabMenuVisible(false)}>
+          <View style={menuManagementStyles.fabMenuSheet}>
+            <Text style={menuManagementStyles.fabMenuTitle}>Menu Options</Text>
             <Pressable
               style={({ pressed }) => [
-                productsScreenStyles.fabMenuOption,
-                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+                menuManagementStyles.fabMenuOption,
+                pressed ? menuManagementStyles.fabMenuOptionPressed : null,
               ]}
               onPress={() => {
                 setFabMenuVisible(false);
-                navigation.navigate('AddEditProduct', undefined);
+                navigation.navigate('AddEditMenuItem', undefined);
               }}
             >
-              <View style={productsScreenStyles.fabMenuOptionIcon}>
+              <View style={menuManagementStyles.fabMenuOptionIcon}>
                 <UtensilsCrossed size={20} color={colors.primary} />
               </View>
-              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
-                <Text style={productsScreenStyles.fabMenuOptionTitle}>Add Product</Text>
-                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+              <View style={menuManagementStyles.fabMenuOptionTextBlock}>
+                <Text style={menuManagementStyles.fabMenuOptionTitle}>Add Product</Text>
+                <Text style={menuManagementStyles.fabMenuOptionCaption}>
                   Create a new menu item
                 </Text>
               </View>
             </Pressable>
-            <View style={productsScreenStyles.fabMenuDivider} />
+            <View style={menuManagementStyles.fabMenuDivider} />
             <Pressable
               style={({ pressed }) => [
-                productsScreenStyles.fabMenuOption,
-                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+                menuManagementStyles.fabMenuOption,
+                pressed ? menuManagementStyles.fabMenuOptionPressed : null,
               ]}
               onPress={() => {
                 setFabMenuVisible(false);
                 setCategoryModalVisible(true);
               }}
             >
-              <View style={productsScreenStyles.fabMenuOptionIcon}>
+              <View style={menuManagementStyles.fabMenuOptionIcon}>
                 <Tags size={20} color={colors.primary} />
               </View>
-              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
-                <Text style={productsScreenStyles.fabMenuOptionTitle}>Add Category</Text>
-                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+              <View style={menuManagementStyles.fabMenuOptionTextBlock}>
+                <Text style={menuManagementStyles.fabMenuOptionTitle}>Add Category</Text>
+                <Text style={menuManagementStyles.fabMenuOptionCaption}>
                   Create a new product category
                 </Text>
               </View>
             </Pressable>
-            <View style={productsScreenStyles.fabMenuDivider} />
+            <View style={menuManagementStyles.fabMenuDivider} />
             <Pressable
               style={({ pressed }) => [
-                productsScreenStyles.fabMenuOption,
-                pressed ? productsScreenStyles.fabMenuOptionPressed : null,
+                menuManagementStyles.fabMenuOption,
+                pressed ? menuManagementStyles.fabMenuOptionPressed : null,
               ]}
               onPress={() => {
                 setFabMenuVisible(false);
                 setDeletePickerVisible(true);
               }}
             >
-              <View style={productsScreenStyles.fabMenuOptionIcon}>
+              <View style={menuManagementStyles.fabMenuOptionIcon}>
                 <Trash2 size={20} color={colors.danger} />
               </View>
-              <View style={productsScreenStyles.fabMenuOptionTextBlock}>
+              <View style={menuManagementStyles.fabMenuOptionTextBlock}>
                 <Text
                   style={[
-                    productsScreenStyles.fabMenuOptionTitle,
-                    productsScreenStyles.fabMenuOptionTitleDanger,
+                    menuManagementStyles.fabMenuOptionTitle,
+                    menuManagementStyles.fabMenuOptionTitleDanger,
                   ]}
                 >
                   Delete Category
                 </Text>
-                <Text style={productsScreenStyles.fabMenuOptionCaption}>
+                <Text style={menuManagementStyles.fabMenuOptionCaption}>
                   Remove a category and unlink its products
                 </Text>
               </View>

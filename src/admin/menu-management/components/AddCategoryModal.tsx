@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
-import { TextField } from '../../components/common/TextField/TextField';
-import { colors } from '../../theme';
+import { TextField } from '@/components/common/TextField/TextField';
+import { colors } from '@/theme';
 import { addCategoryModalStyles } from './AddCategoryModal.styles';
 
 interface AddCategoryModalProps {

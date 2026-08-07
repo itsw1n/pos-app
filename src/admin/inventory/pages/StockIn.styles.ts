@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, spacing, typography } from '../../theme';
+import { colors, radius, shadows, spacing, typography } from '@/theme';
 
-export const stockInScreenStyles = StyleSheet.create({
+export const stockInStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

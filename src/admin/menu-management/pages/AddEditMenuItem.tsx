@@ -15,32 +15,32 @@ import {
 import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
-import { TextField } from '../../components/common/TextField/TextField';
-import { CategoryPickerModal } from '../../components/common/Category/CategoryPickerModal';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
+import { TextField } from '@/components/common/TextField/TextField';
+import { CategoryPickerModal } from '@/components/common/Category/CategoryPickerModal';
 import { useCategories } from '@/hooks/useCategories';
-import { useAuth } from '../../context/AuthContext';
-import { toErrorMessage } from '../../services/errors';
-import { colors } from '../../theme';
-import { ProductsStackParamList } from './ProductsNavigator';
-import { useProducts } from './useProducts';
-import { addEditProductScreenStyles } from './AddEditProductScreen.styles';
+import { useAuth } from '@/context/AuthContext';
+import { toErrorMessage } from '@/services/errors';
+import { colors } from '@/theme';
+import { MenuManagementStackParamList } from '@/admin/menu-management/MenuManagementNavigator';
+import { useMenuManagement } from '@/admin/menu-management/hooks/useMenuManagement';
+import { addEditMenuItemStyles } from './AddEditMenuItem.styles';
 
-type AddEditProductScreenProps = StackScreenProps<
-  ProductsStackParamList,
-  'AddEditProduct'
+type AddEditMenuItemProps = StackScreenProps<
+  MenuManagementStackParamList,
+  'AddEditMenuItem'
 > & {
   style?: StyleProp<ViewStyle>;
 };
 
-export function AddEditProductScreen({
+export function AddEditMenuItem({
   navigation,
   route,
   style,
-}: AddEditProductScreenProps): React.JSX.Element {
+}: AddEditMenuItemProps): React.JSX.Element {
   const { role } = useAuth();
   const { categories, loadCategories } = useCategories();
-  const { createProduct, updateProduct, deleteProduct } = useProducts();
+  const { createProduct, updateProduct, deleteProduct } = useMenuManagement();
   const product = route.params?.product;
   const isEditing = product !== undefined;
 
@@ -72,8 +72,8 @@ export function AddEditProductScreen({
 
   if (role !== 'admin') {
     return (
-      <View style={[addEditProductScreenStyles.container, style]}>
-        <Text style={addEditProductScreenStyles.errorText}>Admin access required</Text>
+      <View style={[addEditMenuItemStyles.container, style]}>
+        <Text style={addEditMenuItemStyles.errorText}>Admin access required</Text>
       </View>
     );
   }
@@ -114,45 +114,45 @@ export function AddEditProductScreen({
   };
 
   return (
-    <SafeAreaView style={[addEditProductScreenStyles.container, style]}>
-      <View style={addEditProductScreenStyles.topBar}>
+    <SafeAreaView style={[addEditMenuItemStyles.container, style]}>
+      <View style={addEditMenuItemStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={addEditProductScreenStyles.topBarTitle}>
+        <Text style={addEditMenuItemStyles.topBarTitle}>
           {isEditing ? 'Edit' : 'Add'} Product
         </Text>
-        <View style={addEditProductScreenStyles.topBarSpacer} />
+        <View style={addEditMenuItemStyles.topBarSpacer} />
       </View>
 
       <KeyboardAvoidingView
-        style={addEditProductScreenStyles.keyboardView}
+        style={addEditMenuItemStyles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={addEditProductScreenStyles.content}
+          contentContainerStyle={addEditMenuItemStyles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={addEditProductScreenStyles.formCard}>
+          <View style={addEditMenuItemStyles.formCard}>
             <TextField
               label="Name"
               value={name}
               onChangeText={setName}
-              style={addEditProductScreenStyles.fieldSpacing}
+              style={addEditMenuItemStyles.fieldSpacing}
             />
-            <Text style={addEditProductScreenStyles.sectionLabel}>Category</Text>
+            <Text style={addEditMenuItemStyles.sectionLabel}>Category</Text>
             <Pressable
               style={[
-                addEditProductScreenStyles.categoryPicker,
-                categoryPickerOpen ? addEditProductScreenStyles.categoryPickerActive : null,
+                addEditMenuItemStyles.categoryPicker,
+                categoryPickerOpen ? addEditMenuItemStyles.categoryPickerActive : null,
               ]}
               onPress={() => setCategoryPickerOpen(true)}
             >
               <Text
                 style={
                   categoryName
-                    ? addEditProductScreenStyles.categoryPickerText
-                    : addEditProductScreenStyles.categoryPickerPlaceholder
+                    ? addEditMenuItemStyles.categoryPickerText
+                    : addEditMenuItemStyles.categoryPickerPlaceholder
                 }
               >
                 {categoryName || 'Select a category'}
@@ -164,16 +164,16 @@ export function AddEditProductScreen({
               value={priceText}
               onChangeText={setPriceText}
               keyboardType="decimal-pad"
-              style={addEditProductScreenStyles.fieldSpacing}
+              style={addEditMenuItemStyles.fieldSpacing}
             />
 
-            <Text style={addEditProductScreenStyles.sectionLabel}>Availability</Text>
-            <View style={addEditProductScreenStyles.availabilityRow}>
-              <View style={addEditProductScreenStyles.availabilityTextBlock}>
-                <Text style={addEditProductScreenStyles.availabilityTitle}>
+            <Text style={addEditMenuItemStyles.sectionLabel}>Availability</Text>
+            <View style={addEditMenuItemStyles.availabilityRow}>
+              <View style={addEditMenuItemStyles.availabilityTextBlock}>
+                <Text style={addEditMenuItemStyles.availabilityTitle}>
                   Available on POS
                 </Text>
-                <Text style={addEditProductScreenStyles.availabilityCaption}>
+                <Text style={addEditMenuItemStyles.availabilityCaption}>
                   Show this item on the POS menu
                 </Text>
               </View>
@@ -186,13 +186,13 @@ export function AddEditProductScreen({
             </View>
           </View>
 
-          {error ? <Text style={addEditProductScreenStyles.errorText}>{error}</Text> : null}
+          {error ? <Text style={addEditMenuItemStyles.errorText}>{error}</Text> : null}
 
           <Pressable
             style={[
-              addEditProductScreenStyles.saveButton,
+              addEditMenuItemStyles.saveButton,
               !formIsValid || isSubmitting
-                ? addEditProductScreenStyles.saveButtonDisabled
+                ? addEditMenuItemStyles.saveButtonDisabled
                 : null,
             ]}
             disabled={!formIsValid || isSubmitting}
@@ -201,7 +201,7 @@ export function AddEditProductScreen({
             {isSubmitting ? (
               <ActivityIndicator color={colors.surface} />
             ) : (
-              <Text style={addEditProductScreenStyles.saveButtonText}>
+              <Text style={addEditMenuItemStyles.saveButtonText}>
                 {isEditing ? 'Save Changes' : 'Add Product'}
               </Text>
             )}
@@ -209,11 +209,11 @@ export function AddEditProductScreen({
 
           {isEditing && product ? (
             <Pressable
-              style={addEditProductScreenStyles.deleteButton}
+              style={addEditMenuItemStyles.deleteButton}
               disabled={isSubmitting}
               onPress={() => setDeleteConfirmOpen(true)}
             >
-              <Text style={addEditProductScreenStyles.deleteButtonText}>
+              <Text style={addEditMenuItemStyles.deleteButtonText}>
                 Delete Product
               </Text>
             </Pressable>

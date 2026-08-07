@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { supabase } from '../../services/supabase';
-import { ProductRow, toProduct, UNCATEGORIZED } from '../../services/catalog';
-import { Product } from '../../types/entities';
+import { supabase } from '@/services/supabase';
+import { ProductRow, toProduct, UNCATEGORIZED } from '@/services/catalog';
+import { Product } from '@/types/entities';
 
 export interface ProductPayload {
   name: string;
@@ -10,7 +10,7 @@ export interface ProductPayload {
   is_available: boolean;
 }
 
-export interface UseProductsResult {
+export interface UseMenuManagementResult {
   products: Product[];
   isLoading: boolean;
   error: string;
@@ -32,7 +32,7 @@ function validatePayload(payload: ProductPayload): void {
   }
 }
 
-export function useProducts(): UseProductsResult {
+export function useMenuManagement(): UseMenuManagementResult {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
