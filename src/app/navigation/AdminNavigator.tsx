@@ -1,16 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Box, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
-import { TabBarIcon } from '../../components/common/TabBarIcon/TabBarIcon';
-import { POSNavigator } from '../../features/pos/POSNavigator';
-import { TransactionsNavigator } from '../../features/transactions/TransactionsNavigator';
-import { InventoryViewScreen } from '../../features/inventory/InventoryViewScreen';
-import { SettingsNavigator } from '../../features/settings/SettingsNavigator';
-import { colors } from '../../theme';
+import { Box, ChartColumn, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
+import { TabBarIcon } from '@/components/common/TabBarIcon/TabBarIcon';
+import { ProductsNavigator } from '@/features/products/ProductsNavigator';
+import { TransactionsNavigator } from '@/features/transactions/TransactionsNavigator';
+import { ReportsNavigator } from '@/features/reports/ReportsNavigator';
+import { SettingsNavigator } from '@/features/settings/SettingsNavigator';
+import { colors } from '@/theme';
 
 const Tabs = createBottomTabNavigator();
 
-export function CashierNavigator(): React.JSX.Element {
+export function AdminNavigator(): React.JSX.Element {
   return (
     <Tabs.Navigator
       screenOptions={{
@@ -20,8 +20,8 @@ export function CashierNavigator(): React.JSX.Element {
       }}
     >
       <Tabs.Screen
-        name="Menu"
-        component={POSNavigator}
+        name="Products"
+        component={ProductsNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
             <TabBarIcon icon={UtensilsCrossed} focused={focused} color={color} size={size} />
@@ -38,11 +38,11 @@ export function CashierNavigator(): React.JSX.Element {
         }}
       />
       <Tabs.Screen
-        name="Inventory"
-        component={InventoryViewScreen}
+        name="Dashboard"
+        component={ReportsNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Box} focused={focused} color={color} size={size} />
+            <TabBarIcon icon={ChartColumn} focused={focused} color={color} size={size} />
           ),
         }}
       />

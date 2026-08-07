@@ -2,11 +2,11 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { AdminNavigator } from '../components/layout/AdminNavigator';
-import { CashierNavigator } from '../components/layout/CashierNavigator';
-import { LoginScreen } from '../features/auth/LoginScreen';
-import { colors } from '../theme';
+import { useAuth } from '@/context/AuthContext';
+import { AdminNavigator } from '@/app/navigation/AdminNavigator';
+import { CashierNavigator } from '@/app/navigation/CashierNavigator';
+import { LoginScreen } from '@/features/auth/LoginScreen';
+import { colors } from '@/theme';
 
 const Stack = createStackNavigator();
 
