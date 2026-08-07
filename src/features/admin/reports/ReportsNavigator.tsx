@@ -1,8 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { colors, typography } from '@/theme';
-import { InventoryManagement } from '@/features/admin/inventory/pages/InventoryManagement';
-import { StockIn } from '@/features/admin/inventory/pages/StockIn';
+import { InventoryManagement } from '@/features/admin/inventory-management/pages/InventoryManagement';
+import { StockIn } from '@/features/admin/inventory-management/pages/StockIn';
 import { Dashboard } from './pages/Dashboard';
 import { Reports } from './pages/Reports';
 
