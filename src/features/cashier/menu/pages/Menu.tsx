@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   SafeAreaView,
@@ -91,9 +91,13 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
   const { cart, products, isLoading, error, addToCart, decrementItem } =
     useMenu();
   const { total } = useCart();
-  const { categories } = useCategories();
+  const { categories, loadCategories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
 
   const categoryNames = useMemo(
     () => categories.map((category) => category.name),
