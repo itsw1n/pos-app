@@ -23,6 +23,7 @@ import {
   TransactionRecord,
   TransactionItemRow,
 } from '@/features/shared/orders/hooks/useOrders';
+import { formatOrderNumber } from '@/utils/orderNumber';
 import { useAuth } from '@/context/AuthContext';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
@@ -45,10 +46,6 @@ function formatPeso(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-}
-
-function transactionLabel(id: string): string {
-  return `#TXN-${id.replace(/-/g, '').toUpperCase().slice(0, 8)}`;
 }
 
 const itemsCache = new Map<string, TransactionItemRow[]>();
@@ -105,6 +102,7 @@ function TransactionCard({
       event.stopPropagation();
       navigation.navigate('Void', {
         transactionId: item.id,
+        order_number: item.order_number,
         date: item.date,
         total: item.total_amount,
       });
@@ -126,7 +124,9 @@ function TransactionCard({
     >
       {/* ROW 1 */}
       <View style={S.row1}>
-        <Text style={S.txnId}>{transactionLabel(item.id)}</Text>
+        <Text style={S.txnId}>
+          {formatOrderNumber(item.order_number, item.id)}
+        </Text>
         {isVoided ? (
           <View style={S.voidBadge}>
             <Text style={S.voidBadgeText}>VOIDED</Text>

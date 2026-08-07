@@ -10,6 +10,7 @@ export type OrdersStackParamList = {
   TransactionDetail: { transaction: TransactionRecord };
   Void: {
     transactionId: string;
+    order_number?: number;
     date: string;
     total: number;
   };

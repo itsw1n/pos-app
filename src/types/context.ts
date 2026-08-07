@@ -31,5 +31,6 @@ export interface POSTransaction {
   date: string;
   status: 'completed';
   items: CartItem[];
+  order_number?: number;
   synced: boolean;
 }
