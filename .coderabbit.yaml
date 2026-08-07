@@ -1,0 +1,6 @@
+review:
+  auto_review:
+    enabled: true
+    base_branches:
+      - dev
+      - main
