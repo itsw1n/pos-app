@@ -20,7 +20,8 @@ export async function syncPendingRecords(): Promise<void> {
   const { isConnected } = await NetInfo.fetch();
   if (!isConnected) return;
 
-  const unsynced = await getUnsyncedRecords<UnsyncedTransaction>('transactions');
+  const unsynced =
+    await getUnsyncedRecords<UnsyncedTransaction>('transactions');
   for (const record of unsynced) {
     const { data: existing } = await supabase
       .from('transactions')

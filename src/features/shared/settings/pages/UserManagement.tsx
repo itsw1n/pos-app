@@ -27,32 +27,49 @@ interface NewUserForm {
   role: 'admin' | 'cashier';
 }
 
-export function UserManagement({ style }: UserManagementProps): React.JSX.Element {
+export function UserManagement({
+  style,
+}: UserManagementProps): React.JSX.Element {
   const { role } = useAuth();
-  const { users, isLoading, error, loadUsers, createUser, setUserActive } = useUsers();
-  const [form, setForm] = useState<NewUserForm>({ username: '', password: '', role: 'cashier' });
+  const { users, isLoading, error, loadUsers, createUser, setUserActive } =
+    useUsers();
+  const [form, setForm] = useState<NewUserForm>({
+    username: '',
+    password: '',
+    role: 'cashier',
+  });
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [pendingToggle, setPendingToggle] = useState<User | null>(null);
 
-  const pendingWillDisable = pendingToggle !== null && pendingToggle.is_active !== false;
+  const pendingWillDisable =
+    pendingToggle !== null && pendingToggle.is_active !== false;
 
   useFocusEffect(
     useCallback(() => {
       void loadUsers();
-    }, [loadUsers])
+    }, [loadUsers]),
   );
 
   if (role !== 'admin') {
     return (
-      <View style={[userManagementStyles.container, userManagementStyles.centered, style]}>
-        <Text style={userManagementStyles.errorText}>Admin access required</Text>
+      <View
+        style={[
+          userManagementStyles.container,
+          userManagementStyles.centered,
+          style,
+        ]}
+      >
+        <Text style={userManagementStyles.errorText}>
+          Admin access required
+        </Text>
       </View>
     );
   }
 
-  const formIsValid = form.username.trim().length > 0 && form.password.length > 0;
+  const formIsValid =
+    form.username.trim().length > 0 && form.password.length > 0;
 
   const handleCreate = async (): Promise<void> => {
     if (!formIsValid || isSubmitting) return;
@@ -63,7 +80,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
       setForm({ username: '', password: '', role: 'cashier' });
       void loadUsers();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Failed to create user');
+      setFormError(
+        err instanceof Error ? err.message : 'Failed to create user',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +96,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
     setTogglingId(user.user_id);
     setUserActive(user.user_id, !willDisable)
       .catch((err) => {
-        setFormError(err instanceof Error ? err.message : 'Could not update user');
+        setFormError(
+          err instanceof Error ? err.message : 'Could not update user',
+        );
       })
       .finally(() => setTogglingId(null));
   };
@@ -119,7 +140,13 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
 
   if (isLoading && users.length === 0) {
     return (
-      <View style={[userManagementStyles.container, userManagementStyles.centered, style]}>
+      <View
+        style={[
+          userManagementStyles.container,
+          userManagementStyles.centered,
+          style,
+        ]}
+      >
         <Text style={userManagementStyles.loadingText}>Loading users...</Text>
       </View>
     );
@@ -135,7 +162,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
-            <Text style={userManagementStyles.sectionLabel}>Create Account</Text>
+            <Text style={userManagementStyles.sectionLabel}>
+              Create Account
+            </Text>
             <View style={userManagementStyles.formCard}>
               <TextField
                 label="Username"
@@ -161,7 +190,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
                   variant={form.role === 'cashier' ? 'primary' : 'outline'}
                   size="small"
                   style={userManagementStyles.roleButton}
-                  onPress={() => setForm((prev) => ({ ...prev, role: 'cashier' }))}
+                  onPress={() =>
+                    setForm((prev) => ({ ...prev, role: 'cashier' }))
+                  }
                 >
                   Cashier
                 </Button>
@@ -169,7 +200,9 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
                   variant={form.role === 'admin' ? 'primary' : 'outline'}
                   size="small"
                   style={userManagementStyles.roleButton}
-                  onPress={() => setForm((prev) => ({ ...prev, role: 'admin' }))}
+                  onPress={() =>
+                    setForm((prev) => ({ ...prev, role: 'admin' }))
+                  }
                 >
                   Admin
                 </Button>
@@ -191,8 +224,12 @@ export function UserManagement({ style }: UserManagementProps): React.JSX.Elemen
                 )}
               </Button>
             </View>
-            {error ? <Text style={userManagementStyles.errorText}>{error}</Text> : null}
-            <Text style={userManagementStyles.sectionLabel}>Accounts ({users.length})</Text>
+            {error ? (
+              <Text style={userManagementStyles.errorText}>{error}</Text>
+            ) : null}
+            <Text style={userManagementStyles.sectionLabel}>
+              Accounts ({users.length})
+            </Text>
           </View>
         }
         ListEmptyComponent={

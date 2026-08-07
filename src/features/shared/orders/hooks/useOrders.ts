@@ -58,7 +58,9 @@ export function useOrders(): UseTransactionsResult {
     try {
       let query = supabase
         .from('transactions')
-        .select('id, date, total_amount, payment_mode, user_id, status, void_reason')
+        .select(
+          'id, date, total_amount, payment_mode, user_id, status, void_reason',
+        )
         .order('date', { ascending: false });
       if (role !== 'admin' && user) {
         query = query.eq('user_id', user.user_id);
@@ -74,22 +76,27 @@ export function useOrders(): UseTransactionsResult {
           .select('transaction_id')
           .in(
             'transaction_id',
-            rows.map((row) => row.id)
+            rows.map((row) => row.id),
           );
         if (!itemsError) {
           itemsCount = new Map<string, number>();
-          for (const item of (items as Array<{ transaction_id: string }>) ?? []) {
-            itemsCount.set(item.transaction_id, (itemsCount.get(item.transaction_id) ?? 0) + 1);
+          for (const item of (items as Array<{ transaction_id: string }>) ??
+            []) {
+            itemsCount.set(
+              item.transaction_id,
+              (itemsCount.get(item.transaction_id) ?? 0) + 1,
+            );
           }
         }
       }
 
-      const { data: users } = await supabase.from('user').select('user_id, username');
+      const { data: users } = await supabase
+        .from('user')
+        .select('user_id, username');
       const userById = new Map(
-        ((users as Array<{ user_id: number; username: string }>) ?? []).map((row) => [
-          row.user_id,
-          row.username,
-        ])
+        ((users as Array<{ user_id: number; username: string }>) ?? []).map(
+          (row) => [row.user_id, row.username],
+        ),
       );
 
       setTransactions(
@@ -103,38 +110,48 @@ export function useOrders(): UseTransactionsResult {
           items_count: itemsCount.get(row.id) ?? 0,
           status: row.status === 'voided' ? 'voided' : 'completed',
           void_reason: row.void_reason ?? null,
-        }))
+        })),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load transactions');
+      setError(
+        err instanceof Error ? err.message : 'Failed to load transactions',
+      );
     } finally {
       setIsLoading(false);
     }
   }, [role, user]);
 
-  const getTransactionItems = useCallback(async (transactionId: string): Promise<TransactionItemRow[]> => {
-    const [itemsRes, productsRes] = await Promise.all([
-      supabase.from('transaction_items').select('*').eq('transaction_id', transactionId),
-      supabase.from('product').select('product_id, name, price'),
-    ]);
-    if (itemsRes.error) throw itemsRes.error;
-    if (productsRes.error) throw productsRes.error;
+  const getTransactionItems = useCallback(
+    async (transactionId: string): Promise<TransactionItemRow[]> => {
+      const [itemsRes, productsRes] = await Promise.all([
+        supabase
+          .from('transaction_items')
+          .select('*')
+          .eq('transaction_id', transactionId),
+        supabase.from('product').select('product_id, name, price'),
+      ]);
+      if (itemsRes.error) throw itemsRes.error;
+      if (productsRes.error) throw productsRes.error;
 
-    const items = (itemsRes.data as TransactionItem[]) ?? [];
-    const products = (productsRes.data as Product[]) ?? [];
-    const productById = new Map(products.map((product) => [product.product_id, product]));
+      const items = (itemsRes.data as TransactionItem[]) ?? [];
+      const products = (productsRes.data as Product[]) ?? [];
+      const productById = new Map(
+        products.map((product) => [product.product_id, product]),
+      );
 
-    return items.map((item) => {
-      const product = productById.get(item.product_id);
-      return {
-        product_id: item.product_id,
-        product_name: product?.name ?? `Product #${item.product_id}`,
-        quantity: item.quantity,
-        price: product?.price ?? 0,
-        subtotal: item.subtotal,
-      };
-    });
-  }, []);
+      return items.map((item) => {
+        const product = productById.get(item.product_id);
+        return {
+          product_id: item.product_id,
+          product_name: product?.name ?? `Product #${item.product_id}`,
+          quantity: item.quantity,
+          price: product?.price ?? 0,
+          subtotal: item.subtotal,
+        };
+      });
+    },
+    [],
+  );
 
   const voidTransaction = useCallback(
     async (transactionId: string, reason: string): Promise<void> => {
@@ -144,7 +161,9 @@ export function useOrders(): UseTransactionsResult {
       }
       const { isConnected } = await NetInfo.fetch();
       if (!isConnected) {
-        throw new Error('Cannot void a transaction while offline. Connect to the network and try again.');
+        throw new Error(
+          'Cannot void a transaction while offline. Connect to the network and try again.',
+        );
       }
 
       setIsVoiding(true);
@@ -172,12 +191,14 @@ export function useOrders(): UseTransactionsResult {
             .eq('stock_id', inventory.stock_id);
           if (updateError) throw updateError;
 
-          const { error: movementError } = await supabase.from('stock_movements').insert({
-            stock_id: inventory.stock_id,
-            type: 'in',
-            quantity: item.quantity,
-            date: new Date().toISOString(),
-          });
+          const { error: movementError } = await supabase
+            .from('stock_movements')
+            .insert({
+              stock_id: inventory.stock_id,
+              type: 'in',
+              quantity: item.quantity,
+              date: new Date().toISOString(),
+            });
           if (movementError) throw movementError;
         }
 
@@ -189,14 +210,15 @@ export function useOrders(): UseTransactionsResult {
 
         await loadTransactions();
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to void transaction';
+        const message =
+          err instanceof Error ? err.message : 'Failed to void transaction';
         setError(message);
         throw err;
       } finally {
         setIsVoiding(false);
       }
     },
-    [loadTransactions]
+    [loadTransactions],
   );
 
   useEffect(() => {

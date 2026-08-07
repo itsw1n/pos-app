@@ -45,7 +45,12 @@ export function AddCategoryModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable style={addCategoryModalStyles.backdrop} onPress={onClose}>
         <Pressable style={addCategoryModalStyles.sheet} onPress={() => {}}>
           <Text style={addCategoryModalStyles.title}>New Category</Text>
@@ -57,14 +62,18 @@ export function AddCategoryModal({
             placeholder="e.g. Pastries"
             style={addCategoryModalStyles.field}
           />
-          {error ? <Text style={addCategoryModalStyles.errorText}>{error}</Text> : null}
+          {error ? (
+            <Text style={addCategoryModalStyles.errorText}>{error}</Text>
+          ) : null}
           <View style={addCategoryModalStyles.actions}>
             <Pressable
               style={addCategoryModalStyles.cancelButton}
               disabled={isSubmitting}
               onPress={onClose}
             >
-              <Text style={addCategoryModalStyles.cancelButtonText}>Cancel</Text>
+              <Text style={addCategoryModalStyles.cancelButtonText}>
+                Cancel
+              </Text>
             </Pressable>
             <Pressable
               style={[

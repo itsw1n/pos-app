@@ -34,9 +34,21 @@ export function ReportsNavigator(): React.JSX.Element {
         component={Dashboard}
         options={{ title: 'Dashboard', headerShown: false }}
       />
-      <Stack.Screen name="Reports" component={Reports} options={{ title: 'Reports', headerShown: false }} />
-      <Stack.Screen name="Inventory" component={InventoryManagement} options={{ title: 'Inventory' }} />
-      <Stack.Screen name="StockIn" component={StockIn} options={{ title: 'Stock In' }} />
+      <Stack.Screen
+        name="Reports"
+        component={Reports}
+        options={{ title: 'Reports', headerShown: false }}
+      />
+      <Stack.Screen
+        name="Inventory"
+        component={InventoryManagement}
+        options={{ title: 'Inventory' }}
+      />
+      <Stack.Screen
+        name="StockIn"
+        component={StockIn}
+        options={{ title: 'Stock In' }}
+      />
     </Stack.Navigator>
   );
 }

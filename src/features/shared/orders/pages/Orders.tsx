@@ -14,15 +14,15 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { colors } from '@/theme';
 import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
-import { useOrders, TransactionRecord } from '@/features/shared/orders/hooks/useOrders';
+import {
+  useOrders,
+  TransactionRecord,
+} from '@/features/shared/orders/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { transactionHistoryScreenStyles } from './Orders.styles';
 
-type OrdersProps = StackScreenProps<
-  OrdersStackParamList,
-  'OrdersHome'
-> & {
+type OrdersProps = StackScreenProps<OrdersStackParamList, 'OrdersHome'> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -58,16 +58,18 @@ function getDateBoundary(filter: DateFilterKey): number {
   if (filter === 'today') return day.getTime();
   if (filter === 'week') {
     const offset = (day.getDay() + 6) % 7;
-    return new Date(day.getFullYear(), day.getMonth(), day.getDate() - offset).getTime();
+    return new Date(
+      day.getFullYear(),
+      day.getMonth(),
+      day.getDate() - offset,
+    ).getTime();
   }
-  if (filter === 'month') return new Date(day.getFullYear(), day.getMonth(), 1).getTime();
+  if (filter === 'month')
+    return new Date(day.getFullYear(), day.getMonth(), 1).getTime();
   return 0;
 }
 
-export function Orders({
-  navigation,
-  style,
-}: OrdersProps): React.JSX.Element {
+export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
   const { transactions, isLoading, error, loadTransactions } = useOrders();
   const { role } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,26 +78,37 @@ export function Orders({
   useFocusEffect(
     useCallback(() => {
       void loadTransactions();
-    }, [loadTransactions])
+    }, [loadTransactions]),
   );
 
   const filteredTransactions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const boundary = getDateBoundary(dateFilter);
     const dateFiltered =
-      dateFilter === 'all' ? transactions : transactions.filter((item) => new Date(item.date).getTime() >= boundary);
+      dateFilter === 'all'
+        ? transactions
+        : transactions.filter(
+            (item) => new Date(item.date).getTime() >= boundary,
+          );
     if (!query) return dateFiltered;
     return dateFiltered.filter(
-      (item) => item.id.toLowerCase().includes(query) || item.user_name.toLowerCase().includes(query)
+      (item) =>
+        item.id.toLowerCase().includes(query) ||
+        item.user_name.toLowerCase().includes(query),
     );
   }, [transactions, searchQuery, dateFilter]);
 
   const totalSales = useMemo(
-    () => filteredTransactions.reduce((sum, item) => sum + item.total_amount, 0),
-    [filteredTransactions]
+    () =>
+      filteredTransactions.reduce((sum, item) => sum + item.total_amount, 0),
+    [filteredTransactions],
   );
 
-  const renderItem = ({ item }: { item: TransactionRecord }): React.JSX.Element => {
+  const renderItem = ({
+    item,
+  }: {
+    item: TransactionRecord;
+  }): React.JSX.Element => {
     const isVoided = item.status === 'voided';
     return (
       <View
@@ -105,7 +118,9 @@ export function Orders({
         ]}
       >
         <View style={transactionHistoryScreenStyles.topRow}>
-          <Text style={transactionHistoryScreenStyles.itemId}># {item.id.slice(-4)}</Text>
+          <Text style={transactionHistoryScreenStyles.itemId}>
+            # {item.id.slice(-4)}
+          </Text>
           <View style={transactionHistoryScreenStyles.modeBadge}>
             <Text style={transactionHistoryScreenStyles.modeBadgeText}>
               {PAYMENT_MODE_LABEL[item.payment_mode]}
@@ -113,7 +128,9 @@ export function Orders({
           </View>
         </View>
         <View style={transactionHistoryScreenStyles.itemMetaRow}>
-          <Text style={transactionHistoryScreenStyles.itemDate}>{formatDate(item.date)}</Text>
+          <Text style={transactionHistoryScreenStyles.itemDate}>
+            {formatDate(item.date)}
+          </Text>
           <Text style={transactionHistoryScreenStyles.itemCount}>
             {item.items_count} item(s)
           </Text>
@@ -130,7 +147,9 @@ export function Orders({
           <View style={transactionHistoryScreenStyles.itemActions}>
             {isVoided ? (
               <View style={transactionHistoryScreenStyles.voidedBadge}>
-                <Text style={transactionHistoryScreenStyles.voidedBadgeText}>VOIDED</Text>
+                <Text style={transactionHistoryScreenStyles.voidedBadgeText}>
+                  VOIDED
+                </Text>
               </View>
             ) : (
               <>
@@ -138,7 +157,9 @@ export function Orders({
                   <Pressable
                     style={({ pressed }) => [
                       transactionHistoryScreenStyles.voidButton,
-                      pressed ? transactionHistoryScreenStyles.voidButtonPressed : null,
+                      pressed
+                        ? transactionHistoryScreenStyles.voidButtonPressed
+                        : null,
                     ]}
                     onPress={() =>
                       navigation.navigate('Void', {
@@ -148,7 +169,9 @@ export function Orders({
                       })
                     }
                   >
-                    <Text style={transactionHistoryScreenStyles.voidButtonText}>Void</Text>
+                    <Text style={transactionHistoryScreenStyles.voidButtonText}>
+                      Void
+                    </Text>
                   </Pressable>
                 )}
               </>
@@ -163,7 +186,9 @@ export function Orders({
     return (
       <View style={[transactionHistoryScreenStyles.loadingContainer, style]}>
         <ActivityIndicator color={colors.primary} />
-        <Text style={transactionHistoryScreenStyles.loadingText}>Loading transactions...</Text>
+        <Text style={transactionHistoryScreenStyles.loadingText}>
+          Loading transactions...
+        </Text>
       </View>
     );
   }
@@ -187,14 +212,18 @@ export function Orders({
               key={filter.key}
               style={[
                 transactionHistoryScreenStyles.filterTab,
-                isActive ? transactionHistoryScreenStyles.filterTabActive : null,
+                isActive
+                  ? transactionHistoryScreenStyles.filterTabActive
+                  : null,
               ]}
               onPress={() => setDateFilter(filter.key as DateFilterKey)}
             >
               <Text
                 style={[
                   transactionHistoryScreenStyles.filterTabText,
-                  isActive ? transactionHistoryScreenStyles.filterTabTextActive : null,
+                  isActive
+                    ? transactionHistoryScreenStyles.filterTabTextActive
+                    : null,
                 ]}
               >
                 {filter.label}
@@ -206,21 +235,27 @@ export function Orders({
 
       <View style={transactionHistoryScreenStyles.summaryBar}>
         <View style={transactionHistoryScreenStyles.summaryBlock}>
-          <Text style={transactionHistoryScreenStyles.summaryLabel}>Total Sales</Text>
+          <Text style={transactionHistoryScreenStyles.summaryLabel}>
+            Total Sales
+          </Text>
           <Text style={transactionHistoryScreenStyles.summaryValue}>
             {formatPeso(totalSales)}
           </Text>
         </View>
         <View style={transactionHistoryScreenStyles.summaryDivider} />
         <View style={transactionHistoryScreenStyles.summaryBlock}>
-          <Text style={transactionHistoryScreenStyles.summaryLabel}>Transactions</Text>
+          <Text style={transactionHistoryScreenStyles.summaryLabel}>
+            Transactions
+          </Text>
           <Text style={transactionHistoryScreenStyles.summaryCount}>
             {filteredTransactions.length}
           </Text>
         </View>
       </View>
 
-      {error ? <Text style={transactionHistoryScreenStyles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text style={transactionHistoryScreenStyles.errorText}>{error}</Text>
+      ) : null}
 
       <FlatList
         data={filteredTransactions}
@@ -230,7 +265,9 @@ export function Orders({
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={transactionHistoryScreenStyles.emptyContainer}>
-            <Text style={transactionHistoryScreenStyles.emptyText}>No transactions yet</Text>
+            <Text style={transactionHistoryScreenStyles.emptyText}>
+              No transactions yet
+            </Text>
           </View>
         }
       />

@@ -29,20 +29,30 @@ type MenuProps = StackScreenProps<MenuStackParamList, 'MenuHome'> & {
 const ALL_CATEGORIES = 'All';
 
 export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
-  const { cart, products, isLoading, error, addToCart, decrementItem, getTotal } = useMenu();
+  const {
+    cart,
+    products,
+    isLoading,
+    error,
+    addToCart,
+    decrementItem,
+    getTotal,
+  } = useMenu();
   const { categories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
 
   const categoryNames = useMemo(
     () => categories.map((category) => category.name),
-    [categories]
+    [categories],
   );
 
   const filteredProducts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const byCategory =
-      activeCategory === ALL_CATEGORIES ? products : products.filter((p) => p.category === activeCategory);
+      activeCategory === ALL_CATEGORIES
+        ? products
+        : products.filter((p) => p.category === activeCategory);
     if (!query) return byCategory;
     return byCategory.filter((p) => p.name.toLowerCase().includes(query));
   }, [products, activeCategory, searchQuery]);
@@ -108,12 +118,12 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
     <SafeAreaView style={[menuStyles.container, style]}>
       <AppHeader pageTitle="Menu" />
 
-        <SearchBar
-          placeholder="Cari Menu"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={{ marginHorizontal: spacing['2xl'], marginVertical: spacing.md }}
-        />
+      <SearchBar
+        placeholder="Cari Menu"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        style={{ marginHorizontal: spacing['2xl'], marginVertical: spacing.md }}
+      />
 
       <View style={menuStyles.categoryWrapper}>
         <CategoryBar
@@ -133,7 +143,10 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
         showsVerticalScrollIndicator={false}
       />
 
-      <Pressable style={menuStyles.totalBar} onPress={() => navigation.navigate('Checkout')}>
+      <Pressable
+        style={menuStyles.totalBar}
+        onPress={() => navigation.navigate('Checkout')}
+      >
         <View style={menuStyles.totalBarLeft}>
           <Text style={menuStyles.totalBarLabel}>Total</Text>
           <ArrowRight size={16} color={colors.surface} />

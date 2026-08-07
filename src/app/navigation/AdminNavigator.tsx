@@ -1,6 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Box, ChartColumn, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
+import {
+  Box,
+  ChartColumn,
+  Receipt,
+  Settings,
+  UtensilsCrossed,
+} from 'lucide-react-native';
 import { TabBarIcon } from '@/components/common/TabBarIcon/TabBarIcon';
 import { MenuManagementNavigator } from '@/features/admin/menu-management/MenuManagementNavigator';
 import { OrdersNavigator } from '@/features/shared/orders/OrdersNavigator';
@@ -24,7 +30,12 @@ export function AdminNavigator(): React.JSX.Element {
         component={MenuManagementNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={UtensilsCrossed} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={UtensilsCrossed}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -33,7 +44,12 @@ export function AdminNavigator(): React.JSX.Element {
         component={OrdersNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Receipt} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={Receipt}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -42,7 +58,12 @@ export function AdminNavigator(): React.JSX.Element {
         component={ReportsNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={ChartColumn} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={ChartColumn}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -51,7 +72,12 @@ export function AdminNavigator(): React.JSX.Element {
         component={SettingsNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Settings} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={Settings}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />

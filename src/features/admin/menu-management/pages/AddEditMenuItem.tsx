@@ -47,7 +47,9 @@ export function AddEditMenuItem({
   const [name, setName] = useState(product?.name ?? '');
   const [categoryId, setCategoryId] = useState(product?.category_id ?? '');
   const [categoryName, setCategoryName] = useState(product?.category ?? '');
-  const [priceText, setPriceText] = useState(product ? String(product.price) : '');
+  const [priceText, setPriceText] = useState(
+    product ? String(product.price) : '',
+  );
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -57,7 +59,7 @@ export function AddEditMenuItem({
   useFocusEffect(
     useCallback(() => {
       void loadCategories(true);
-    }, [loadCategories])
+    }, [loadCategories]),
   );
 
   const price = parseFloat(priceText);
@@ -67,13 +69,15 @@ export function AddEditMenuItem({
       categoryId.trim().length > 0 &&
       Number.isFinite(price) &&
       price >= 0,
-    [name, categoryId, price]
+    [name, categoryId, price],
   );
 
   if (role !== 'admin') {
     return (
       <View style={[addEditMenuItemStyles.container, style]}>
-        <Text style={addEditMenuItemStyles.errorText}>Admin access required</Text>
+        <Text style={addEditMenuItemStyles.errorText}>
+          Admin access required
+        </Text>
       </View>
     );
   }
@@ -89,7 +93,12 @@ export function AddEditMenuItem({
     setError('');
     setIsSubmitting(true);
     try {
-      const payload = { name, category_id: categoryId, price, is_available: isAvailable };
+      const payload = {
+        name,
+        category_id: categoryId,
+        price,
+        is_available: isAvailable,
+      };
       if (isEditing && product) {
         await updateProduct(product.product_id, payload);
       } else {
@@ -144,7 +153,9 @@ export function AddEditMenuItem({
             <Pressable
               style={[
                 addEditMenuItemStyles.categoryPicker,
-                categoryPickerOpen ? addEditMenuItemStyles.categoryPickerActive : null,
+                categoryPickerOpen
+                  ? addEditMenuItemStyles.categoryPickerActive
+                  : null,
               ]}
               onPress={() => setCategoryPickerOpen(true)}
             >
@@ -186,7 +197,9 @@ export function AddEditMenuItem({
             </View>
           </View>
 
-          {error ? <Text style={addEditMenuItemStyles.errorText}>{error}</Text> : null}
+          {error ? (
+            <Text style={addEditMenuItemStyles.errorText}>{error}</Text>
+          ) : null}
 
           <Pressable
             style={[

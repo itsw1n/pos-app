@@ -9,7 +9,9 @@ export interface ReceiptData {
   items: Array<{ name: string; quantity: number; subtotal: number }>;
 }
 
-export async function generateReceipt(transaction: ReceiptData): Promise<string> {
+export async function generateReceipt(
+  transaction: ReceiptData,
+): Promise<string> {
   const html = `
     <html><body style="font-family: monospace; padding: 20px;">
       <h3>IPSS - Cafe Elvira</h3>

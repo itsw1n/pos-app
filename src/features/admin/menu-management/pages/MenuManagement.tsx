@@ -9,7 +9,13 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Pencil, Plus, Tags, Trash2, UtensilsCrossed } from 'lucide-react-native';
+import {
+  Pencil,
+  Plus,
+  Tags,
+  Trash2,
+  UtensilsCrossed,
+} from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
@@ -27,7 +33,10 @@ import { AddCategoryModal } from '@/features/admin/menu-management/components/Ad
 import { useMenuManagement } from '@/features/admin/menu-management/hooks/useMenuManagement';
 import { menuManagementStyles } from './MenuManagement.styles';
 
-type MenuManagementProps = StackScreenProps<MenuManagementStackParamList, 'MenuManagement'> & {
+type MenuManagementProps = StackScreenProps<
+  MenuManagementStackParamList,
+  'MenuManagement'
+> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -45,16 +54,22 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-export function MenuManagement({ navigation, style }: MenuManagementProps): React.JSX.Element {
+export function MenuManagement({
+  navigation,
+  style,
+}: MenuManagementProps): React.JSX.Element {
   const { role } = useAuth();
   const { products, isLoading, error, loadProducts } = useMenuManagement();
-  const { categories, loadCategories, createCategory, deleteCategory } = useCategories();
+  const { categories, loadCategories, createCategory, deleteCategory } =
+    useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
   const [fabMenuVisible, setFabMenuVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [deletePickerVisible, setDeletePickerVisible] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+    null,
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
@@ -62,12 +77,12 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
     useCallback(() => {
       void loadProducts();
       void loadCategories();
-    }, [loadProducts, loadCategories])
+    }, [loadProducts, loadCategories]),
   );
 
   const categoryNames = useMemo(
     () => categories.map((category) => category.name),
-    [categories]
+    [categories],
   );
 
   const filteredProducts = useMemo(() => {
@@ -79,7 +94,8 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
     if (!query) return byCategory;
     return byCategory.filter(
       (p) =>
-        p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)
+        p.name.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query),
     );
   }, [products, activeCategory, searchQuery]);
 
@@ -90,7 +106,10 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
       list.push(product);
       grouped.set(product.category, list);
     }
-    return Array.from(grouped.entries()).map(([title, data]) => ({ title, data }));
+    return Array.from(grouped.entries()).map(([title, data]) => ({
+      title,
+      data,
+    }));
   }, [filteredProducts]);
 
   const handleAddCategory = useCallback(
@@ -98,19 +117,21 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
       const category = await createCategory(name);
       setActiveCategory(category.name);
     },
-    [createCategory]
+    [createCategory],
   );
 
   const handleCategorySelectedToDelete = useCallback(
     (categoryId: string, _name: string): void => {
       setDeletePickerVisible(false);
-      const category = categories.find((item) => item.category_id === categoryId);
+      const category = categories.find(
+        (item) => item.category_id === categoryId,
+      );
       if (category) {
         setCategoryToDelete(category);
         setDeleteError('');
       }
     },
-    [categories]
+    [categories],
   );
 
   const handleConfirmDelete = useCallback(async (): Promise<void> => {
@@ -121,7 +142,7 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
       await deleteCategory(categoryToDelete.category_id);
       setCategoryToDelete(null);
       setActiveCategory((current) =>
-        current === categoryToDelete.name ? ALL_CATEGORIES : current
+        current === categoryToDelete.name ? ALL_CATEGORIES : current,
       );
       void loadProducts();
     } catch (err) {
@@ -133,8 +154,16 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
 
   if (role !== 'admin') {
     return (
-      <View style={[menuManagementStyles.container, menuManagementStyles.loadingContainer, style]}>
-        <Text style={menuManagementStyles.loadingText}>Admin access required</Text>
+      <View
+        style={[
+          menuManagementStyles.container,
+          menuManagementStyles.loadingContainer,
+          style,
+        ]}
+      >
+        <Text style={menuManagementStyles.loadingText}>
+          Admin access required
+        </Text>
       </View>
     );
   }
@@ -148,26 +177,42 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
         <Text style={menuManagementStyles.productName} numberOfLines={1}>
           {item.name}
         </Text>
-        <Text style={menuManagementStyles.productPrice}>{formatPeso(item.price)}</Text>
+        <Text style={menuManagementStyles.productPrice}>
+          {formatPeso(item.price)}
+        </Text>
       </View>
       <Pressable
         hitSlop={8}
         style={menuManagementStyles.editButton}
-        onPress={() => navigation.navigate('AddEditMenuItem', { product: item })}
+        onPress={() =>
+          navigation.navigate('AddEditMenuItem', { product: item })
+        }
       >
         <Pencil size={16} color={colors.textSecondary} />
       </Pressable>
     </View>
   );
 
-  const renderSectionHeader = ({ section }: { section: ProductSection }): React.JSX.Element => (
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: ProductSection;
+  }): React.JSX.Element => (
     <Text style={menuManagementStyles.sectionHeader}>{section.title}</Text>
   );
 
   if (isLoading && products.length === 0) {
     return (
-      <View style={[menuManagementStyles.container, menuManagementStyles.loadingContainer, style]}>
-        <Text style={menuManagementStyles.loadingText}>Loading products...</Text>
+      <View
+        style={[
+          menuManagementStyles.container,
+          menuManagementStyles.loadingContainer,
+          style,
+        ]}
+      >
+        <Text style={menuManagementStyles.loadingText}>
+          Loading products...
+        </Text>
       </View>
     );
   }
@@ -191,7 +236,9 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
         />
       </View>
 
-      {error ? <Text style={menuManagementStyles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text style={menuManagementStyles.errorText}>{error}</Text>
+      ) : null}
 
       <SectionList
         sections={sections}
@@ -203,7 +250,9 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={menuManagementStyles.emptyContainer}>
-            <Text style={menuManagementStyles.emptyText}>No products yet — add your first one</Text>
+            <Text style={menuManagementStyles.emptyText}>
+              No products yet — add your first one
+            </Text>
           </View>
         }
       />
@@ -224,7 +273,10 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
         animationType="fade"
         onRequestClose={() => setFabMenuVisible(false)}
       >
-        <Pressable style={menuManagementStyles.fabMenuBackdrop} onPress={() => setFabMenuVisible(false)}>
+        <Pressable
+          style={menuManagementStyles.fabMenuBackdrop}
+          onPress={() => setFabMenuVisible(false)}
+        >
           <View style={menuManagementStyles.fabMenuSheet}>
             <Text style={menuManagementStyles.fabMenuTitle}>Menu Options</Text>
             <Pressable
@@ -241,7 +293,9 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
                 <UtensilsCrossed size={20} color={colors.primary} />
               </View>
               <View style={menuManagementStyles.fabMenuOptionTextBlock}>
-                <Text style={menuManagementStyles.fabMenuOptionTitle}>Add Product</Text>
+                <Text style={menuManagementStyles.fabMenuOptionTitle}>
+                  Add Product
+                </Text>
                 <Text style={menuManagementStyles.fabMenuOptionCaption}>
                   Create a new menu item
                 </Text>
@@ -262,7 +316,9 @@ export function MenuManagement({ navigation, style }: MenuManagementProps): Reac
                 <Tags size={20} color={colors.primary} />
               </View>
               <View style={menuManagementStyles.fabMenuOptionTextBlock}>
-                <Text style={menuManagementStyles.fabMenuOptionTitle}>Add Category</Text>
+                <Text style={menuManagementStyles.fabMenuOptionTitle}>
+                  Add Category
+                </Text>
                 <Text style={menuManagementStyles.fabMenuOptionCaption}>
                   Create a new product category
                 </Text>

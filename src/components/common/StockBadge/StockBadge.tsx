@@ -29,7 +29,9 @@ export function StockBadge({
 }: StockBadgeProps): React.JSX.Element {
   return (
     <View style={[stockBadgeStyles.root, statusContainerStyles[status], style]}>
-      <Text style={stockBadgeStyles.label}>{label ?? DEFAULT_LABELS[status]}</Text>
+      <Text style={stockBadgeStyles.label}>
+        {label ?? DEFAULT_LABELS[status]}
+      </Text>
     </View>
   );
 }

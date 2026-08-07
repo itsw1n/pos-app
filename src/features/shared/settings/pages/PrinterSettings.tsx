@@ -17,8 +17,11 @@ type PrinterSettingsProps = {
 
 export type PrinterConnectionType = 'bluetooth' | 'wifi';
 
-export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Element {
-  const [connectionType, setConnectionType] = useState<PrinterConnectionType>('bluetooth');
+export function PrinterSettings({
+  style,
+}: PrinterSettingsProps): React.JSX.Element {
+  const [connectionType, setConnectionType] =
+    useState<PrinterConnectionType>('bluetooth');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [status, setStatus] = useState('');
@@ -44,7 +47,7 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
         '<h3>IPSS - Cafe Elvira</h3>' +
         '<p>Test print</p>' +
         '<p>If you can read this, the printer is working.</p>' +
-        '</body></html>'
+        '</body></html>',
     )
       .then(() => setStatus('Test print sent'))
       .catch(() => {
@@ -95,7 +98,9 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
             style={[
               printerSettingsStyles.toggleOption,
               printerSettingsStyles.toggleOptionRight,
-              connectionType === 'wifi' ? printerSettingsStyles.toggleOptionActive : null,
+              connectionType === 'wifi'
+                ? printerSettingsStyles.toggleOptionActive
+                : null,
             ]}
             onPress={() => selectConnectionType('wifi')}
           >
@@ -115,7 +120,9 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
 
       <View style={printerSettingsStyles.card}>
         <Text style={printerSettingsStyles.cardTitle}>
-          {connectionType === 'bluetooth' ? 'Pair a Bluetooth Printer' : 'Connect a WiFi Printer'}
+          {connectionType === 'bluetooth'
+            ? 'Pair a Bluetooth Printer'
+            : 'Connect a WiFi Printer'}
         </Text>
         <Text style={printerSettingsStyles.cardCaption}>
           {connectionType === 'bluetooth'
@@ -126,7 +133,9 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
         <View style={printerSettingsStyles.deviceRow}>
           <View style={printerSettingsStyles.deviceInfo}>
             <Text style={printerSettingsStyles.deviceName}>
-              {connectionType === 'bluetooth' ? 'No printer paired' : 'No printer configured'}
+              {connectionType === 'bluetooth'
+                ? 'No printer paired'
+                : 'No printer configured'}
             </Text>
             <Text style={printerSettingsStyles.deviceStatus}>
               {isConnected ? 'Connected' : 'Not connected'}
@@ -138,7 +147,11 @@ export function PrinterSettings({ style }: PrinterSettingsProps): React.JSX.Elem
             disabled={isConnecting}
             onPress={handleConnect}
           >
-            {isConnecting ? 'Connecting...' : isConnected ? 'Reconnect' : 'Connect'}
+            {isConnecting
+              ? 'Connecting...'
+              : isConnected
+                ? 'Reconnect'
+                : 'Connect'}
           </Button>
         </View>
       </View>

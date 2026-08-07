@@ -1,5 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -9,7 +16,10 @@ import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator
 import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
 import { inventoryManagementStyles } from './InventoryManagement.styles';
 
-type InventoryManagementProps = StackScreenProps<ReportsStackParamList, 'Inventory'> & {
+type InventoryManagementProps = StackScreenProps<
+  ReportsStackParamList,
+  'Inventory'
+> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -27,15 +37,25 @@ const STATUS_LABEL: Record<StockStatus, string> = {
   critical: 'Critical',
 };
 
-export function InventoryManagement({ navigation, style }: InventoryManagementProps): React.JSX.Element {
-  const { items, isLoading, error, loadInventory, getStatus, lowCount, criticalCount } =
-    useInventory();
+export function InventoryManagement({
+  navigation,
+  style,
+}: InventoryManagementProps): React.JSX.Element {
+  const {
+    items,
+    isLoading,
+    error,
+    loadInventory,
+    getStatus,
+    lowCount,
+    criticalCount,
+  } = useInventory();
   const [filter, setFilter] = useState<FilterKey>('all');
 
   useFocusEffect(
     useCallback(() => {
       void loadInventory();
-    }, [loadInventory])
+    }, [loadInventory]),
   );
 
   const filteredItems = useMemo(() => {
@@ -54,7 +74,9 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
             <Text style={inventoryManagementStyles.itemName} numberOfLines={1}>
               {item.product_name}
             </Text>
-            <Text style={inventoryManagementStyles.itemCategory}>{item.product_category}</Text>
+            <Text style={inventoryManagementStyles.itemCategory}>
+              {item.product_category}
+            </Text>
           </View>
           <StockBadge status={status} label={STATUS_LABEL[status]} />
         </View>
@@ -63,14 +85,18 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
           <Text
             style={[
               inventoryManagementStyles.statValue,
-              status === 'critical' ? inventoryManagementStyles.statValueCritical : null,
+              status === 'critical'
+                ? inventoryManagementStyles.statValueCritical
+                : null,
             ]}
           >
             {item.quantity}
           </Text>
           <Text style={inventoryManagementStyles.statDivider}>•</Text>
           <Text style={inventoryManagementStyles.statLabel}>Reorder at</Text>
-          <Text style={inventoryManagementStyles.statValue}>{item.reorder_level}</Text>
+          <Text style={inventoryManagementStyles.statValue}>
+            {item.reorder_level}
+          </Text>
         </View>
         <Pressable
           style={({ pressed }) => [
@@ -86,7 +112,9 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
             })
           }
         >
-          <Text style={inventoryManagementStyles.stockInButtonText}>Stock In</Text>
+          <Text style={inventoryManagementStyles.stockInButtonText}>
+            Stock In
+          </Text>
         </Pressable>
       </View>
     );
@@ -95,7 +123,9 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
   if (isLoading && items.length === 0) {
     return (
       <View style={[inventoryManagementStyles.loadingContainer, style]}>
-        <Text style={inventoryManagementStyles.loadingText}>Loading inventory...</Text>
+        <Text style={inventoryManagementStyles.loadingText}>
+          Loading inventory...
+        </Text>
       </View>
     );
   }
@@ -104,16 +134,24 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
     <View style={[inventoryManagementStyles.container, style]}>
       <View style={inventoryManagementStyles.summaryCard}>
         <View style={inventoryManagementStyles.summaryRow}>
-          <Text style={inventoryManagementStyles.summaryLabel}>Total items</Text>
-          <Text style={inventoryManagementStyles.summaryValue}>{items.length}</Text>
+          <Text style={inventoryManagementStyles.summaryLabel}>
+            Total items
+          </Text>
+          <Text style={inventoryManagementStyles.summaryValue}>
+            {items.length}
+          </Text>
         </View>
         <View style={inventoryManagementStyles.summaryRow}>
           <Text style={inventoryManagementStyles.summaryLabel}>Low stock</Text>
           <Text style={inventoryManagementStyles.summaryValue}>{lowCount}</Text>
         </View>
         <View style={inventoryManagementStyles.summaryRow}>
-          <Text style={inventoryManagementStyles.summaryLabel}>Out of stock</Text>
-          <Text style={inventoryManagementStyles.summaryValueCritical}>{criticalCount}</Text>
+          <Text style={inventoryManagementStyles.summaryLabel}>
+            Out of stock
+          </Text>
+          <Text style={inventoryManagementStyles.summaryValueCritical}>
+            {criticalCount}
+          </Text>
         </View>
       </View>
 
@@ -123,13 +161,17 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
             <TriangleAlert size={18} color={colors.warning} />
           </View>
           <Text style={inventoryManagementStyles.alertText}>
-            {criticalCount > 0 ? `${criticalCount} item(s) out of stock · ` : ''}
+            {criticalCount > 0
+              ? `${criticalCount} item(s) out of stock · `
+              : ''}
             {lowCount > 0 ? `${lowCount} item(s) low on stock` : ''}
           </Text>
         </View>
       ) : null}
 
-      {error ? <Text style={inventoryManagementStyles.errorText}>{error}</Text> : null}
+      {error ? (
+        <Text style={inventoryManagementStyles.errorText}>{error}</Text>
+      ) : null}
 
       <View style={inventoryManagementStyles.filterBar}>
         {FILTERS.map((option) => {
@@ -146,7 +188,9 @@ export function InventoryManagement({ navigation, style }: InventoryManagementPr
               <Text
                 style={[
                   inventoryManagementStyles.filterTabText,
-                  isActive ? inventoryManagementStyles.filterTabTextActive : null,
+                  isActive
+                    ? inventoryManagementStyles.filterTabTextActive
+                    : null,
                 ]}
               >
                 {option.label}

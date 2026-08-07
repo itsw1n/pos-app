@@ -1,5 +1,14 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
@@ -25,11 +34,12 @@ const PERIODS: Array<{ key: ReportPeriod; label: string }> = [
   { key: 'monthly', label: 'Monthly' },
 ];
 
-const PAYMENT_MODE_LABEL: Record<PaymentModeBreakdown['payment_mode'], string> = {
-  cash: 'Cash',
-  gcash: 'GCash',
-  maya: 'Maya',
-};
+const PAYMENT_MODE_LABEL: Record<PaymentModeBreakdown['payment_mode'], string> =
+  {
+    cash: 'Cash',
+    gcash: 'GCash',
+    maya: 'Maya',
+  };
 
 const STOCK_LABEL: Record<StockLevel, string> = {
   ok: 'In Stock',
@@ -44,11 +54,7 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-function SalesSummary({
-  report,
-}: {
-  report: SalesReport;
-}): React.JSX.Element {
+function SalesSummary({ report }: { report: SalesReport }): React.JSX.Element {
   return (
     <View style={reportsStyles.card}>
       <Text style={reportsStyles.cardTitle}>Sales Report</Text>
@@ -59,7 +65,9 @@ function SalesSummary({
       </View>
       <View style={reportsStyles.summaryRow}>
         <Text style={reportsStyles.summaryLabel}>Revenue</Text>
-        <Text style={reportsStyles.summaryValue}>{formatPeso(report.totalRevenue)}</Text>
+        <Text style={reportsStyles.summaryValue}>
+          {formatPeso(report.totalRevenue)}
+        </Text>
       </View>
       <View style={reportsStyles.summaryRow}>
         <Text style={reportsStyles.summaryLabel}>Orders</Text>
@@ -67,7 +75,9 @@ function SalesSummary({
       </View>
       <View style={reportsStyles.summaryRow}>
         <Text style={reportsStyles.summaryLabel}>Average order</Text>
-        <Text style={reportsStyles.summaryValue}>{formatPeso(report.averageOrderValue)}</Text>
+        <Text style={reportsStyles.summaryValue}>
+          {formatPeso(report.averageOrderValue)}
+        </Text>
       </View>
 
       <View style={reportsStyles.divider} />
@@ -75,9 +85,13 @@ function SalesSummary({
       <Text style={reportsStyles.sectionLabel}>By payment mode</Text>
       {report.paymentModeBreakdown.map((entry) => (
         <View key={entry.payment_mode} style={reportsStyles.listRow}>
-          <Text style={reportsStyles.rowName}>{PAYMENT_MODE_LABEL[entry.payment_mode]}</Text>
+          <Text style={reportsStyles.rowName}>
+            {PAYMENT_MODE_LABEL[entry.payment_mode]}
+          </Text>
           <Text style={reportsStyles.rowMeta}>{entry.orders} order(s)</Text>
-          <Text style={reportsStyles.rowValue}>{formatPeso(entry.revenue)}</Text>
+          <Text style={reportsStyles.rowValue}>
+            {formatPeso(entry.revenue)}
+          </Text>
         </View>
       ))}
 
@@ -115,11 +129,15 @@ function InventorySummary({
       </View>
       <View style={reportsStyles.summaryRow}>
         <Text style={reportsStyles.summaryLabel}>Out of stock</Text>
-        <Text style={reportsStyles.summaryValueCritical}>{report.outOfStockCount}</Text>
+        <Text style={reportsStyles.summaryValueCritical}>
+          {report.outOfStockCount}
+        </Text>
       </View>
       <View style={reportsStyles.summaryRow}>
         <Text style={reportsStyles.summaryLabel}>Stock value</Text>
-        <Text style={reportsStyles.summaryValue}>{formatPeso(report.stockValue)}</Text>
+        <Text style={reportsStyles.summaryValue}>
+          {formatPeso(report.stockValue)}
+        </Text>
       </View>
 
       <View style={reportsStyles.divider} />
@@ -136,7 +154,9 @@ function InventorySummary({
             </Text>
           </View>
           <View style={reportsStyles.stockBadge}>
-            <Text style={reportsStyles.stockBadgeText}>{STOCK_LABEL[item.status]}</Text>
+            <Text style={reportsStyles.stockBadgeText}>
+              {STOCK_LABEL[item.status]}
+            </Text>
           </View>
         </View>
       ))}
@@ -148,7 +168,8 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
   const { getSalesReport, getInventoryReport } = useReports();
   const [period, setPeriod] = useState<ReportPeriod>('daily');
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
-  const [inventoryReport, setInventoryReport] = useState<InventoryReport | null>(null);
+  const [inventoryReport, setInventoryReport] =
+    useState<InventoryReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -169,13 +190,13 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
         setIsLoading(false);
       }
     },
-    [getSalesReport, getInventoryReport]
+    [getSalesReport, getInventoryReport],
   );
 
   useFocusEffect(
     useCallback(() => {
       void loadReports(period);
-    }, [loadReports, period])
+    }, [loadReports, period]),
   );
 
   return (
@@ -186,44 +207,46 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
         contentContainerStyle={reportsStyles.content}
         showsVerticalScrollIndicator={false}
       >
-      <View style={reportsStyles.filterBar}>
-        {PERIODS.map((option) => {
-          const isActive = period === option.key;
-          return (
-            <Pressable
-              key={option.key}
-              style={[
-                reportsStyles.filterTab,
-                isActive ? reportsStyles.filterTabActive : null,
-              ]}
-              onPress={() => setPeriod(option.key)}
-            >
-              <Text
+        <View style={reportsStyles.filterBar}>
+          {PERIODS.map((option) => {
+            const isActive = period === option.key;
+            return (
+              <Pressable
+                key={option.key}
                 style={[
-                  reportsStyles.filterTabText,
-                  isActive ? reportsStyles.filterTabTextActive : null,
+                  reportsStyles.filterTab,
+                  isActive ? reportsStyles.filterTabActive : null,
                 ]}
+                onPress={() => setPeriod(option.key)}
               >
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {error ? <Text style={reportsStyles.errorText}>{error}</Text> : null}
-
-      {isLoading && !salesReport && !inventoryReport ? (
-        <View style={reportsStyles.loadingContainer}>
-          <ActivityIndicator color={colors.primary} />
-          <Text style={reportsStyles.loadingText}>Loading reports...</Text>
+                <Text
+                  style={[
+                    reportsStyles.filterTabText,
+                    isActive ? reportsStyles.filterTabTextActive : null,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-      ) : (
-        <>
-          {salesReport ? <SalesSummary report={salesReport} /> : null}
-          {inventoryReport ? <InventorySummary report={inventoryReport} /> : null}
-        </>
-      )}
+
+        {error ? <Text style={reportsStyles.errorText}>{error}</Text> : null}
+
+        {isLoading && !salesReport && !inventoryReport ? (
+          <View style={reportsStyles.loadingContainer}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={reportsStyles.loadingText}>Loading reports...</Text>
+          </View>
+        ) : (
+          <>
+            {salesReport ? <SalesSummary report={salesReport} /> : null}
+            {inventoryReport ? (
+              <InventorySummary report={inventoryReport} />
+            ) : null}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

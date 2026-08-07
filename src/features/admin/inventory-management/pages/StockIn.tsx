@@ -21,7 +21,11 @@ type StockInProps = StackScreenProps<ReportsStackParamList, 'StockIn'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-export function StockIn({ navigation, route, style }: StockInProps): React.JSX.Element {
+export function StockIn({
+  navigation,
+  route,
+  style,
+}: StockInProps): React.JSX.Element {
   const { stockId, productName, currentQuantity, reorderLevel } = route.params;
   const { addStock } = useInventory();
 
@@ -38,7 +42,11 @@ export function StockIn({ navigation, route, style }: StockInProps): React.JSX.E
     setError('');
     setIsSubmitting(true);
     try {
-      await addStock({ stockId, quantity, supplier: supplier.trim() || undefined });
+      await addStock({
+        stockId,
+        quantity,
+        supplier: supplier.trim() || undefined,
+      });
       navigation.goBack();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add stock');
@@ -51,7 +59,10 @@ export function StockIn({ navigation, route, style }: StockInProps): React.JSX.E
       style={[stockInStyles.container, style]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={stockInStyles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={stockInStyles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={stockInStyles.productCard}>
           <Text style={stockInStyles.productName}>{productName}</Text>
           <View style={stockInStyles.statsRow}>
@@ -90,7 +101,9 @@ export function StockIn({ navigation, route, style }: StockInProps): React.JSX.E
           style={({ pressed }) => [
             stockInStyles.submitButton,
             pressed ? stockInStyles.submitButtonPressed : null,
-            !quantityIsValid || isSubmitting ? stockInStyles.submitButtonDisabled : null,
+            !quantityIsValid || isSubmitting
+              ? stockInStyles.submitButtonDisabled
+              : null,
           ]}
           disabled={!quantityIsValid || isSubmitting}
           onPress={handleSubmit}

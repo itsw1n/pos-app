@@ -8,21 +8,22 @@ Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System
 
 ## Tech Stack
 
-| Concern | Choice |
-|---|---|
-| Platform | Mobile-only (Expo Go / Android APK via EAS) |
-| Framework | Expo SDK 57, React Native 0.86, React 19 |
-| Language | TypeScript (~6.0, `strict: true`) |
-| UI styling | React Native `StyleSheet` + design tokens (no Tailwind, no inline style objects) |
-| Navigation | `@react-navigation/native` (Stack + Bottom Tabs), role-based |
-| Online DB / Auth | Supabase (`@supabase/supabase-js`) — Auth + Postgres |
-| Offline storage | `expo-sqlite` (modern async API) |
-| Connectivity | `@react-native-community/netinfo` |
-| Receipts | `expo-print`, `expo-sharing` (+ Bluetooth/WiFi printer skeleton) |
-| Charts | `victory-native` + `react-native-svg` |
-| IDs | `react-native-uuid` (transaction dedup) |
+| Concern          | Choice                                                                           |
+| ---------------- | -------------------------------------------------------------------------------- |
+| Platform         | Mobile-only (Expo Go / Android APK via EAS)                                      |
+| Framework        | Expo SDK 57, React Native 0.86, React 19                                         |
+| Language         | TypeScript (~6.0, `strict: true`)                                                |
+| UI styling       | React Native `StyleSheet` + design tokens (no Tailwind, no inline style objects) |
+| Navigation       | `@react-navigation/native` (Stack + Bottom Tabs), role-based                     |
+| Online DB / Auth | Supabase (`@supabase/supabase-js`) — Auth + Postgres                             |
+| Offline storage  | `expo-sqlite` (modern async API)                                                 |
+| Connectivity     | `@react-native-community/netinfo`                                                |
+| Receipts         | `expo-print`, `expo-sharing` (+ Bluetooth/WiFi printer skeleton)                 |
+| Charts           | `victory-native` + `react-native-svg`                                            |
+| IDs              | `react-native-uuid` (transaction dedup)                                          |
 
 ### Key versions
+
 - `expo ~57.0.10`, `react-native 0.86.2`, `react 19.2.3`, `typescript ~6.0.3`
 - `@supabase/supabase-js ^2`, `@react-navigation/* ^7`
 
@@ -65,6 +66,7 @@ You need `.env.local` only to run the seed; the app itself only needs
 `.env.development` (or `.env.production`).
 
 ### Local Development (Makefile)
+
 ```
 make setup        # npm install
 make dev          # expo start against the development env
@@ -73,16 +75,18 @@ make reset        # drop + recreate schema, then seed
 make typecheck    # npx tsc --noEmit
 make build        # npx expo export --platform android (mobile-only)
 ```
+
 Demo credentials created by the seed: `admin@elvira.cafe`/`admin123` (admin),
 `cashier@elvira.cafe`/`cashier123` (cashier). Log in with the email address;
 AuthContext signs in with `email: username`.
 
 ### Docker (tooling only — backend is a hosted Supabase project)
+
 The database is NOT containerized; Docker runs the Node tooling:
+
 ```
 make docker-seed / docker-reset / docker-typecheck / docker-build
 ```
-
 
 ---
 
@@ -146,6 +150,7 @@ Features are grouped **role-first** (`features/shared` / `features/cashier` / `f
 Single source of truth = theme tokens. **Never hardcode design values.**
 
 ### Rules
+
 1. `StyleSheet.create()` for every component.
 2. Never hardcode colors/spacing/typography/radius/shadows — import from theme.
 3. Co-locate styles: `{Component}.styles.ts` next to `{Component}.tsx`.
@@ -162,9 +167,11 @@ Single source of truth = theme tokens. **Never hardcode design values.**
 8. Styling separated from business logic.
 
 ### Theme tokens (`src/theme/index.ts`)
+
 ```ts
 import { colors, spacing, typography, radius, shadows } from '../theme';
 ```
+
 - **colors** (`src/theme/colors.ts`): `primary #364C35`, `secondary #4D644B`, `navActive #ADC5AB`, `background #F5F5F5`, `surface #FFFFFF`, `success #4CAF72`, `warning #F5A623`, `danger #E8614A`, `disabled #C2C5C5`, `textPrimary #1A1A1A`, `textSecondary #6B6B6B`, `border #E0E0E0`.
 - **spacing**: 12-step scale, 4px base — `0, xs(4), sm(8), md(12), lg(16), xl(20), 2xl(24) … 7xl(80)`.
 - **typography**: 8 steps — `xs(10) … 4xl(32)`, each `{fontSize, fontWeight, lineHeight}`.
@@ -173,6 +180,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 - **textStyles** (`src/styles/textStyles.ts`): `h1-h3, body, caption, label, error, success`.
 
 ### Shared components (`src/components/common/`)
+
 `Button` (variant/size/disabled), `Card`, `ProductCard`, `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error). All named exports, all accept `style`.
 
 ---
@@ -185,6 +193,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 - Type names: interfaces for shapes, `as const` for token objects, union types for enums.
 
 ### Domain types (`src/types/entities.ts`)
+
 ```ts
 UserRole = 'admin' | 'cashier'
 
@@ -197,6 +206,7 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 ```
 
 ### Context types (`src/types/context.ts`)
+
 `PaymentMode = 'cash' | 'gcash' | 'maya'`, `CartItem`, `CartContextType`, `POSTransaction` (has `id: string` UUID + `synced` flag).
 
 ---
@@ -214,13 +224,13 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 
 ## Services (`src/services/`)
 
-| File | Purpose |
-|---|---|
-| `supabase.ts` | `createClient` from `EXPO_PUBLIC_*` env vars |
-| `sqlite.ts` | `initDb` (4 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced` — modern async `expo-sqlite` API |
-| `syncService.ts` | `syncPendingRecords()` pushes unsynced transactions, dedup via remote id check; `generateSyncId()` |
-| `receiptService.ts` | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)` |
-| `printerService.ts` | `printReceipt(html)` |
+| File                | Purpose                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `supabase.ts`       | `createClient` from `EXPO_PUBLIC_*` env vars                                                                         |
+| `sqlite.ts`         | `initDb` (4 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced` — modern async `expo-sqlite` API |
+| `syncService.ts`    | `syncPendingRecords()` pushes unsynced transactions, dedup via remote id check; `generateSyncId()`                   |
+| `receiptService.ts` | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)`                                                        |
+| `printerService.ts` | `printReceipt(html)`                                                                                                 |
 
 **Local SQLite tables:** `transactions`, `transaction_items`, `inventory`, `stock_movements` (see `initDb`).
 
@@ -229,6 +239,7 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 ## POS Flow (core feature)
 
 Menu → Add to cart (global `CartContext`) → Checkout → Payment (Cash w/ change / GCash / Maya) → `processTransaction`:
+
 1. Build `POSTransaction` with UUID id, `synced: false`.
 2. Online: insert transaction + items into Supabase, auto-deduct inventory, log `stock_movements` (type `out`).
 3. Offline: save transaction + items to SQLite.
@@ -264,6 +275,7 @@ Follow `type(scope):message` — **one commit = one layer, not one feature.**
 - Stage only related files; verify `npx tsc --noEmit` passes before committing.
 
 Examples:
+
 ```
 feat(auth): add auth context and login screen
 feat(api): add supabase, sqlite, sync, and receipt services
@@ -279,6 +291,7 @@ GitFlow-style model enforced by `.github/workflows`. `main` is always stable;
 all integration happens on `dev`.
 
 **Branches**
+
 - `main` — stable/releaseable only. Do not commit or push directly. Only merged
   from `dev` via the promote PR (`--no-ff`).
 - `dev` — integration branch. All `feature/`, `refactor/`, `fix/`, `chore/`
@@ -286,6 +299,7 @@ all integration happens on `dev`.
 - When `dev` is stable, open a PR `dev → main`. That merge is the release.
 
 **CI (`ci.yml`)** — runs on every PR to `main`/`dev` and on pushes to both:
+
 - `npm run typecheck` (`tsc --noEmit`) — must pass.
 - `npm run build` (`expo export --platform android`) — verifies the Metro
   bundle. Uses dummy `EXPO_PUBLIC_*` values in CI; real values only ship via
@@ -293,6 +307,7 @@ all integration happens on `dev`.
 
 **Tagging (`release.yml`)** — `googleapis/release-please-action` runs on push
 to `main`:
+
 - Derives a semantic version from conventional commits:
   `feat` → minor, `fix` → patch, `BREAKING CHANGE`/`!` → major.
 - Opens a release PR and, once merged back to `main`, tags `vX.Y.Z`,
@@ -301,6 +316,7 @@ to `main`:
   a mis-typed `feat` mis-bumps the version.
 
 **Branch protection (apply in GitHub UI — Settings → Branches → Add rule)**
+
 1. Add a rule for `main` and one for `dev`.
 2. Enable: "Require a pull request before merging" (1 approval, `dismiss stale`).
 3. Enable: "Require status checks to pass before merging" → select `Typecheck`

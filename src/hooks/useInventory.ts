@@ -45,7 +45,9 @@ export function useInventory(): UseInventoryResult {
         supabase.from('product').select('*, category(name)'),
       ]);
       const inventory = (inventoryRes.data as Inventory[]) ?? [];
-      const products = (((productRes.data as unknown) as ProductRow[]) ?? []).map(toProduct);
+      const products = ((productRes.data as unknown as ProductRow[]) ?? []).map(
+        toProduct,
+      );
       const productById = new Map(products.map((p) => [p.product_id, p]));
       setItems(
         inventory.map((record) => {
@@ -57,7 +59,7 @@ export function useInventory(): UseInventoryResult {
             price: product?.price ?? 0,
             is_available: product?.is_available ?? false,
           };
-        })
+        }),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load inventory');
@@ -86,7 +88,9 @@ export function useInventory(): UseInventoryResult {
   const addStock = useCallback(
     async (payload: StockInPayload): Promise<void> => {
       if (!Number.isInteger(payload.quantity) || payload.quantity <= 0) {
-        throw new Error('Stock-in quantity must be a whole number greater than zero');
+        throw new Error(
+          'Stock-in quantity must be a whole number greater than zero',
+        );
       }
 
       const date = new Date().toISOString();
@@ -103,13 +107,15 @@ export function useInventory(): UseInventoryResult {
           .update({ quantity: currentQuantity + payload.quantity })
           .eq('stock_id', payload.stockId);
         if (updateError) throw updateError;
-        const { error: movementError } = await supabase.from('stock_movements').insert({
-          stock_id: payload.stockId,
-          type: 'in',
-          quantity: payload.quantity,
-          date,
-          supplier: payload.supplier ?? null,
-        });
+        const { error: movementError } = await supabase
+          .from('stock_movements')
+          .insert({
+            stock_id: payload.stockId,
+            type: 'in',
+            quantity: payload.quantity,
+            date,
+            supplier: payload.supplier ?? null,
+          });
         if (movementError) throw movementError;
       } else {
         await saveToSQLite('stock_movements', {
@@ -122,8 +128,17 @@ export function useInventory(): UseInventoryResult {
       }
       await loadInventory();
     },
-    [loadInventory]
+    [loadInventory],
   );
 
-  return { items, isLoading, error, loadInventory, getStatus, addStock, lowCount, criticalCount };
+  return {
+    items,
+    isLoading,
+    error,
+    loadInventory,
+    getStatus,
+    addStock,
+    lowCount,
+    criticalCount,
+  };
 }

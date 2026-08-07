@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { confirmDialogStyles } from './ConfirmDialog.styles';
 
 interface ConfirmDialogProps {
@@ -28,8 +35,16 @@ export function ConfirmDialog({
   style,
 }: ConfirmDialogProps): React.JSX.Element {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <Pressable style={[confirmDialogStyles.backdrop, style]} onPress={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <Pressable
+        style={[confirmDialogStyles.backdrop, style]}
+        onPress={onCancel}
+      >
         <Pressable style={confirmDialogStyles.sheet} onPress={() => {}}>
           <Text style={confirmDialogStyles.title}>{title}</Text>
           <Text style={confirmDialogStyles.message}>{message}</Text>
@@ -39,12 +54,16 @@ export function ConfirmDialog({
               disabled={isLoading}
               onPress={onCancel}
             >
-              <Text style={confirmDialogStyles.cancelButtonText}>{cancelLabel}</Text>
+              <Text style={confirmDialogStyles.cancelButtonText}>
+                {cancelLabel}
+              </Text>
             </Pressable>
             <Pressable
               style={[
                 confirmDialogStyles.confirmButton,
-                destructive ? confirmDialogStyles.confirmButtonDestructive : null,
+                destructive
+                  ? confirmDialogStyles.confirmButtonDestructive
+                  : null,
                 isLoading ? confirmDialogStyles.confirmButtonDisabled : null,
               ]}
               disabled={isLoading}

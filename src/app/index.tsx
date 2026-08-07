@@ -12,7 +12,11 @@ import { CartProvider } from '@/context/CartContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary/ErrorBoundary';
 import { Navigation } from '@/app/navigation/Navigation';
 
-function FontGate({ children }: { children: React.ReactNode }): React.JSX.Element {
+function FontGate({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,

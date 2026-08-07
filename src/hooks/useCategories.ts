@@ -37,80 +37,92 @@ export function useCategories(): UseCategoriesResult {
         .select('*')
         .order('name', { ascending: true });
       if (loadError) throw loadError;
-      const rows = ((data as unknown) as CategoryRow[]) ?? [];
+      const rows = (data as unknown as CategoryRow[]) ?? [];
       sharedCache = rows.map(toCategory);
       setCategories(sharedCache);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load categories');
+      setError(
+        err instanceof Error ? err.message : 'Failed to load categories',
+      );
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const createCategory = useCallback(async (name: string): Promise<Category> => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      throw new Error('Category name is required');
-    }
-    const { data, error: insertError } = await supabase
-      .from('category')
-      .insert({ name: trimmed })
-      .select()
-      .single();
-    if (insertError) throw insertError;
-    const category = toCategory(data as CategoryRow);
-    sharedCache = sharedCache ? [...sharedCache, category] : [category];
-    setCategories(sharedCache);
-    return category;
-  }, []);
-
-  const deleteCategory = useCallback(async (categoryId: string): Promise<void> => {
-    const target = sharedCache?.find((category) => category.category_id === categoryId);
-    if (!target) return;
-    if (target.name === UNCATEGORIZED) {
-      throw new Error(`The ${UNCATEGORIZED} category cannot be deleted`);
-    }
-
-    let { data: uncategorized, error: uncatError } = await supabase
-      .from('category')
-      .select('*')
-      .eq('name', UNCATEGORIZED)
-      .maybeSingle();
-    if (uncatError) throw uncatError;
-
-    if (!uncategorized) {
-      const insert = await supabase
+  const createCategory = useCallback(
+    async (name: string): Promise<Category> => {
+      const trimmed = name.trim();
+      if (!trimmed) {
+        throw new Error('Category name is required');
+      }
+      const { data, error: insertError } = await supabase
         .from('category')
-        .insert({ name: UNCATEGORIZED })
+        .insert({ name: trimmed })
         .select()
         .single();
-      if (insert.error) throw insert.error;
-      uncategorized = insert.data;
-    }
+      if (insertError) throw insertError;
+      const category = toCategory(data as CategoryRow);
+      sharedCache = sharedCache ? [...sharedCache, category] : [category];
+      setCategories(sharedCache);
+      return category;
+    },
+    [],
+  );
 
-    const uncategorizedId = (uncategorized as CategoryRow).category_id;
+  const deleteCategory = useCallback(
+    async (categoryId: string): Promise<void> => {
+      const target = sharedCache?.find(
+        (category) => category.category_id === categoryId,
+      );
+      if (!target) return;
+      if (target.name === UNCATEGORIZED) {
+        throw new Error(`The ${UNCATEGORIZED} category cannot be deleted`);
+      }
 
-    const { error: reassignError } = await supabase
-      .from('product')
-      .update({ category_id: uncategorizedId })
-      .eq('category_id', categoryId);
-    if (reassignError) throw reassignError;
+      let { data: uncategorized, error: uncatError } = await supabase
+        .from('category')
+        .select('*')
+        .eq('name', UNCATEGORIZED)
+        .maybeSingle();
+      if (uncatError) throw uncatError;
 
-    const { error: deleteError } = await supabase
-      .from('category')
-      .delete()
-      .eq('category_id', categoryId);
-    if (deleteError) throw deleteError;
+      if (!uncategorized) {
+        const insert = await supabase
+          .from('category')
+          .insert({ name: UNCATEGORIZED })
+          .select()
+          .single();
+        if (insert.error) throw insert.error;
+        uncategorized = insert.data;
+      }
 
-    const remaining = (sharedCache ?? []).filter(
-      (category) => category.category_id !== categoryId
-    );
-    if (!remaining.some((category) => category.category_id === uncategorizedId)) {
-      remaining.unshift(toCategory(uncategorized as CategoryRow));
-    }
-    sharedCache = remaining;
-    setCategories(sharedCache);
-  }, []);
+      const uncategorizedId = (uncategorized as CategoryRow).category_id;
+
+      const { error: reassignError } = await supabase
+        .from('product')
+        .update({ category_id: uncategorizedId })
+        .eq('category_id', categoryId);
+      if (reassignError) throw reassignError;
+
+      const { error: deleteError } = await supabase
+        .from('category')
+        .delete()
+        .eq('category_id', categoryId);
+      if (deleteError) throw deleteError;
+
+      const remaining = (sharedCache ?? []).filter(
+        (category) => category.category_id !== categoryId,
+      );
+      if (
+        !remaining.some((category) => category.category_id === uncategorizedId)
+      ) {
+        remaining.unshift(toCategory(uncategorized as CategoryRow));
+      }
+      sharedCache = remaining;
+      setCategories(sharedCache);
+    },
+    [],
+  );
 
   return {
     categories,

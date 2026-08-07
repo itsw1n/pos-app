@@ -1,10 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 export type LocalTableName =
-  | 'transactions'
-  | 'transaction_items'
-  | 'inventory'
-  | 'stock_movements';
+  'transactions' | 'transaction_items' | 'inventory' | 'stock_movements';
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -51,26 +48,30 @@ export async function initDb(): Promise<void> {
   `);
 }
 
-export async function saveToSQLite<T extends Record<string, SQLite.SQLiteBindValue>>(
-  table: LocalTableName,
-  data: T
-): Promise<void> {
+export async function saveToSQLite<
+  T extends Record<string, SQLite.SQLiteBindValue>,
+>(table: LocalTableName, data: T): Promise<void> {
   const db = await getDb();
   const keys = Object.keys(data) as (keyof T & string)[];
   const values = keys.map((key) => data[key]);
   const placeholders = keys.map(() => '?').join(', ');
   await db.runAsync(
     `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`,
-    values
+    values,
   );
 }
 
-export async function getUnsyncedRecords<T>(table: LocalTableName): Promise<T[]> {
+export async function getUnsyncedRecords<T>(
+  table: LocalTableName,
+): Promise<T[]> {
   const db = await getDb();
   return db.getAllAsync<T>(`SELECT * FROM ${table} WHERE synced = 0`);
 }
 
-export async function markSynced(table: LocalTableName, id: string): Promise<void> {
+export async function markSynced(
+  table: LocalTableName,
+  id: string,
+): Promise<void> {
   const db = await getDb();
   await db.runAsync(`UPDATE ${table} SET synced = 1 WHERE id = ?`, id);
 }

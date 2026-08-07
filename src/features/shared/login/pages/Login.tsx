@@ -56,12 +56,12 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
           contentContainerStyle={loginScreenStyles.scrollView}
           keyboardShouldPersistTaps="handled"
         >
-<View style={loginScreenStyles.topBar}>
-              <View style={loginScreenStyles.brandRow}>
-                <Text style={loginScreenStyles.logoIcon}>🌿</Text>
-                <Text style={loginScreenStyles.brandName}>ElviraCafe</Text>
-              </View>
+          <View style={loginScreenStyles.topBar}>
+            <View style={loginScreenStyles.brandRow}>
+              <Text style={loginScreenStyles.logoIcon}>🌿</Text>
+              <Text style={loginScreenStyles.brandName}>ElviraCafe</Text>
             </View>
+          </View>
 
           <View style={loginScreenStyles.heroContainer}>
             <Text style={loginScreenStyles.heroPlaceholder}>☕</Text>
@@ -72,47 +72,51 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
             Manage your business easily and efficiently.
           </Text>
 
-           <View style={loginScreenStyles.inputGroup}>
-             <Text style={loginScreenStyles.inputLabel}>Username</Text>
-             <InputField
-               value={username}
-               onChangeText={setUsername}
-               placeholder="Enter your username"
-               autoCapitalize="none"
-               autoCorrect={false}
-               disabled={isLoading}
-               leftIcon={
-                 <User size={18} color={colors.textSecondary} />
-               }
-               style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
-             />
-           </View>
+          <View style={loginScreenStyles.inputGroup}>
+            <Text style={loginScreenStyles.inputLabel}>Username</Text>
+            <InputField
+              value={username}
+              onChangeText={setUsername}
+              placeholder="Enter your username"
+              autoCapitalize="none"
+              autoCorrect={false}
+              disabled={isLoading}
+              leftIcon={<User size={18} color={colors.textSecondary} />}
+              style={{
+                borderRadius: radius.xl,
+                height: 52,
+                paddingHorizontal: 14,
+              }}
+            />
+          </View>
 
-           <View style={loginScreenStyles.inputGroupLarge}>
-             <View style={loginScreenStyles.inputLabelRow}>
-               <Text style={loginScreenStyles.inputLabel}>Password</Text>
-             </View>
-             <InputField
-               value={password}
-               onChangeText={setPassword}
-               placeholder="••••••••"
-               secureTextEntry={!showPassword}
-               disabled={isLoading}
-               leftIcon={
-                 <Lock size={18} color={colors.textSecondary} />
-               }
-rightIcon={
-                  <Pressable onPress={() => setShowPassword((prev) => !prev)}>
-                    {showPassword ? (
-                      <EyeOff size={18} color={colors.textSecondary} />
-                    ) : (
-                      <Eye size={18} color={colors.textSecondary} />
-                    )}
-                  </Pressable>
-                }
-               style={{ borderRadius: radius.xl, height: 52, paddingHorizontal: 14 }}
-             />
-           </View>
+          <View style={loginScreenStyles.inputGroupLarge}>
+            <View style={loginScreenStyles.inputLabelRow}>
+              <Text style={loginScreenStyles.inputLabel}>Password</Text>
+            </View>
+            <InputField
+              value={password}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry={!showPassword}
+              disabled={isLoading}
+              leftIcon={<Lock size={18} color={colors.textSecondary} />}
+              rightIcon={
+                <Pressable onPress={() => setShowPassword((prev) => !prev)}>
+                  {showPassword ? (
+                    <EyeOff size={18} color={colors.textSecondary} />
+                  ) : (
+                    <Eye size={18} color={colors.textSecondary} />
+                  )}
+                </Pressable>
+              }
+              style={{
+                borderRadius: radius.xl,
+                height: 52,
+                paddingHorizontal: 14,
+              }}
+            />
+          </View>
 
           {error ? <Text style={loginScreenStyles.error}>{error}</Text> : null}
 
@@ -129,7 +133,8 @@ rightIcon={
 
         <View style={loginScreenStyles.footer}>
           <Text style={loginScreenStyles.footerText}>
-            <Text style={{ color: colors.success }}>●</Text> Secure Connection • v2.4.0
+            <Text style={{ color: colors.success }}>●</Text> Secure Connection •
+            v2.4.0
           </Text>
         </View>
       </KeyboardAvoidingView>

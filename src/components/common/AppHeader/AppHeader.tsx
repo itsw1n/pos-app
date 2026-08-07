@@ -1,6 +1,10 @@
 import React, { useCallback } from 'react';
 import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { useNavigation, NavigationProp, ParamListBase } from '@react-navigation/native';
+import {
+  useNavigation,
+  NavigationProp,
+  ParamListBase,
+} from '@react-navigation/native';
 import { Coffee } from 'lucide-react-native';
 import { useAuth } from '../../../context/AuthContext';
 import { colors, spacing, typography } from '../../../theme';
@@ -11,7 +15,10 @@ interface AppHeaderProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export function AppHeader({ pageTitle, style }: AppHeaderProps): React.JSX.Element {
+export function AppHeader({
+  pageTitle,
+  style,
+}: AppHeaderProps): React.JSX.Element {
   const { user, role } = useAuth();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
@@ -48,7 +55,10 @@ export function AppHeader({ pageTitle, style }: AppHeaderProps): React.JSX.Eleme
         accessibilityRole="button"
         accessibilityLabel="Profile"
         onPress={() => navigation.navigate('Settings')}
-        style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.profileButton,
+          pressed && styles.pressed,
+        ]}
       >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials}</Text>

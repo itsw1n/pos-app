@@ -29,7 +29,11 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-export function VoidTransaction({ navigation, route, style }: VoidTransactionProps): React.JSX.Element {
+export function VoidTransaction({
+  navigation,
+  route,
+  style,
+}: VoidTransactionProps): React.JSX.Element {
   const { transactionId, date, total } = route.params;
   const { isVoiding, voidTransaction } = useOrders();
 
@@ -45,7 +49,9 @@ export function VoidTransaction({ navigation, route, style }: VoidTransactionPro
       await voidTransaction(transactionId, reason);
       navigation.goBack();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to void transaction');
+      setError(
+        err instanceof Error ? err.message : 'Failed to void transaction',
+      );
     }
   };
 
@@ -54,7 +60,10 @@ export function VoidTransaction({ navigation, route, style }: VoidTransactionPro
       style={[voidScreenStyles.container, style]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={voidScreenStyles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={voidScreenStyles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={voidScreenStyles.warningBanner}>
           <View style={voidScreenStyles.bannerIcon}>
             <CircleAlert size={18} color={colors.danger} />
@@ -62,8 +71,8 @@ export function VoidTransaction({ navigation, route, style }: VoidTransactionPro
           <View style={voidScreenStyles.bannerContent}>
             <Text style={voidScreenStyles.warningTitle}>Confirm Void</Text>
             <Text style={voidScreenStyles.warningText}>
-              Voiding restores sold quantities back to inventory and excludes this sale from reports.
-              This action cannot be undone.
+              Voiding restores sold quantities back to inventory and excludes
+              this sale from reports. This action cannot be undone.
             </Text>
           </View>
         </View>
@@ -71,11 +80,15 @@ export function VoidTransaction({ navigation, route, style }: VoidTransactionPro
         <View style={voidScreenStyles.summaryCard}>
           <View style={voidScreenStyles.summaryRow}>
             <Text style={voidScreenStyles.summaryLabel}>Date</Text>
-            <Text style={voidScreenStyles.summaryValue}>{new Date(date).toLocaleString()}</Text>
+            <Text style={voidScreenStyles.summaryValue}>
+              {new Date(date).toLocaleString()}
+            </Text>
           </View>
           <View style={voidScreenStyles.summaryRow}>
             <Text style={voidScreenStyles.summaryLabel}>Total</Text>
-            <Text style={voidScreenStyles.summaryValue}>{formatPeso(total)}</Text>
+            <Text style={voidScreenStyles.summaryValue}>
+              {formatPeso(total)}
+            </Text>
           </View>
         </View>
 
@@ -102,7 +115,9 @@ export function VoidTransaction({ navigation, route, style }: VoidTransactionPro
           style={({ pressed }) => [
             voidScreenStyles.confirmButton,
             pressed ? voidScreenStyles.confirmButtonPressed : null,
-            !reasonIsValid || isVoiding ? voidScreenStyles.confirmButtonDisabled : null,
+            !reasonIsValid || isVoiding
+              ? voidScreenStyles.confirmButtonDisabled
+              : null,
           ]}
           disabled={!reasonIsValid || isVoiding}
           onPress={handleConfirm}

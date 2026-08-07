@@ -31,17 +31,27 @@ type PaymentProps = StackScreenProps<MenuStackParamList, 'Payment'> & {
   style?: StyleProp<ViewStyle>;
 };
 
-const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: LucideIcon }> = [
+const PAYMENT_METHODS: Array<{
+  value: PaymentMode;
+  label: string;
+  icon: LucideIcon;
+}> = [
   { value: 'cash', label: 'Cash', icon: Banknote },
   { value: 'gcash', label: 'GCash', icon: Smartphone },
   { value: 'maya', label: 'Maya', icon: Wallet },
 ];
 
-export function Payment({ navigation, route, style }: PaymentProps): React.JSX.Element {
+export function Payment({
+  navigation,
+  route,
+  style,
+}: PaymentProps): React.JSX.Element {
   const { getTotal, processTransaction } = useMenu();
   const total = getTotal();
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMode>(route.params.paymentMode ?? 'cash');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMode>(
+    route.params.paymentMode ?? 'cash',
+  );
   const [amountText, setAmountText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -49,7 +59,8 @@ export function Payment({ navigation, route, style }: PaymentProps): React.JSX.E
   const amountReceived = parseFloat(amountText);
   const isCash = selectedMethod === 'cash';
   const amountIsValid = !Number.isNaN(amountReceived) && amountReceived > 0;
-  const cashIsSufficient = !isCash || (amountIsValid && amountReceived >= total);
+  const cashIsSufficient =
+    !isCash || (amountIsValid && amountReceived >= total);
   const change = isCash && amountIsValid ? amountReceived - total : null;
   const canConfirm = isCash ? amountIsValid && cashIsSufficient : !isProcessing;
 
@@ -62,7 +73,11 @@ export function Payment({ navigation, route, style }: PaymentProps): React.JSX.E
       const transaction = await processTransaction(selectedMethod, finalAmount);
       navigation.replace('Receipt', { transaction });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Payment failed. Please try again.',
+      );
       setIsProcessing(false);
     }
   };
@@ -139,7 +154,9 @@ export function Payment({ navigation, route, style }: PaymentProps): React.JSX.E
               <Text
                 style={[
                   paymentStyles.changeValue,
-                  change !== null && change < 0 ? paymentStyles.changeNegative : null,
+                  change !== null && change < 0
+                    ? paymentStyles.changeNegative
+                    : null,
                 ]}
               >
                 {change !== null && change >= 0 ? `₱${change.toFixed(2)}` : '—'}
@@ -169,7 +186,9 @@ export function Payment({ navigation, route, style }: PaymentProps): React.JSX.E
             <ActivityIndicator color={colors.surface} />
           ) : (
             <>
-              <Text style={paymentStyles.confirmButtonText}>Confirm Payment</Text>
+              <Text style={paymentStyles.confirmButtonText}>
+                Confirm Payment
+              </Text>
               <ArrowRight size={18} color={colors.surface} />
             </>
           )}

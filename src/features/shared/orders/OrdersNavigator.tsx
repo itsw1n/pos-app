@@ -29,7 +29,11 @@ export function OrdersNavigator(): React.JSX.Element {
         component={Orders}
         options={{ title: 'Orders', headerShown: false }}
       />
-      <Stack.Screen name="Void" component={VoidTransaction} options={{ title: 'Void Transaction' }} />
+      <Stack.Screen
+        name="Void"
+        component={VoidTransaction}
+        options={{ title: 'Void Transaction' }}
+      />
     </Stack.Navigator>
   );
 }

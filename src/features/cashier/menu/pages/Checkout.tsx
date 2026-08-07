@@ -23,7 +23,10 @@ type CheckoutProps = StackScreenProps<MenuStackParamList, 'Checkout'> & {
 
 const PPN_RATE = 0.11;
 
-export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Element {
+export function Checkout({
+  navigation,
+  style,
+}: CheckoutProps): React.JSX.Element {
   const { cart, addToCart, decrementItem, getTotal } = useMenu();
   const [customerName, setCustomerName] = useState('');
   const subtotal = getTotal();
@@ -61,7 +64,9 @@ export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Elemen
           </View>
         </View>
 
-        <View style={[checkoutStyles.infoCard, checkoutStyles.infoCardCustomer]}>
+        <View
+          style={[checkoutStyles.infoCard, checkoutStyles.infoCardCustomer]}
+        >
           <View style={checkoutStyles.iconCircle}>
             <User size={20} color={colors.primary} />
           </View>
@@ -79,7 +84,10 @@ export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Elemen
 
         <View style={checkoutStyles.orderItems}>
           {cart.map((item) => (
-            <View key={String(item.product_id)} style={checkoutStyles.orderItemCard}>
+            <View
+              key={String(item.product_id)}
+              style={checkoutStyles.orderItemCard}
+            >
               <View style={checkoutStyles.productImage}>
                 <Text style={checkoutStyles.productImageEmoji}>☕</Text>
               </View>
@@ -87,7 +95,9 @@ export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Elemen
                 <Text style={checkoutStyles.productName} numberOfLines={1}>
                   {item.name}
                 </Text>
-                <Text style={checkoutStyles.productPrice}>₱{item.price.toFixed(2)}</Text>
+                <Text style={checkoutStyles.productPrice}>
+                  ₱{item.price.toFixed(2)}
+                </Text>
               </View>
               <QtyControls
                 qty={item.qty}
@@ -104,14 +114,21 @@ export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Elemen
           <Text style={checkoutStyles.paymentTitle}>PAYMENT DETAIL</Text>
           <View style={checkoutStyles.detailRow}>
             <Text style={checkoutStyles.detailLabel}>Subtotal</Text>
-            <Text style={checkoutStyles.detailValue}>₱{subtotal.toFixed(2)}</Text>
+            <Text style={checkoutStyles.detailValue}>
+              ₱{subtotal.toFixed(2)}
+            </Text>
           </View>
           {/*
             TODO: confirm VAT with client before enabling
           */}
           <View style={checkoutStyles.detailRow}>
             <Text style={checkoutStyles.detailLabel}>PPN 11%</Text>
-            <Text style={[checkoutStyles.detailValue, checkoutStyles.detailValueSecondary]}>
+            <Text
+              style={[
+                checkoutStyles.detailValue,
+                checkoutStyles.detailValueSecondary,
+              ]}
+            >
               ₱{ppn.toFixed(2)}
             </Text>
           </View>
@@ -124,8 +141,13 @@ export function Checkout({ navigation, style }: CheckoutProps): React.JSX.Elemen
           <Text style={checkoutStyles.totalValue}>₱{total.toFixed(2)}</Text>
         </View>
 
-        <Pressable style={checkoutStyles.processButton} onPress={handleContinue}>
-          <Text style={checkoutStyles.processButtonText}>Process Check Out</Text>
+        <Pressable
+          style={checkoutStyles.processButton}
+          onPress={handleContinue}
+        >
+          <Text style={checkoutStyles.processButtonText}>
+            Process Check Out
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

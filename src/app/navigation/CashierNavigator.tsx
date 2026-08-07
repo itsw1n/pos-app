@@ -24,7 +24,12 @@ export function CashierNavigator(): React.JSX.Element {
         component={MenuNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={UtensilsCrossed} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={UtensilsCrossed}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -33,7 +38,12 @@ export function CashierNavigator(): React.JSX.Element {
         component={OrdersNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Receipt} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={Receipt}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -42,7 +52,12 @@ export function CashierNavigator(): React.JSX.Element {
         component={Inventory}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Box} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={Box}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -51,7 +66,12 @@ export function CashierNavigator(): React.JSX.Element {
         component={SettingsNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
-            <TabBarIcon icon={Settings} focused={focused} color={color} size={size} />
+            <TabBarIcon
+              icon={Settings}
+              focused={focused}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />

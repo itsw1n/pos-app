@@ -30,7 +30,10 @@ import { colors } from '@/theme';
 import { SettingsStackParamList } from '@/features/shared/settings/SettingsNavigator';
 import { settingsScreenStyles as styles } from './Settings.styles';
 
-type SettingsProps = StackScreenProps<SettingsStackParamList, 'SettingsHome'> & {
+type SettingsProps = StackScreenProps<
+  SettingsStackParamList,
+  'SettingsHome'
+> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -64,9 +67,13 @@ export function Settings({
             </View>
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>{row.title}</Text>
-              {row.caption ? <Text style={styles.rowCaption}>{row.caption}</Text> : null}
+              {row.caption ? (
+                <Text style={styles.rowCaption}>{row.caption}</Text>
+              ) : null}
             </View>
-            {row.trailing ?? <ChevronRight size={18} color={colors.textSecondary} />}
+            {row.trailing ?? (
+              <ChevronRight size={18} color={colors.textSecondary} />
+            )}
           </>
         );
         if (row.onPress) {
@@ -85,7 +92,10 @@ export function Settings({
           );
         }
         return (
-          <View key={row.key} style={[styles.row, isLast ? styles.rowLast : null]}>
+          <View
+            key={row.key}
+            style={[styles.row, isLast ? styles.rowLast : null]}
+          >
             {content}
           </View>
         );
@@ -204,7 +214,9 @@ export function Settings({
               </View>
               <View style={styles.rowText}>
                 <Text style={styles.rowTitle}>User Management</Text>
-                <Text style={styles.rowCaption}>Create and disable staff accounts</Text>
+                <Text style={styles.rowCaption}>
+                  Create and disable staff accounts
+                </Text>
               </View>
               <ChevronRight size={18} color={colors.textSecondary} />
             </Pressable>
@@ -212,7 +224,10 @@ export function Settings({
         ) : null}
 
         <Pressable
-          style={({ pressed }) => [styles.logout, pressed ? styles.logoutPressed : null]}
+          style={({ pressed }) => [
+            styles.logout,
+            pressed ? styles.logoutPressed : null,
+          ]}
           onPress={() => void logout()}
         >
           <LogOut size={18} color={colors.danger} />

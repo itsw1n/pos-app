@@ -17,10 +17,18 @@ import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { colors, radius, spacing } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
-import { useReports, LowStockItem, TopProduct, DaySales } from '@/features/admin/reports/hooks/useReports';
+import {
+  useReports,
+  LowStockItem,
+  TopProduct,
+  DaySales,
+} from '@/features/admin/reports/hooks/useReports';
 import { dashboardStyles } from './Dashboard.styles';
 
-type DashboardProps = StackScreenProps<ReportsStackParamList, 'DashboardHome'> & {
+type DashboardProps = StackScreenProps<
+  ReportsStackParamList,
+  'DashboardHome'
+> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -53,7 +61,13 @@ function LowStockRow({ item }: { item: LowStockItem }): React.JSX.Element {
 
 const CHART_HEIGHT = 160;
 
-function WeeklySalesChart({ data, width }: { data: DaySales[]; width: number }): React.JSX.Element {
+function WeeklySalesChart({
+  data,
+  width,
+}: {
+  data: DaySales[];
+  width: number;
+}): React.JSX.Element {
   const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
   const slotWidth = width / Math.max(data.length, 1);
   const barWidth = Math.min(slotWidth * 0.55, 22);
@@ -61,14 +75,19 @@ function WeeklySalesChart({ data, width }: { data: DaySales[]; width: number }):
   const plotHeight = CHART_HEIGHT - plotTop - spacing['2xl'];
 
   const bars = data.map((d, index) => {
-    const barHeight = d.revenue > 0 ? Math.max((d.revenue / maxRevenue) * plotHeight, 2) : 0;
+    const barHeight =
+      d.revenue > 0 ? Math.max((d.revenue / maxRevenue) * plotHeight, 2) : 0;
     const x = index * slotWidth + (slotWidth - barWidth) / 2;
     const y = plotTop + plotHeight - barHeight;
     return { ...d, x, y, barHeight };
   });
 
   return (
-    <Svg width={width} height={CHART_HEIGHT} viewBox={`0 0 ${width} ${CHART_HEIGHT}`}>
+    <Svg
+      width={width}
+      height={CHART_HEIGHT}
+      viewBox={`0 0 ${width} ${CHART_HEIGHT}`}
+    >
       <Line
         x1={0}
         y1={plotTop + plotHeight}
@@ -104,7 +123,11 @@ function WeeklySalesChart({ data, width }: { data: DaySales[]; width: number }):
   );
 }
 
-function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Element {
+function TopProductColumn({
+  product,
+}: {
+  product: TopProduct;
+}): React.JSX.Element {
   return (
     <View style={dashboardStyles.topProductColumn}>
       <View style={dashboardStyles.topProductTile}>
@@ -120,7 +143,10 @@ function TopProductColumn({ product }: { product: TopProduct }): React.JSX.Eleme
   );
 }
 
-export function Dashboard({ navigation, style }: DashboardProps): React.JSX.Element {
+export function Dashboard({
+  navigation,
+  style,
+}: DashboardProps): React.JSX.Element {
   const { dashboard, isLoading, error, loadDashboard } = useReports();
   const { width } = useWindowDimensions();
   const chartWidth = Math.max(width - spacing['2xl'] * 2 - spacing.lg * 2, 200);
@@ -128,7 +154,7 @@ export function Dashboard({ navigation, style }: DashboardProps): React.JSX.Elem
   useFocusEffect(
     useCallback(() => {
       void loadDashboard();
-    }, [loadDashboard])
+    }, [loadDashboard]),
   );
 
   if (isLoading && !dashboard) {
@@ -168,7 +194,9 @@ export function Dashboard({ navigation, style }: DashboardProps): React.JSX.Elem
               <Receipt size={18} color={colors.primary} />
             </View>
             <Text style={dashboardStyles.summaryLabel}>Total Orders</Text>
-            <Text style={dashboardStyles.summaryValue}>{dashboard?.totalOrders ?? 0}</Text>
+            <Text style={dashboardStyles.summaryValue}>
+              {dashboard?.totalOrders ?? 0}
+            </Text>
           </View>
         </View>
 
@@ -187,9 +215,13 @@ export function Dashboard({ navigation, style }: DashboardProps): React.JSX.Elem
             </Pressable>
           </View>
           {lowStock.length > 0 ? (
-            lowStock.slice(0, 2).map((item) => <LowStockRow key={item.stock_id} item={item} />)
+            lowStock
+              .slice(0, 2)
+              .map((item) => <LowStockRow key={item.stock_id} item={item} />)
           ) : (
-            <Text style={dashboardStyles.emptyText}>All items are sufficiently stocked</Text>
+            <Text style={dashboardStyles.emptyText}>
+              All items are sufficiently stocked
+            </Text>
           )}
         </View>
 
@@ -205,7 +237,9 @@ export function Dashboard({ navigation, style }: DashboardProps): React.JSX.Elem
                 <TopProductColumn key={product.product_id} product={product} />
               ))
             ) : (
-              <Text style={dashboardStyles.emptyText}>No sales recorded yet</Text>
+              <Text style={dashboardStyles.emptyText}>
+                No sales recorded yet
+              </Text>
             )}
           </ScrollView>
         </View>

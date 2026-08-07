@@ -23,7 +23,12 @@ export function CategoryPickerModal({
   onSelect,
 }: CategoryPickerModalProps): React.JSX.Element {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable style={categoryPickerModalStyles.backdrop} onPress={onClose}>
         <View style={categoryPickerModalStyles.sheet}>
           <Text style={categoryPickerModalStyles.title}>{title}</Text>
@@ -39,12 +44,16 @@ export function CategoryPickerModal({
                   <Text
                     style={[
                       categoryPickerModalStyles.optionText,
-                      isSelected ? categoryPickerModalStyles.optionTextSelected : null,
+                      isSelected
+                        ? categoryPickerModalStyles.optionTextSelected
+                        : null,
                     ]}
                   >
                     {category.name}
                   </Text>
-                  {isSelected ? <Check size={18} color={colors.primary} /> : null}
+                  {isSelected ? (
+                    <Check size={18} color={colors.primary} />
+                  ) : null}
                 </Pressable>
               );
             })}

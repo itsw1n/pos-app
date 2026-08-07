@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { supabase } from '../services/supabase';
 import { User, UserRole } from '../types/entities';
 
@@ -14,7 +20,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 type StoredUser = Pick<User, 'user_id' | 'username' | 'role'>;
 
-function toAppUser(profile: StoredUser | undefined, fallbackUsername: string): User {
+function toAppUser(
+  profile: StoredUser | undefined,
+  fallbackUsername: string,
+): User {
   return {
     user_id: profile?.user_id ?? 0,
     username: profile?.username ?? fallbackUsername,
@@ -23,16 +32,23 @@ function toAppUser(profile: StoredUser | undefined, fallbackUsername: string): U
   };
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
 
-  const applyProfile = useCallback((profile: StoredUser | undefined, fallbackUsername: string): void => {
-    const nextUser = toAppUser(profile, fallbackUsername);
-    setUser(nextUser);
-    setRole(nextUser.role);
-  }, []);
+  const applyProfile = useCallback(
+    (profile: StoredUser | undefined, fallbackUsername: string): void => {
+      const nextUser = toAppUser(profile, fallbackUsername);
+      setUser(nextUser);
+      setRole(nextUser.role);
+    },
+    [],
+  );
 
   const login = async (username: string, password: string): Promise<void> => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -64,18 +80,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
       .then(({ data }) => {
         if (!active) return;
         if (data.session) {
-          return supabase.auth
-            .getUser()
-            .then(({ data: userData }) =>
-              supabase
-                .from('user')
-                .select('user_id, username, role')
-                .eq('user_id', userData.user?.id ?? '')
-                .single()
-                .then(({ data: profile }) => {
-                  if (active) applyProfile(profile as StoredUser | undefined, userData.user?.email ?? '');
-                })
-            );
+          return supabase.auth.getUser().then(({ data: userData }) =>
+            supabase
+              .from('user')
+              .select('user_id, username, role')
+              .eq('user_id', userData.user?.id ?? '')
+              .single()
+              .then(({ data: profile }) => {
+                if (active)
+                  applyProfile(
+                    profile as StoredUser | undefined,
+                    userData.user?.email ?? '',
+                  );
+              }),
+          );
         }
         return undefined;
       })
@@ -83,27 +101,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
         if (active) setIsHydrating(false);
       });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        if (active) {
-          setUser(null);
-          setRole(null);
-        }
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        supabase.auth
-          .getUser()
-          .then(({ data: userData }) =>
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT' || !session) {
+          if (active) {
+            setUser(null);
+            setRole(null);
+          }
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          supabase.auth.getUser().then(({ data: userData }) =>
             supabase
               .from('user')
               .select('user_id, username, role')
               .eq('user_id', userData.user?.id ?? '')
               .single()
               .then(({ data: profile }) => {
-                if (active) applyProfile(profile as StoredUser | undefined, userData.user?.email ?? '');
-              })
+                if (active)
+                  applyProfile(
+                    profile as StoredUser | undefined,
+                    userData.user?.email ?? '',
+                  );
+              }),
           );
-      }
-    });
+        }
+      },
+    );
 
     return () => {
       active = false;

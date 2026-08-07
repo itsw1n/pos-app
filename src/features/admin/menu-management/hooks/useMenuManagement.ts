@@ -46,7 +46,7 @@ export function useMenuManagement(): UseMenuManagementResult {
         .select('*, category(name)')
         .order('name', { ascending: true });
       if (loadError) throw loadError;
-      setProducts(((data as unknown) as ProductRow[])?.map(toProduct) ?? []);
+      setProducts((data as unknown as ProductRow[])?.map(toProduct) ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
@@ -54,23 +54,26 @@ export function useMenuManagement(): UseMenuManagementResult {
     }
   }, []);
 
-  const createProduct = useCallback(async (payload: ProductPayload): Promise<Product> => {
-    validatePayload(payload);
-    const { data, error: insertError } = await supabase
-      .from('product')
-      .insert({
-        name: payload.name.trim(),
-        category_id: payload.category_id,
-        price: payload.price,
-        is_available: payload.is_available,
-      })
-      .select()
-      .single();
-    if (insertError) throw insertError;
-    const created = toProduct(data as ProductRow);
-    setProducts((prev) => [...prev, created]);
-    return created;
-  }, []);
+  const createProduct = useCallback(
+    async (payload: ProductPayload): Promise<Product> => {
+      validatePayload(payload);
+      const { data, error: insertError } = await supabase
+        .from('product')
+        .insert({
+          name: payload.name.trim(),
+          category_id: payload.category_id,
+          price: payload.price,
+          is_available: payload.is_available,
+        })
+        .select()
+        .single();
+      if (insertError) throw insertError;
+      const created = toProduct(data as ProductRow);
+      setProducts((prev) => [...prev, created]);
+      return created;
+    },
+    [],
+  );
 
   const updateProduct = useCallback(
     async (productId: number, payload: ProductPayload): Promise<void> => {
@@ -93,30 +96,45 @@ export function useMenuManagement(): UseMenuManagementResult {
                 name: payload.name.trim(),
                 category_id: payload.category_id,
                 category:
-                  product.category_id === payload.category_id ? product.category : UNCATEGORIZED,
+                  product.category_id === payload.category_id
+                    ? product.category
+                    : UNCATEGORIZED,
                 price: payload.price,
                 is_available: payload.is_available,
               }
-            : product
-        )
+            : product,
+        ),
       );
     },
-    []
+    [],
   );
 
-  const deleteProduct = useCallback(async (productId: number): Promise<void> => {
-    const { error: inventoryError } = await supabase
-      .from('inventory')
-      .delete()
-      .eq('product_id', productId);
-    if (inventoryError) throw inventoryError;
-    const { error: deleteError } = await supabase
-      .from('product')
-      .delete()
-      .eq('product_id', productId);
-    if (deleteError) throw deleteError;
-    setProducts((prev) => prev.filter((product) => product.product_id !== productId));
-  }, []);
+  const deleteProduct = useCallback(
+    async (productId: number): Promise<void> => {
+      const { error: inventoryError } = await supabase
+        .from('inventory')
+        .delete()
+        .eq('product_id', productId);
+      if (inventoryError) throw inventoryError;
+      const { error: deleteError } = await supabase
+        .from('product')
+        .delete()
+        .eq('product_id', productId);
+      if (deleteError) throw deleteError;
+      setProducts((prev) =>
+        prev.filter((product) => product.product_id !== productId),
+      );
+    },
+    [],
+  );
 
-  return { products, isLoading, error, loadProducts, createProduct, updateProduct, deleteProduct };
+  return {
+    products,
+    isLoading,
+    error,
+    loadProducts,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  };
 }

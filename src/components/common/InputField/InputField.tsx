@@ -74,7 +74,9 @@ export function InputField({
   const borderWidth = hasError || isFocused ? 2 : 1;
 
   const containerStyle: ViewStyle[] = [
-    multiline ? inputFieldStyles.multilineContainer : inputFieldStyles.container,
+    multiline
+      ? inputFieldStyles.multilineContainer
+      : inputFieldStyles.container,
     style,
     { borderColor, borderWidth },
     disabled && { backgroundColor: colors.background, opacity: 0.6 },
@@ -89,10 +91,14 @@ export function InputField({
         onHoverOut={() => setIsHover(false)}
         onPress={() => {}}
       >
-        {leftIcon ? <View style={inputFieldStyles.icon}>{leftIcon}</View> : null}
+        {leftIcon ? (
+          <View style={inputFieldStyles.icon}>{leftIcon}</View>
+        ) : null}
         <TextInput
           style={[
-            multiline ? inputFieldStyles.inputMultiline : inputFieldStyles.input,
+            multiline
+              ? inputFieldStyles.inputMultiline
+              : inputFieldStyles.input,
             inputStyle,
             disabled && inputFieldStyles.inputDisabled,
           ]}
@@ -114,10 +120,18 @@ export function InputField({
           onBlur={() => setIsFocused(false)}
           onSubmitEditing={onSubmitEditing}
         />
-        {rightIcon ? <View style={[inputFieldStyles.icon, inputFieldStyles.iconAfter]}>{rightIcon}</View> : null}
+        {rightIcon ? (
+          <View style={[inputFieldStyles.icon, inputFieldStyles.iconAfter]}>
+            {rightIcon}
+          </View>
+        ) : null}
       </Pressable>
-      {hasError && error ? <Text style={inputFieldStyles.errorText}>{error}</Text> : null}
-      {helperText && !hasError ? <Text style={inputFieldStyles.helperText}>{helperText}</Text> : null}
+      {hasError && error ? (
+        <Text style={inputFieldStyles.errorText}>{error}</Text>
+      ) : null}
+      {helperText && !hasError ? (
+        <Text style={inputFieldStyles.helperText}>{helperText}</Text>
+      ) : null}
     </View>
   );
 }

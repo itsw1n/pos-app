@@ -25,10 +25,26 @@ export function MenuNavigator(): React.JSX.Element {
         headerTintColor: colors.primary,
       }}
     >
-      <Stack.Screen name="MenuHome" component={Menu} options={{ title: 'Menu', headerShown: false }} />
-      <Stack.Screen name="Checkout" component={Checkout} options={{ title: 'Checkout', headerShown: false }} />
-      <Stack.Screen name="Payment" component={Payment} options={{ title: 'Payment', headerShown: false }} />
-      <Stack.Screen name="Receipt" component={Receipt} options={{ title: 'Receipt', headerShown: false }} />
+      <Stack.Screen
+        name="MenuHome"
+        component={Menu}
+        options={{ title: 'Menu', headerShown: false }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={Checkout}
+        options={{ title: 'Checkout', headerShown: false }}
+      />
+      <Stack.Screen
+        name="Payment"
+        component={Payment}
+        options={{ title: 'Payment', headerShown: false }}
+      />
+      <Stack.Screen
+        name="Receipt"
+        component={Receipt}
+        options={{ title: 'Receipt', headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }

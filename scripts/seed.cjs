@@ -38,7 +38,10 @@ function loadEnvFile(file) {
     const eq = trimmed.indexOf('=');
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
-    const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    const value = trimmed
+      .slice(eq + 1)
+      .trim()
+      .replace(/^["']|["']$/g, '');
     if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
       process.env[key] = value;
     }
@@ -65,7 +68,7 @@ const TABLES = [
 
 function readSql() {
   return MIGRATION_FILES.map((file) =>
-    fs.readFileSync(path.join(ROOT, 'supabase/migrations', file), 'utf8')
+    fs.readFileSync(path.join(ROOT, 'supabase/migrations', file), 'utf8'),
   ).join('\n');
 }
 
@@ -78,9 +81,14 @@ function connectionString() {
 
 async function withDb(callback) {
   if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL is required (set in .env.development / .env.local)');
+    throw new Error(
+      'DATABASE_URL is required (set in .env.development / .env.local)',
+    );
   }
-  const client = new Client({ connectionString: connectionString(), ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    connectionString: connectionString(),
+    ssl: { rejectUnauthorized: false },
+  });
   try {
     await client.connect();
     await callback(client);
@@ -103,8 +111,18 @@ const ADMIN_EMAIL = 'admin@elvira.cafe';
 const CASHIER_EMAIL = 'cashier@elvira.cafe';
 
 const authUsers = [
-  { email: ADMIN_EMAIL, password: 'admin123', role: 'admin', username: 'admin' },
-  { email: CASHIER_EMAIL, password: 'cashier123', role: 'cashier', username: 'cashier' },
+  {
+    email: ADMIN_EMAIL,
+    password: 'admin123',
+    role: 'admin',
+    username: 'admin',
+  },
+  {
+    email: CASHIER_EMAIL,
+    password: 'cashier123',
+    role: 'cashier',
+    username: 'cashier',
+  },
 ];
 
 // Deterministic category UUIDs (stable across re-seeds).
@@ -115,19 +133,73 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_ID_BY_NAME = Object.fromEntries(
-  CATEGORIES.map((category) => [category.name, category.category_id])
+  CATEGORIES.map((category) => [category.name, category.category_id]),
 );
 
 const products = [
-  { product_id: 1, name: 'Americano', category: 'Coffee', price: 100, is_available: true },
-  { product_id: 2, name: 'Cappuccino', category: 'Coffee', price: 140, is_available: true },
-  { product_id: 3, name: 'Affogato', category: 'Dessert', price: 160, is_available: true },
-  { product_id: 4, name: 'Iced Coffee Milk', category: 'Coffee', price: 130, is_available: true },
-  { product_id: 5, name: 'Luwak Coffee', category: 'Coffee', price: 250, is_available: true },
-  { product_id: 6, name: 'Caramel Latte', category: 'Coffee', price: 150, is_available: true },
-  { product_id: 7, name: 'Matcha Latte', category: 'Non-Coffee', price: 145, is_available: true },
-  { product_id: 8, name: 'Chocolate Cake', category: 'Dessert', price: 120, is_available: true },
-  { product_id: 9, name: 'Cheesecake', category: 'Dessert', price: 135, is_available: true },
+  {
+    product_id: 1,
+    name: 'Americano',
+    category: 'Coffee',
+    price: 100,
+    is_available: true,
+  },
+  {
+    product_id: 2,
+    name: 'Cappuccino',
+    category: 'Coffee',
+    price: 140,
+    is_available: true,
+  },
+  {
+    product_id: 3,
+    name: 'Affogato',
+    category: 'Dessert',
+    price: 160,
+    is_available: true,
+  },
+  {
+    product_id: 4,
+    name: 'Iced Coffee Milk',
+    category: 'Coffee',
+    price: 130,
+    is_available: true,
+  },
+  {
+    product_id: 5,
+    name: 'Luwak Coffee',
+    category: 'Coffee',
+    price: 250,
+    is_available: true,
+  },
+  {
+    product_id: 6,
+    name: 'Caramel Latte',
+    category: 'Coffee',
+    price: 150,
+    is_available: true,
+  },
+  {
+    product_id: 7,
+    name: 'Matcha Latte',
+    category: 'Non-Coffee',
+    price: 145,
+    is_available: true,
+  },
+  {
+    product_id: 8,
+    name: 'Chocolate Cake',
+    category: 'Dessert',
+    price: 120,
+    is_available: true,
+  },
+  {
+    product_id: 9,
+    name: 'Cheesecake',
+    category: 'Dessert',
+    price: 135,
+    is_available: true,
+  },
 ].map((product) => ({
   ...product,
   category_id: CATEGORY_ID_BY_NAME[product.category],
@@ -146,10 +218,38 @@ const inventory = [
 ];
 
 const stockMovements = [
-  { movement_id: 1, stock_id: 1, type: 'in', quantity: 40, date: '2026-08-01T09:00:00Z', supplier: 'Green Bean Co.' },
-  { movement_id: 2, stock_id: 2, type: 'out', quantity: 12, date: '2026-08-02T10:00:00Z', supplier: null },
-  { movement_id: 3, stock_id: 5, type: 'in', quantity: 25, date: '2026-08-01T09:00:00Z', supplier: 'Bean Roasters' },
-  { movement_id: 4, stock_id: 4, type: 'out', quantity: 25, date: '2026-08-04T12:00:00Z', supplier: null },
+  {
+    movement_id: 1,
+    stock_id: 1,
+    type: 'in',
+    quantity: 40,
+    date: '2026-08-01T09:00:00Z',
+    supplier: 'Green Bean Co.',
+  },
+  {
+    movement_id: 2,
+    stock_id: 2,
+    type: 'out',
+    quantity: 12,
+    date: '2026-08-02T10:00:00Z',
+    supplier: null,
+  },
+  {
+    movement_id: 3,
+    stock_id: 5,
+    type: 'in',
+    quantity: 25,
+    date: '2026-08-01T09:00:00Z',
+    supplier: 'Bean Roasters',
+  },
+  {
+    movement_id: 4,
+    stock_id: 4,
+    type: 'out',
+    quantity: 25,
+    date: '2026-08-04T12:00:00Z',
+    supplier: null,
+  },
 ];
 
 // Deterministic UUIDs for transactions (so links are stable between re-seeds).
@@ -212,14 +312,62 @@ const transactions = [
 
 // transaction_id -> items
 const transactionItems = [
-  { id: '11111111-1111-1111-1111-100000000001', transaction_id: TX.amer, product_id: 1, quantity: 2, subtotal: 200 },
-  { id: '11111111-1111-1111-1111-100000000002', transaction_id: TX.amer, product_id: 2, quantity: 1, subtotal: 140 },
-  { id: '11111111-1111-1111-1111-100000000003', transaction_id: TX.capp, product_id: 2, quantity: 2, subtotal: 280 },
-  { id: '11111111-1111-1111-1111-100000000004', transaction_id: TX.capp, product_id: 7, quantity: 2, subtotal: 290 },
-  { id: '11111111-1111-1111-1111-100000000005', transaction_id: TX.aff, product_id: 6, quantity: 1, subtotal: 150 },
-  { id: '11111111-1111-1111-1111-100000000006', transaction_id: TX.aff, product_id: 1, quantity: 1, subtotal: 145 },
-  { id: '11111111-1111-1111-1111-100000000007', transaction_id: TX.iced, product_id: 4, quantity: 2, subtotal: 260 },
-  { id: '11111111-1111-1111-1111-100000000008', transaction_id: TX.iced, product_id: 1, quantity: 1, subtotal: 210 },
+  {
+    id: '11111111-1111-1111-1111-100000000001',
+    transaction_id: TX.amer,
+    product_id: 1,
+    quantity: 2,
+    subtotal: 200,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000002',
+    transaction_id: TX.amer,
+    product_id: 2,
+    quantity: 1,
+    subtotal: 140,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000003',
+    transaction_id: TX.capp,
+    product_id: 2,
+    quantity: 2,
+    subtotal: 280,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000004',
+    transaction_id: TX.capp,
+    product_id: 7,
+    quantity: 2,
+    subtotal: 290,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000005',
+    transaction_id: TX.aff,
+    product_id: 6,
+    quantity: 1,
+    subtotal: 150,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000006',
+    transaction_id: TX.aff,
+    product_id: 1,
+    quantity: 1,
+    subtotal: 145,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000007',
+    transaction_id: TX.iced,
+    product_id: 4,
+    quantity: 2,
+    subtotal: 260,
+  },
+  {
+    id: '11111111-1111-1111-1111-100000000008',
+    transaction_id: TX.iced,
+    product_id: 1,
+    quantity: 1,
+    subtotal: 210,
+  },
 ];
 
 const UPSERT_CATEGORIES = `
@@ -269,7 +417,7 @@ function valuesClause(rows, columns) {
       (_, i) =>
         '(' +
         columns.map((_, j) => `$${i * columns.length + j + 1}`).join(', ') +
-        ')'
+        ')',
     )
     .join(', ');
   const flattened = rows.flatMap((row) => columns.map((c) => row[c]));
@@ -287,9 +435,10 @@ async function upsertRows(client, sql, rows, columns) {
 
 async function upsertTransactions(client) {
   // Idempotent: replace the seeded transaction set.
-  await client.query('delete from transaction_items where transaction_id = any($1::uuid[]);', [
-    transactions.map((t) => t.id),
-  ]);
+  await client.query(
+    'delete from transaction_items where transaction_id = any($1::uuid[]);',
+    [transactions.map((t) => t.id)],
+  );
   await client.query('delete from transactions where id = any($1::uuid[]);', [
     transactions.map((t) => t.id),
   ]);
@@ -309,20 +458,32 @@ async function upsertTransactions(client) {
     client,
     'insert into transactions (id, total_amount, payment_mode, user_id, date, status, void_reason, amount_received, change_given) values',
     txRows,
-    ['id', 'total_amount', 'payment_mode', 'user_id', 'date', 'status', 'void_reason', 'amount_received', 'change_given']
+    [
+      'id',
+      'total_amount',
+      'payment_mode',
+      'user_id',
+      'date',
+      'status',
+      'void_reason',
+      'amount_received',
+      'change_given',
+    ],
   );
 
   await upsertRows(
     client,
     'insert into transaction_items (id, transaction_id, product_id, quantity, subtotal) values',
     transactionItems,
-    ['id', 'transaction_id', 'product_id', 'quantity', 'subtotal']
+    ['id', 'transaction_id', 'product_id', 'quantity', 'subtotal'],
   );
 }
 
 async function upsertAuthUsers() {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users');
+    throw new Error(
+      'SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users',
+    );
   }
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -381,16 +542,29 @@ async function runSeed(mode) {
     await client.query("notify pgrst, 'reload schema';");
 
     await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, [
-      'category_id', 'name',
+      'category_id',
+      'name',
     ]);
     await upsertRows(client, UPSERT_PRODUCTS, products, [
-      'product_id', 'name', 'category_id', 'price', 'is_available',
+      'product_id',
+      'name',
+      'category_id',
+      'price',
+      'is_available',
     ]);
     await upsertRows(client, UPSERT_INVENTORY, inventory, [
-      'stock_id', 'product_id', 'quantity', 'reorder_level',
+      'stock_id',
+      'product_id',
+      'quantity',
+      'reorder_level',
     ]);
     await upsertRows(client, UPSERT_MOVEMENTS, stockMovements, [
-      'movement_id', 'stock_id', 'type', 'quantity', 'date', 'supplier',
+      'movement_id',
+      'stock_id',
+      'type',
+      'quantity',
+      'date',
+      'supplier',
     ]);
 
     // Users must be inserted after auth users resolve to their uuid.
@@ -402,7 +576,11 @@ async function runSeed(mode) {
       is_active: true,
     }));
     await upsertRows(client, UPSERT_USER, rows, [
-      'user_id', 'username', 'password', 'role', 'is_active',
+      'user_id',
+      'username',
+      'password',
+      'role',
+      'is_active',
     ]);
 
     await upsertTransactions(client);

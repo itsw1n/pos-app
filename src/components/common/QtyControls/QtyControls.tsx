@@ -34,7 +34,12 @@ export function QtyControls({
         ]}
         onPress={onIncrement}
       >
-        <Text style={[qtyControlsStyles.buttonText, qtyControlsStyles.incrementButtonText]}>
+        <Text
+          style={[
+            qtyControlsStyles.buttonText,
+            qtyControlsStyles.incrementButtonText,
+          ]}
+        >
           +
         </Text>
       </Pressable>

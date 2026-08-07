@@ -1,5 +1,12 @@
 import React, { useCallback } from 'react';
-import { FlatList, SafeAreaView, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  FlatList,
+  SafeAreaView,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
@@ -19,13 +26,20 @@ const STATUS_LABEL: Record<StockStatus, string> = {
 };
 
 export function Inventory({ style }: InventoryProps): React.JSX.Element {
-  const { items, isLoading, error, loadInventory, getStatus, lowCount, criticalCount } =
-    useInventory();
+  const {
+    items,
+    isLoading,
+    error,
+    loadInventory,
+    getStatus,
+    lowCount,
+    criticalCount,
+  } = useInventory();
 
   useFocusEffect(
     useCallback(() => {
       void loadInventory();
-    }, [loadInventory])
+    }, [loadInventory]),
   );
 
   const alertCount = lowCount + criticalCount;
@@ -39,7 +53,9 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
             <Text style={inventoryStyles.itemName} numberOfLines={1}>
               {item.product_name}
             </Text>
-            <Text style={inventoryStyles.itemCategory}>{item.product_category}</Text>
+            <Text style={inventoryStyles.itemCategory}>
+              {item.product_category}
+            </Text>
           </View>
           <StockBadge status={status} label={STATUS_LABEL[status]} />
         </View>
@@ -83,7 +99,9 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
         </View>
         <View style={inventoryStyles.summaryRow}>
           <Text style={inventoryStyles.summaryLabel}>Out of stock</Text>
-          <Text style={inventoryStyles.summaryValueCritical}>{criticalCount}</Text>
+          <Text style={inventoryStyles.summaryValueCritical}>
+            {criticalCount}
+          </Text>
         </View>
       </View>
 
@@ -93,7 +111,9 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
             <TriangleAlert size={18} color={colors.warning} />
           </View>
           <Text style={inventoryStyles.alertText}>
-            {criticalCount > 0 ? `${criticalCount} item(s) out of stock · ` : ''}
+            {criticalCount > 0
+              ? `${criticalCount} item(s) out of stock · `
+              : ''}
             {lowCount > 0 ? `${lowCount} item(s) low on stock` : ''}
           </Text>
         </View>

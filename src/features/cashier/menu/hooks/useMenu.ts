@@ -15,19 +15,30 @@ export interface UseMenuResult {
   isLoading: boolean;
   error: string;
   loadProducts: () => Promise<void>;
-  addToCart: (product: { product_id: number; name: string; price: number }) => void;
+  addToCart: (product: {
+    product_id: number;
+    name: string;
+    price: number;
+  }) => void;
   decrementItem: (productId: number) => void;
   removeFromCart: (productId: number) => void;
   getTotal: () => number;
   processTransaction: (
     paymentMode: PaymentMode,
-    amountReceived?: number
+    amountReceived?: number,
   ) => Promise<POSTransaction>;
 }
 
 export function useMenu(): UseMenuResult {
   const { user } = useAuth();
-  const { cart, addToCart, decrementItem, removeFromCart, getTotal, clearCart } = useCart();
+  const {
+    cart,
+    addToCart,
+    decrementItem,
+    removeFromCart,
+    getTotal,
+    clearCart,
+  } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +51,7 @@ export function useMenu(): UseMenuResult {
         .from('product')
         .select('*, category(name)')
         .order('name', { ascending: true });
-      setProducts(((data as unknown) as ProductRow[])?.map(toProduct) ?? []);
+      setProducts((data as unknown as ProductRow[])?.map(toProduct) ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
@@ -53,7 +64,10 @@ export function useMenu(): UseMenuResult {
   }, [loadProducts]);
 
   const processTransaction = useCallback(
-    async (paymentMode: PaymentMode, amountReceived?: number): Promise<POSTransaction> => {
+    async (
+      paymentMode: PaymentMode,
+      amountReceived?: number,
+    ): Promise<POSTransaction> => {
       const total = getTotal();
       const transaction: POSTransaction = {
         id: uuid.v4(),
@@ -61,7 +75,9 @@ export function useMenu(): UseMenuResult {
         payment_mode: paymentMode,
         amount_received: amountReceived ?? null,
         change_given:
-          paymentMode === 'cash' && amountReceived !== undefined ? amountReceived - total : null,
+          paymentMode === 'cash' && amountReceived !== undefined
+            ? amountReceived - total
+            : null,
         user_id: user?.user_id ?? 0,
         date: new Date().toISOString(),
         status: 'completed',
@@ -81,13 +97,15 @@ export function useMenu(): UseMenuResult {
         if (txError) throw txError;
 
         for (const item of cart) {
-          const { error: itemError } = await supabase.from('transaction_items').insert({
-            id: uuid.v4(),
-            transaction_id: transaction.id,
-            product_id: item.product_id,
-            quantity: item.qty,
-            subtotal: item.price * item.qty,
-          });
+          const { error: itemError } = await supabase
+            .from('transaction_items')
+            .insert({
+              id: uuid.v4(),
+              transaction_id: transaction.id,
+              product_id: item.product_id,
+              quantity: item.qty,
+              subtotal: item.price * item.qty,
+            });
           if (itemError) throw itemError;
 
           const { data: inventory } = await supabase
@@ -98,7 +116,12 @@ export function useMenu(): UseMenuResult {
           if (inventory) {
             await supabase
               .from('inventory')
-              .update({ quantity: Math.max(0, (inventory.quantity as number) - item.qty) })
+              .update({
+                quantity: Math.max(
+                  0,
+                  (inventory.quantity as number) - item.qty,
+                ),
+              })
               .eq('stock_id', inventory.stock_id);
             await supabase.from('stock_movements').insert({
               stock_id: inventory.stock_id,
@@ -131,7 +154,7 @@ export function useMenu(): UseMenuResult {
       clearCart();
       return transaction;
     },
-    [cart, getTotal, user, clearCart]
+    [cart, getTotal, user, clearCart],
   );
 
   return {

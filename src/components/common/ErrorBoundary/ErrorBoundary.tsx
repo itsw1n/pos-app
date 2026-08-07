@@ -12,7 +12,10 @@ interface ErrorBoundaryState {
   errorMessage: string;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: '',
@@ -31,7 +34,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <View style={[errorBoundaryStyles.container, this.props.style]}>
           <Text style={errorBoundaryStyles.title}>Something went wrong</Text>
-          <Text style={errorBoundaryStyles.message}>{this.state.errorMessage}</Text>
+          <Text style={errorBoundaryStyles.message}>
+            {this.state.errorMessage}
+          </Text>
           <Pressable
             style={({ pressed }) => [
               errorBoundaryStyles.button,

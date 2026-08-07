@@ -3,7 +3,11 @@ import { CartContextType, CartItem } from '../types/context';
 
 const CartContext = createContext<CartContextType | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
+export function CartProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   const addToCart = useCallback(
@@ -12,20 +16,20 @@ export function CartProvider({ children }: { children: React.ReactNode }): React
         const exists = prev.find((i) => i.product_id === product.product_id);
         if (exists) {
           return prev.map((i) =>
-            i.product_id === product.product_id ? { ...i, qty: i.qty + 1 } : i
+            i.product_id === product.product_id ? { ...i, qty: i.qty + 1 } : i,
           );
         }
         return [...prev, { ...product, qty: 1 }];
       });
     },
-    []
+    [],
   );
 
   const decrementItem = useCallback((productId: number): void => {
     setCart((prev) =>
       prev
         .map((i) => (i.product_id === productId ? { ...i, qty: i.qty - 1 } : i))
-        .filter((i) => i.qty > 0)
+        .filter((i) => i.qty > 0),
     );
   }, []);
 
@@ -43,7 +47,14 @@ export function CartProvider({ children }: { children: React.ReactNode }): React
 
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, decrementItem, removeFromCart, getTotal, clearCart }}
+      value={{
+        cart,
+        addToCart,
+        decrementItem,
+        removeFromCart,
+        getTotal,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>

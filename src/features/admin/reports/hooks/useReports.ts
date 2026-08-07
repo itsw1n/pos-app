@@ -106,7 +106,10 @@ function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function getPeriodRange(period: ReportPeriod): { start: Date; end: Date } {
+export function getPeriodRange(period: ReportPeriod): {
+  start: Date;
+  end: Date;
+} {
   const now = new Date();
   if (period === 'daily') {
     return { start: startOfDay(now), end: now };
@@ -120,12 +123,20 @@ export function getPeriodRange(period: ReportPeriod): { start: Date; end: Date }
   return { start, end: now };
 }
 
-export function buildDaySales(transactions: StoredTransaction[], dayCount: number): DaySales[] {
+export function buildDaySales(
+  transactions: StoredTransaction[],
+  dayCount: number,
+): DaySales[] {
   const now = new Date();
   const buckets: DaySales[] = [];
   for (let i = dayCount - 1; i >= 0; i -= 1) {
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-    buckets.push({ date: dayKey(day), label: DAY_LABELS[day.getDay()], revenue: 0, orders: 0 });
+    buckets.push({
+      date: dayKey(day),
+      label: DAY_LABELS[day.getDay()],
+      revenue: 0,
+      orders: 0,
+    });
   }
   const bucketByDate = new Map(buckets.map((bucket) => [bucket.date, bucket]));
   for (const transaction of transactions) {
@@ -151,20 +162,31 @@ export function buildSalesReport(
   period: ReportPeriod,
   transactions: StoredTransaction[],
   start: Date,
-  end: Date
+  end: Date,
 ): SalesReport {
-  const active = transactions.filter((transaction) => isActive(transaction) && inRange(transaction.date, start, end));
-  const totalRevenue = active.reduce((sum, transaction) => sum + transaction.total_amount, 0);
+  const active = transactions.filter(
+    (transaction) =>
+      isActive(transaction) && inRange(transaction.date, start, end),
+  );
+  const totalRevenue = active.reduce(
+    (sum, transaction) => sum + transaction.total_amount,
+    0,
+  );
   const totalOrders = active.length;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const dayCount = Math.floor((end.getTime() - start.getTime()) / DAY_MS) + 1;
 
   const paymentModeBreakdown = PAYMENT_MODES.map((paymentMode) => {
-    const rows = active.filter((transaction) => transaction.payment_mode === paymentMode);
+    const rows = active.filter(
+      (transaction) => transaction.payment_mode === paymentMode,
+    );
     return {
       payment_mode: paymentMode,
       orders: rows.length,
-      revenue: rows.reduce((sum, transaction) => sum + transaction.total_amount, 0),
+      revenue: rows.reduce(
+        (sum, transaction) => sum + transaction.total_amount,
+        0,
+      ),
     };
   });
 
@@ -189,28 +211,38 @@ export function useReports(): UseReportsResult {
     setIsLoading(true);
     setError('');
     try {
-      const [transactionsRes, inventoryRes, productsRes, itemsRes] = await Promise.all([
-        supabase
-          .from('transactions')
-          .select('id, date, total_amount, payment_mode, user_id, status')
-          .order('date', { ascending: false }),
-        supabase.from('inventory').select('*'),
-        supabase.from('product').select('*'),
-        supabase.from('transaction_items').select('product_id, quantity, subtotal'),
-      ]);
+      const [transactionsRes, inventoryRes, productsRes, itemsRes] =
+        await Promise.all([
+          supabase
+            .from('transactions')
+            .select('id, date, total_amount, payment_mode, user_id, status')
+            .order('date', { ascending: false }),
+          supabase.from('inventory').select('*'),
+          supabase.from('product').select('*'),
+          supabase
+            .from('transaction_items')
+            .select('product_id, quantity, subtotal'),
+        ]);
       if (transactionsRes.error) throw transactionsRes.error;
       if (inventoryRes.error) throw inventoryRes.error;
       if (productsRes.error) throw productsRes.error;
       if (itemsRes.error) throw itemsRes.error;
 
-      const transactions = ((transactionsRes.data as StoredTransaction[]) ?? []).filter(isActive);
+      const transactions = (
+        (transactionsRes.data as StoredTransaction[]) ?? []
+      ).filter(isActive);
       const inventory = (inventoryRes.data as Inventory[]) ?? [];
       const products = (productsRes.data as Product[]) ?? [];
       const items = (itemsRes.data as TransactionItem[]) ?? [];
 
-      const productById = new Map(products.map((product) => [product.product_id, product]));
+      const productById = new Map(
+        products.map((product) => [product.product_id, product]),
+      );
 
-      const totalRevenue = transactions.reduce((sum, transaction) => sum + transaction.total_amount, 0);
+      const totalRevenue = transactions.reduce(
+        (sum, transaction) => sum + transaction.total_amount,
+        0,
+      );
       const weeklyBreakdown = buildDaySales(transactions, 7);
 
       const lowStock = inventory
@@ -218,15 +250,23 @@ export function useReports(): UseReportsResult {
         .map((record) => ({
           stock_id: record.stock_id,
           product_id: record.product_id,
-          product_name: productById.get(record.product_id)?.name ?? `Product #${record.product_id}`,
+          product_name:
+            productById.get(record.product_id)?.name ??
+            `Product #${record.product_id}`,
           quantity: record.quantity,
           reorder_level: record.reorder_level,
         }))
         .sort((a, b) => a.quantity - b.quantity);
 
-      const soldByProduct = new Map<number, { quantity_sold: number; revenue: number }>();
+      const soldByProduct = new Map<
+        number,
+        { quantity_sold: number; revenue: number }
+      >();
       for (const item of items) {
-        const current = soldByProduct.get(item.product_id) ?? { quantity_sold: 0, revenue: 0 };
+        const current = soldByProduct.get(item.product_id) ?? {
+          quantity_sold: 0,
+          revenue: 0,
+        };
         current.quantity_sold += item.quantity;
         current.revenue += item.subtotal;
         soldByProduct.set(item.product_id, current);
@@ -234,7 +274,8 @@ export function useReports(): UseReportsResult {
       const topProducts = Array.from(soldByProduct.entries())
         .map(([productId, value]) => ({
           product_id: productId,
-          product_name: productById.get(productId)?.name ?? `Product #${productId}`,
+          product_name:
+            productById.get(productId)?.name ?? `Product #${productId}`,
           quantity_sold: value.quantity_sold,
           revenue: value.revenue,
         }))
@@ -255,15 +296,18 @@ export function useReports(): UseReportsResult {
     }
   }, []);
 
-  const getSalesReport = useCallback(async (period: ReportPeriod): Promise<SalesReport> => {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('id, date, total_amount, payment_mode, user_id, status');
-    if (error) throw error;
-    const transactions = (data as StoredTransaction[]) ?? [];
-    const { start, end } = getPeriodRange(period);
-    return buildSalesReport(period, transactions, start, end);
-  }, []);
+  const getSalesReport = useCallback(
+    async (period: ReportPeriod): Promise<SalesReport> => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, date, total_amount, payment_mode, user_id, status');
+      if (error) throw error;
+      const transactions = (data as StoredTransaction[]) ?? [];
+      const { start, end } = getPeriodRange(period);
+      return buildSalesReport(period, transactions, start, end);
+    },
+    [],
+  );
 
   const getInventoryReport = useCallback(async (): Promise<InventoryReport> => {
     const [inventoryRes, productsRes] = await Promise.all([
@@ -275,7 +319,9 @@ export function useReports(): UseReportsResult {
 
     const inventory = (inventoryRes.data as Inventory[]) ?? [];
     const products = (productsRes.data as Product[]) ?? [];
-    const productById = new Map(products.map((product) => [product.product_id, product]));
+    const productById = new Map(
+      products.map((product) => [product.product_id, product]),
+    );
 
     let stockValue = 0;
     let lowStockCount = 0;
@@ -286,7 +332,11 @@ export function useReports(): UseReportsResult {
       const productName = product?.name ?? `Product #${record.product_id}`;
       const price = product?.price ?? 0;
       const status: StockLevel =
-        record.quantity <= 0 ? 'critical' : record.quantity <= record.reorder_level ? 'low' : 'ok';
+        record.quantity <= 0
+          ? 'critical'
+          : record.quantity <= record.reorder_level
+            ? 'low'
+            : 'ok';
       stockValue += price * record.quantity;
       if (status === 'critical') outOfStockCount += 1;
       else if (status === 'low') lowStockCount += 1;
@@ -314,5 +364,12 @@ export function useReports(): UseReportsResult {
     void loadDashboard();
   }, [loadDashboard]);
 
-  return { dashboard, isLoading, error, loadDashboard, getSalesReport, getInventoryReport };
+  return {
+    dashboard,
+    isLoading,
+    error,
+    loadDashboard,
+    getSalesReport,
+    getInventoryReport,
+  };
 }

@@ -8,7 +8,14 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Check, Coffee, Plus, Printer, Settings, Share } from 'lucide-react-native';
+import {
+  Check,
+  Coffee,
+  Plus,
+  Printer,
+  Settings,
+  Share,
+} from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { generateReceipt, shareReceipt } from '@/services/receiptService';
 import { printReceipt } from '@/services/printerService';
@@ -29,7 +36,11 @@ function formatDate(iso: string): string {
   return date.toLocaleString();
 }
 
-export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.Element {
+export function Receipt({
+  navigation,
+  route,
+  style,
+}: ReceiptProps): React.JSX.Element {
   const { transaction } = route.params;
 
   const receiptItems = transaction.items.map((item) => ({
@@ -73,7 +84,7 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
         <hr />
         <p><strong>Total: ${transaction.total_amount.toFixed(2)}</strong></p>
         ${transaction.change_given !== null ? `<p>Change: ${transaction.change_given.toFixed(2)}</p>` : ''}
-      </body></html>`
+      </body></html>`,
     );
   };
 
@@ -82,7 +93,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
       <View style={receiptStyles.topBar}>
         <View style={receiptStyles.topBarBalance} />
         <Text style={receiptStyles.topBarTitle}>Elvira Cafe</Text>
-        <Pressable onPress={() => navigation.getParent()?.navigate('Settings' as never)}>
+        <Pressable
+          onPress={() => navigation.getParent()?.navigate('Settings' as never)}
+        >
           <Settings size={22} color={colors.textSecondary} />
         </Pressable>
       </View>
@@ -97,7 +110,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
             <Check size={28} color={colors.surface} />
           </View>
           <Text style={receiptStyles.successTitle}>Payment Successful</Text>
-          <Text style={receiptStyles.successSubtitle}>Thank you for your visit!</Text>
+          <Text style={receiptStyles.successSubtitle}>
+            Thank you for your visit!
+          </Text>
         </View>
 
         <View style={receiptStyles.receiptCard}>
@@ -115,7 +130,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
             <Text style={receiptStyles.receiptMetaText}>
               Order #{transaction.id.slice(0, 4).toUpperCase()}
             </Text>
-            <Text style={receiptStyles.receiptMetaText}>{formatDate(transaction.date)}</Text>
+            <Text style={receiptStyles.receiptMetaText}>
+              {formatDate(transaction.date)}
+            </Text>
           </View>
 
           <View style={receiptStyles.receiptItems}>
@@ -124,7 +141,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
                 <Text style={receiptStyles.itemName} numberOfLines={1}>
                   {item.quantity}x {item.name}
                 </Text>
-                <Text style={receiptStyles.itemSubtotal}>₱{item.subtotal.toFixed(2)}</Text>
+                <Text style={receiptStyles.itemSubtotal}>
+                  ₱{item.subtotal.toFixed(2)}
+                </Text>
               </View>
             ))}
           </View>
@@ -132,7 +151,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
           <View style={receiptStyles.receiptTotals}>
             <View style={receiptStyles.itemRow}>
               <Text style={receiptStyles.itemName}>Subtotal</Text>
-              <Text style={receiptStyles.itemSubtotal}>₱{subtotal.toFixed(2)}</Text>
+              <Text style={receiptStyles.itemSubtotal}>
+                ₱{subtotal.toFixed(2)}
+              </Text>
             </View>
             {/*
               TODO: confirm Tax with client
@@ -145,7 +166,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
 
           <View style={receiptStyles.receiptGrandTotal}>
             <Text style={receiptStyles.grandTotalLabel}>TOTAL</Text>
-            <Text style={receiptStyles.grandTotalValue}>₱{transaction.total_amount.toFixed(2)}</Text>
+            <Text style={receiptStyles.grandTotalValue}>
+              ₱{transaction.total_amount.toFixed(2)}
+            </Text>
           </View>
 
           <View style={receiptStyles.paymentMethodRow}>
@@ -160,7 +183,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
           <View style={receiptStyles.barcodeSection}>
             {/* TODO: replace with barcode library later */}
             <View style={receiptStyles.barcodePlaceholder} />
-            <Text style={receiptStyles.barcodeText}>Thanks for visiting Elvira Cafe</Text>
+            <Text style={receiptStyles.barcodeText}>
+              Thanks for visiting Elvira Cafe
+            </Text>
           </View>
 
           <View style={receiptStyles.receiptEdge} />
@@ -172,7 +197,9 @@ export function Receipt({ navigation, route, style }: ReceiptProps): React.JSX.E
             onPress={() => navigation.popToTop()}
           >
             <Plus size={18} color={colors.surface} />
-            <Text style={receiptStyles.newTransactionButtonText}>New Transaction</Text>
+            <Text style={receiptStyles.newTransactionButtonText}>
+              New Transaction
+            </Text>
           </Pressable>
 
           <View style={receiptStyles.secondaryRow}>
