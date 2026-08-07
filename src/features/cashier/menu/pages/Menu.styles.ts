@@ -30,6 +30,21 @@ export const menuStyles = StyleSheet.create({
   categoryWrapper: {
     marginBottom: spacing.md,
   },
+  sectionHeader: {
+    ...typography.lg,
+    fontWeight: '600' as const,
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+  },
+  emptyText: {
+    ...typography.md,
+    color: colors.textSecondary,
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',

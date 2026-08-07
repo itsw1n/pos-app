@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import {
-  FlatList,
   Pressable,
   SafeAreaView,
+  SectionList,
   StyleProp,
   Text,
   View,
@@ -26,6 +26,11 @@ type MenuProps = StackScreenProps<MenuStackParamList, 'MenuHome'> & {
 };
 
 const ALL_CATEGORIES = 'All';
+
+type ProductSection = {
+  title: string;
+  data: Product[];
+};
 
 export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
   const {
@@ -60,6 +65,19 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
     const item = cart.find((i) => i.product_id === productId);
     return item ? item.qty : 0;
   };
+
+  const sections = useMemo<ProductSection[]>(() => {
+    const grouped = new Map<string, Product[]>();
+    for (const product of filteredProducts) {
+      const list = grouped.get(product.category) ?? [];
+      list.push(product);
+      grouped.set(product.category, list);
+    }
+    return Array.from(grouped.entries()).map(([title, data]) => ({
+      title,
+      data,
+    }));
+  }, [filteredProducts]);
 
   const total = getTotal();
 
@@ -105,6 +123,14 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
     );
   };
 
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: ProductSection;
+  }): React.JSX.Element => (
+    <Text style={menuStyles.sectionHeader}>{section.title}</Text>
+  );
+
   if (isLoading && products.length === 0) {
     return (
       <View style={[menuStyles.loadingContainer, style]}>
@@ -134,12 +160,21 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
 
       {error ? <Text style={menuStyles.errorText}>{error}</Text> : null}
 
-      <FlatList
-        data={filteredProducts}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => String(item.product_id)}
         renderItem={renderProduct}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={menuStyles.content}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={menuStyles.emptyContainer}>
+            <Text style={menuStyles.emptyText}>
+              No menu items in this category
+            </Text>
+          </View>
+        }
       />
 
       <Pressable
