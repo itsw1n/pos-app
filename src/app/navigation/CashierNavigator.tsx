@@ -2,9 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Box, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
 import { TabBarIcon } from '@/components/common/TabBarIcon/TabBarIcon';
-import { POSNavigator } from '@/features/pos/POSNavigator';
+import { MenuNavigator } from '@/cashier/menu/MenuNavigator';
 import { OrdersNavigator } from '@/shared/orders/OrdersNavigator';
-import { InventoryViewScreen } from '@/features/inventory/InventoryViewScreen';
+import { Inventory } from '@/cashier/inventory/pages/Inventory';
 import { SettingsNavigator } from '@/shared/settings/SettingsNavigator';
 import { colors } from '@/theme';
 
@@ -21,7 +21,7 @@ export function CashierNavigator(): React.JSX.Element {
     >
       <Tabs.Screen
         name="Menu"
-        component={POSNavigator}
+        component={MenuNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
             <TabBarIcon icon={UtensilsCrossed} focused={focused} color={color} size={size} />
@@ -39,7 +39,7 @@ export function CashierNavigator(): React.JSX.Element {
       />
       <Tabs.Screen
         name="Inventory"
-        component={InventoryViewScreen}
+        component={Inventory}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
             <TabBarIcon icon={Box} focused={focused} color={color} size={size} />

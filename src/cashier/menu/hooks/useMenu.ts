@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import uuid from 'react-native-uuid';
-import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
-import { supabase } from '../../services/supabase';
-import { saveToSQLite } from '../../services/sqlite';
-import { ProductRow, toProduct } from '../../services/catalog';
-import { CartItem, PaymentMode, POSTransaction } from '../../types/context';
-import { Product } from '../../types/entities';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { supabase } from '@/services/supabase';
+import { saveToSQLite } from '@/services/sqlite';
+import { ProductRow, toProduct } from '@/services/catalog';
+import { CartItem, PaymentMode, POSTransaction } from '@/types/context';
+import { Product } from '@/types/entities';
 
-export interface UsePOSResult {
+export interface UseMenuResult {
   cart: CartItem[];
   products: Product[];
   isLoading: boolean;
@@ -25,7 +25,7 @@ export interface UsePOSResult {
   ) => Promise<POSTransaction>;
 }
 
-export function usePOS(): UsePOSResult {
+export function useMenu(): UseMenuResult {
   const { user } = useAuth();
   const { cart, addToCart, decrementItem, removeFromCart, getTotal, clearCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);

@@ -20,14 +20,14 @@ import {
   Wallet,
   type LucideIcon,
 } from 'lucide-react-native';
-import { InputField } from '../../components/common/InputField/InputField';
-import { PaymentMode } from '../../types/context';
-import { colors, typography } from '../../theme';
-import { POSStackParamList } from './POSNavigator';
-import { usePOS } from './usePOS';
-import { paymentScreenStyles } from './PaymentScreen.styles';
+import { InputField } from '@/components/common/InputField/InputField';
+import { PaymentMode } from '@/types/context';
+import { colors, typography } from '@/theme';
+import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
+import { useMenu } from '@/cashier/menu/hooks/useMenu';
+import { paymentStyles } from './Payment.styles';
 
-type PaymentScreenProps = StackScreenProps<POSStackParamList, 'Payment'> & {
+type PaymentProps = StackScreenProps<MenuStackParamList, 'Payment'> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -37,8 +37,8 @@ const PAYMENT_METHODS: Array<{ value: PaymentMode; label: string; icon: LucideIc
   { value: 'maya', label: 'Maya', icon: Wallet },
 ];
 
-export function PaymentScreen({ navigation, route, style }: PaymentScreenProps): React.JSX.Element {
-  const { getTotal, processTransaction } = usePOS();
+export function Payment({ navigation, route, style }: PaymentProps): React.JSX.Element {
+  const { getTotal, processTransaction } = useMenu();
   const total = getTotal();
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMode>(route.params.paymentMode ?? 'cash');
@@ -68,45 +68,45 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
   };
 
   return (
-    <SafeAreaView style={[paymentScreenStyles.container, style]}>
-      <View style={paymentScreenStyles.topBar}>
+    <SafeAreaView style={[paymentStyles.container, style]}>
+      <View style={paymentStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={paymentScreenStyles.topBarTitle}>Payment</Text>
-        <View style={paymentScreenStyles.topBarBalance} />
+        <Text style={paymentStyles.topBarTitle}>Payment</Text>
+        <View style={paymentStyles.topBarBalance} />
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={paymentScreenStyles.scrollContent}
+        contentContainerStyle={paymentStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={paymentScreenStyles.totalSection}>
-          <Text style={paymentScreenStyles.totalLabel}>Total Amount Due</Text>
-          <Text style={paymentScreenStyles.totalValue}>₱{total.toFixed(2)}</Text>
+        <View style={paymentStyles.totalSection}>
+          <Text style={paymentStyles.totalLabel}>Total Amount Due</Text>
+          <Text style={paymentStyles.totalValue}>₱{total.toFixed(2)}</Text>
         </View>
 
-        <Text style={paymentScreenStyles.sectionLabel}>PAYMENT METHOD</Text>
+        <Text style={paymentStyles.sectionLabel}>PAYMENT METHOD</Text>
 
-        <View style={paymentScreenStyles.methodList}>
+        <View style={paymentStyles.methodList}>
           {PAYMENT_METHODS.map((method) => {
             const isSelected = selectedMethod === method.value;
             return (
               <Pressable
                 key={method.value}
                 style={[
-                  paymentScreenStyles.paymentOption,
-                  isSelected ? paymentScreenStyles.paymentOptionSelected : null,
+                  paymentStyles.paymentOption,
+                  isSelected ? paymentStyles.paymentOptionSelected : null,
                 ]}
                 onPress={() => setSelectedMethod(method.value)}
               >
-                <View style={paymentScreenStyles.iconCircle}>
+                <View style={paymentStyles.iconCircle}>
                   <method.icon size={18} color={colors.primary} />
                 </View>
-                <Text style={paymentScreenStyles.optionLabel}>{method.label}</Text>
+                <Text style={paymentStyles.optionLabel}>{method.label}</Text>
                 {isSelected ? (
-                  <View style={paymentScreenStyles.selectIndicator}>
+                  <View style={paymentStyles.selectIndicator}>
                     <Check size={14} color={colors.surface} />
                   </View>
                 ) : null}
@@ -116,9 +116,9 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
         </View>
 
         {isCash ? (
-          <View style={paymentScreenStyles.cashSection}>
-            <View style={paymentScreenStyles.amountGroup}>
-              <Text style={paymentScreenStyles.amountLabel}>AMOUNT RECEIVED</Text>
+          <View style={paymentStyles.cashSection}>
+            <View style={paymentStyles.amountGroup}>
+              <Text style={paymentStyles.amountLabel}>AMOUNT RECEIVED</Text>
               <InputField
                 value={amountText}
                 onChangeText={setAmountText}
@@ -134,12 +134,12 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
               />
             </View>
 
-            <View style={paymentScreenStyles.changeRow}>
-              <Text style={paymentScreenStyles.changeLabel}>CHANGE</Text>
+            <View style={paymentStyles.changeRow}>
+              <Text style={paymentStyles.changeLabel}>CHANGE</Text>
               <Text
                 style={[
-                  paymentScreenStyles.changeValue,
-                  change !== null && change < 0 ? paymentScreenStyles.changeNegative : null,
+                  paymentStyles.changeValue,
+                  change !== null && change < 0 ? paymentStyles.changeNegative : null,
                 ]}
               >
                 {change !== null && change >= 0 ? `₱${change.toFixed(2)}` : '—'}
@@ -147,20 +147,20 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
             </View>
           </View>
         ) : (
-          <View style={paymentScreenStyles.hint}>
+          <View style={paymentStyles.hint}>
             <QrCode size={20} color={colors.primary} />
-            <Text style={paymentScreenStyles.hintText}>
+            <Text style={paymentStyles.hintText}>
               Ask customer to scan the QR code on the counter
             </Text>
           </View>
         )}
 
-        {error ? <Text style={paymentScreenStyles.errorText}>{error}</Text> : null}
+        {error ? <Text style={paymentStyles.errorText}>{error}</Text> : null}
 
         <Pressable
           style={[
-            paymentScreenStyles.confirmButton,
-            !canConfirm ? paymentScreenStyles.confirmButtonDisabled : null,
+            paymentStyles.confirmButton,
+            !canConfirm ? paymentStyles.confirmButtonDisabled : null,
           ]}
           disabled={!canConfirm}
           onPress={handleConfirm}
@@ -169,7 +169,7 @@ export function PaymentScreen({ navigation, route, style }: PaymentScreenProps):
             <ActivityIndicator color={colors.surface} />
           ) : (
             <>
-              <Text style={paymentScreenStyles.confirmButtonText}>Confirm Payment</Text>
+              <Text style={paymentStyles.confirmButtonText}>Confirm Payment</Text>
               <ArrowRight size={18} color={colors.surface} />
             </>
           )}

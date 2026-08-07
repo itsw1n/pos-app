@@ -11,25 +11,25 @@ import {
 } from 'react-native';
 import { ArrowRight, ShoppingCart } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '../../components/common/AppHeader/AppHeader';
-import { QtyControls } from '../../components/common/QtyControls/QtyControls';
-import { SearchBar } from '../../components/common/SearchBar/SearchBar';
-import { CategoryBar } from '../../components/common/Category/CategoryBar';
+import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { QtyControls } from '@/components/common/QtyControls/QtyControls';
+import { SearchBar } from '@/components/common/SearchBar/SearchBar';
+import { CategoryBar } from '@/components/common/Category/CategoryBar';
 import { useCategories } from '@/hooks/useCategories';
-import { Product } from '../../types/entities';
-import { colors, spacing } from '../../theme';
-import { POSStackParamList } from './POSNavigator';
-import { usePOS } from './usePOS';
-import { posScreenStyles } from './POSScreen.styles';
+import { Product } from '@/types/entities';
+import { colors, spacing } from '@/theme';
+import { MenuStackParamList } from '@/cashier/menu/MenuNavigator';
+import { useMenu } from '@/cashier/menu/hooks/useMenu';
+import { menuStyles } from './Menu.styles';
 
-type POSScreenProps = StackScreenProps<POSStackParamList, 'POS'> & {
+type MenuProps = StackScreenProps<MenuStackParamList, 'Menu'> & {
   style?: StyleProp<ViewStyle>;
 };
 
 const ALL_CATEGORIES = 'All';
 
-export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Element {
-  const { cart, products, isLoading, error, addToCart, decrementItem, getTotal } = usePOS();
+export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
+  const { cart, products, isLoading, error, addToCart, decrementItem, getTotal } = useMenu();
   const { categories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,18 +60,18 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
     return (
       <View
         style={[
-          posScreenStyles.productCard,
-          inCart ? posScreenStyles.productCardInCart : null,
+          menuStyles.productCard,
+          inCart ? menuStyles.productCardInCart : null,
         ]}
       >
-        <View style={posScreenStyles.productImage}>
-          <Text style={posScreenStyles.productImageEmoji}>☕</Text>
+        <View style={menuStyles.productImage}>
+          <Text style={menuStyles.productImageEmoji}>☕</Text>
         </View>
-        <View style={posScreenStyles.productInfo}>
-          <Text style={posScreenStyles.productName} numberOfLines={1}>
+        <View style={menuStyles.productInfo}>
+          <Text style={menuStyles.productName} numberOfLines={1}>
             {item.name}
           </Text>
-          <Text style={posScreenStyles.productPrice}>₱{item.price.toFixed(2)}</Text>
+          <Text style={menuStyles.productPrice}>₱{item.price.toFixed(2)}</Text>
         </View>
         {inCart ? (
           <QtyControls
@@ -82,9 +82,9 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
         ) : (
           <Pressable
             style={({ pressed }) => [
-              posScreenStyles.addButton,
-              pressed ? posScreenStyles.addButtonPressed : null,
-              !canAdd ? posScreenStyles.addButtonDisabled : null,
+              menuStyles.addButton,
+              pressed ? menuStyles.addButtonPressed : null,
+              !canAdd ? menuStyles.addButtonDisabled : null,
             ]}
             disabled={!canAdd}
             onPress={() => canAdd && addToCart(item)}
@@ -98,14 +98,14 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
 
   if (isLoading && products.length === 0) {
     return (
-      <View style={[posScreenStyles.loadingContainer, style]}>
-        <Text style={posScreenStyles.loadingText}>Loading menu...</Text>
+      <View style={[menuStyles.loadingContainer, style]}>
+        <Text style={menuStyles.loadingText}>Loading menu...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[posScreenStyles.container, style]}>
+    <SafeAreaView style={[menuStyles.container, style]}>
       <AppHeader pageTitle="Menu" />
 
         <SearchBar
@@ -115,7 +115,7 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
           style={{ marginHorizontal: spacing['2xl'], marginVertical: spacing.md }}
         />
 
-      <View style={posScreenStyles.categoryWrapper}>
+      <View style={menuStyles.categoryWrapper}>
         <CategoryBar
           categories={categoryNames}
           activeCategory={activeCategory}
@@ -123,22 +123,22 @@ export function POSScreen({ navigation, style }: POSScreenProps): React.JSX.Elem
         />
       </View>
 
-      {error ? <Text style={posScreenStyles.errorText}>{error}</Text> : null}
+      {error ? <Text style={menuStyles.errorText}>{error}</Text> : null}
 
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => String(item.product_id)}
         renderItem={renderProduct}
-        contentContainerStyle={posScreenStyles.content}
+        contentContainerStyle={menuStyles.content}
         showsVerticalScrollIndicator={false}
       />
 
-      <Pressable style={posScreenStyles.totalBar} onPress={() => navigation.navigate('Checkout')}>
-        <View style={posScreenStyles.totalBarLeft}>
-          <Text style={posScreenStyles.totalBarLabel}>Total</Text>
+      <Pressable style={menuStyles.totalBar} onPress={() => navigation.navigate('Checkout')}>
+        <View style={menuStyles.totalBarLeft}>
+          <Text style={menuStyles.totalBarLabel}>Total</Text>
           <ArrowRight size={16} color={colors.surface} />
         </View>
-        <Text style={posScreenStyles.totalBarValue}>₱{total.toFixed(2)}</Text>
+        <Text style={menuStyles.totalBarValue}>₱{total.toFixed(2)}</Text>
       </Pressable>
     </SafeAreaView>
   );
