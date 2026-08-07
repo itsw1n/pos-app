@@ -52,13 +52,14 @@ export const menuManagementStyles = StyleSheet.create({
   },
   productName: {
     ...typography.md,
-    fontWeight: '500' as const,
+    fontWeight: '600' as const,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   productPrice: {
     ...typography.sm,
-    color: colors.textSecondary,
+    fontWeight: '500' as const,
+    color: colors.primary,
   },
   editButton: {
     width: 36,

@@ -104,7 +104,8 @@ export const menuStyles = StyleSheet.create({
   },
   productPrice: {
     ...typography.sm,
-    color: colors.textSecondary,
+    fontWeight: '500' as const,
+    color: colors.primary,
   },
   addButton: {
     width: 36,
