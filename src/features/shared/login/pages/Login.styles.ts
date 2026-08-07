@@ -103,10 +103,14 @@ export const loginScreenStyles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.sm,
     marginBottom: spacing['2xl'],
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 4,
+        blurRadius: 8,
+        color: colors.primary,
+      },
+    ],
     elevation: 4,
   },
   loginButtonText: {
