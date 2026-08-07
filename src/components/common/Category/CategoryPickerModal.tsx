@@ -9,6 +9,7 @@ interface CategoryPickerModalProps {
   visible: boolean;
   categories: Category[];
   selectedCategoryId?: string;
+  title?: string;
   onClose: () => void;
   onSelect: (categoryId: string, name: string) => void;
 }
@@ -17,6 +18,7 @@ export function CategoryPickerModal({
   visible,
   categories,
   selectedCategoryId,
+  title = 'Select Category',
   onClose,
   onSelect,
 }: CategoryPickerModalProps): React.JSX.Element {
@@ -24,7 +26,7 @@ export function CategoryPickerModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={categoryPickerModalStyles.backdrop} onPress={onClose}>
         <View style={categoryPickerModalStyles.sheet}>
-          <Text style={categoryPickerModalStyles.title}>Select Category</Text>
+          <Text style={categoryPickerModalStyles.title}>{title}</Text>
           <ScrollView style={categoryPickerModalStyles.list}>
             {categories.map((category) => {
               const isSelected = category.category_id === selectedCategoryId;
