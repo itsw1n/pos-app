@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { supabase } from '../../services/supabase';
-import { User, UserRole } from '../../types/entities';
+import { supabase } from '@/services/supabase';
+import { User, UserRole } from '@/types/entities';
 
 export interface UserPayload {
   username: string;

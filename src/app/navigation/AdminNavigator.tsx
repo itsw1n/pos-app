@@ -3,9 +3,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Box, ChartColumn, Receipt, Settings, UtensilsCrossed } from 'lucide-react-native';
 import { TabBarIcon } from '@/components/common/TabBarIcon/TabBarIcon';
 import { ProductsNavigator } from '@/features/products/ProductsNavigator';
-import { TransactionsNavigator } from '@/features/transactions/TransactionsNavigator';
+import { OrdersNavigator } from '@/shared/orders/OrdersNavigator';
 import { ReportsNavigator } from '@/features/reports/ReportsNavigator';
-import { SettingsNavigator } from '@/features/settings/SettingsNavigator';
+import { SettingsNavigator } from '@/shared/settings/SettingsNavigator';
 import { colors } from '@/theme';
 
 const Tabs = createBottomTabNavigator();
@@ -30,7 +30,7 @@ export function AdminNavigator(): React.JSX.Element {
       />
       <Tabs.Screen
         name="Orders"
-        component={TransactionsNavigator}
+        component={OrdersNavigator}
         options={{
           tabBarIcon: ({ focused, color, size }) => (
             <TabBarIcon icon={Receipt} focused={focused} color={color} size={size} />

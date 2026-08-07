@@ -12,13 +12,13 @@ import {
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { CircleAlert } from 'lucide-react-native';
-import { InputField } from '../../components/common/InputField/InputField';
-import { colors, typography } from '../../theme';
-import { TransactionsStackParamList } from './TransactionsNavigator';
-import { useTransactions } from './useTransactions';
-import { voidScreenStyles } from './VoidScreen.styles';
+import { InputField } from '@/components/common/InputField/InputField';
+import { colors, typography } from '@/theme';
+import { OrdersStackParamList } from '@/shared/orders/OrdersNavigator';
+import { useOrders } from '@/shared/orders/hooks/useOrders';
+import { voidScreenStyles } from './VoidTransaction.styles';
 
-type VoidScreenProps = StackScreenProps<TransactionsStackParamList, 'Void'> & {
+type VoidTransactionProps = StackScreenProps<OrdersStackParamList, 'Void'> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -29,9 +29,9 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-export function VoidScreen({ navigation, route, style }: VoidScreenProps): React.JSX.Element {
+export function VoidTransaction({ navigation, route, style }: VoidTransactionProps): React.JSX.Element {
   const { transactionId, date, total } = route.params;
-  const { isVoiding, voidTransaction } = useTransactions();
+  const { isVoiding, voidTransaction } = useOrders();
 
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');

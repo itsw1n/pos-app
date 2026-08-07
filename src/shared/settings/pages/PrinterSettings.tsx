@@ -7,8 +7,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Button } from '../../components/common/Button/Button';
-import { printReceipt } from '../../services/printerService';
+import { Button } from '@/components/common/Button/Button';
+import { printReceipt } from '@/services/printerService';
 import { printerSettingsStyles } from './PrinterSettings.styles';
 
 type PrinterSettingsProps = {

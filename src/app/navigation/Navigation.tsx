@@ -5,7 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
-import { LoginScreen } from '@/features/auth/LoginScreen';
+import { LoginScreen } from '@/shared/login/pages/Login';
 import { colors } from '@/theme';
 
 const Stack = createStackNavigator();

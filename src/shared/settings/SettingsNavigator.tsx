@@ -1,11 +1,11 @@
 import React from 'react';
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { colors, typography } from '../../theme';
-import { ProductsNavigator, ProductsStackParamList } from '../products/ProductsNavigator';
-import { SettingsScreen } from './SettingsScreen';
-import { PrinterSettings } from './PrinterSettings';
-import { UserManagement } from './UserManagement';
+import { colors, typography } from '@/theme';
+import { ProductsNavigator, ProductsStackParamList } from '@/features/products/ProductsNavigator';
+import { Settings } from './pages/Settings';
+import { PrinterSettings } from './pages/PrinterSettings';
+import { UserManagement } from './pages/UserManagement';
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
@@ -27,7 +27,7 @@ export function SettingsNavigator(): React.JSX.Element {
     >
       <Stack.Screen
         name="SettingsHome"
-        component={SettingsScreen}
+        component={Settings}
         options={{ title: 'Settings', headerShown: false }}
       />
       <Stack.Screen

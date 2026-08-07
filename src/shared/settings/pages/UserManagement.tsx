@@ -8,13 +8,13 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Button } from '../../components/common/Button/Button';
-import { ConfirmDialog } from '../../components/common/ConfirmDialog/ConfirmDialog';
-import { TextField } from '../../components/common/TextField/TextField';
-import { useAuth } from '../../context/AuthContext';
-import { colors } from '../../theme';
-import { User } from '../../types/entities';
-import { useUsers } from './useUsers';
+import { Button } from '@/components/common/Button/Button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
+import { TextField } from '@/components/common/TextField/TextField';
+import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/theme';
+import { User } from '@/types/entities';
+import { useUsers } from '@/shared/settings/hooks/useUsers';
 import { userManagementStyles } from './UserManagement.styles';
 
 type UserManagementProps = {

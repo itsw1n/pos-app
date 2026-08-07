@@ -10,7 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '../../components/common/AppHeader/AppHeader';
+import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import {
   Bell,
   ChevronRight,
@@ -24,13 +24,13 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useAuth } from '../../context/AuthContext';
-import { useTransactions } from '../transactions/useTransactions';
-import { colors } from '../../theme';
-import { SettingsStackParamList } from './SettingsNavigator';
-import { settingsScreenStyles as styles } from './SettingsScreen.styles';
+import { useAuth } from '@/context/AuthContext';
+import { useOrders } from '@/shared/orders/hooks/useOrders';
+import { colors } from '@/theme';
+import { SettingsStackParamList } from '@/shared/settings/SettingsNavigator';
+import { settingsScreenStyles as styles } from './Settings.styles';
 
-type SettingsScreenProps = StackScreenProps<SettingsStackParamList, 'SettingsHome'> & {
+type SettingsProps = StackScreenProps<SettingsStackParamList, 'SettingsHome'> & {
   style?: StyleProp<ViewStyle>;
 };
 
@@ -43,12 +43,12 @@ interface SettingsRow {
   trailing?: React.JSX.Element;
 }
 
-export function SettingsScreen({
+export function Settings({
   navigation,
   style,
-}: SettingsScreenProps): React.JSX.Element {
+}: SettingsProps): React.JSX.Element {
   const { user, role, logout } = useAuth();
-  const { transactions: txs } = useTransactions();
+  const { transactions: txs } = useOrders();
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const initials = (user?.username ?? '?').slice(0, 2).toUpperCase();

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../services/supabase';
-import { PaymentMode } from '../../types/context';
-import { Product, TransactionItem } from '../../types/entities';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/services/supabase';
+import { PaymentMode } from '@/types/context';
+import { Product, TransactionItem } from '@/types/entities';
 
 interface StoredTransaction {
   id: string;
@@ -45,7 +45,7 @@ export interface UseTransactionsResult {
   voidTransaction: (transactionId: string, reason: string) => Promise<void>;
 }
 
-export function useTransactions(): UseTransactionsResult {
+export function useOrders(): UseTransactionsResult {
   const { user, role } = useAuth();
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);

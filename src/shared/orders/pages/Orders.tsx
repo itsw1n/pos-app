@@ -11,17 +11,17 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '../../components/common/AppHeader/AppHeader';
-import { colors } from '../../theme';
-import { TransactionsStackParamList } from './TransactionsNavigator';
-import { useTransactions, TransactionRecord } from './useTransactions';
-import { useAuth } from '../../context/AuthContext';
-import { SearchBar } from '../../components/common/SearchBar/SearchBar';
-import { transactionHistoryScreenStyles } from './TransactionHistoryScreen.styles';
+import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { colors } from '@/theme';
+import { OrdersStackParamList } from '@/shared/orders/OrdersNavigator';
+import { useOrders, TransactionRecord } from '@/shared/orders/hooks/useOrders';
+import { useAuth } from '@/context/AuthContext';
+import { SearchBar } from '@/components/common/SearchBar/SearchBar';
+import { transactionHistoryScreenStyles } from './Orders.styles';
 
-type TransactionHistoryScreenProps = StackScreenProps<
-  TransactionsStackParamList,
-  'TransactionHistory'
+type OrdersProps = StackScreenProps<
+  OrdersStackParamList,
+  'Orders'
 > & {
   style?: StyleProp<ViewStyle>;
 };
@@ -64,11 +64,11 @@ function getDateBoundary(filter: DateFilterKey): number {
   return 0;
 }
 
-export function TransactionHistoryScreen({
+export function Orders({
   navigation,
   style,
-}: TransactionHistoryScreenProps): React.JSX.Element {
-  const { transactions, isLoading, error, loadTransactions } = useTransactions();
+}: OrdersProps): React.JSX.Element {
+  const { transactions, isLoading, error, loadTransactions } = useOrders();
   const { role } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilterKey>('all');

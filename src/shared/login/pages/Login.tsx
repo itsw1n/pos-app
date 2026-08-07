@@ -11,11 +11,11 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Eye, EyeOff, Lock, User } from 'lucide-react-native';
-import { InputField } from '../../components/common/InputField/InputField';
-import { useAuth } from '../../context/AuthContext';
-import { colors } from '../../theme';
-import { radius } from '../../theme';
-import { loginScreenStyles } from './LoginScreen.styles';
+import { InputField } from '@/components/common/InputField/InputField';
+import { useAuth } from '@/context/AuthContext';
+import { colors } from '@/theme';
+import { radius } from '@/theme';
+import { loginScreenStyles } from './Login.styles';
 
 interface LoginScreenProps {
   style?: StyleProp<ViewStyle>;
