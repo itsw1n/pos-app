@@ -3,9 +3,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { colors, typography } from '@/theme';
 import { Orders } from './pages/Orders';
 import { VoidTransaction } from './pages/VoidTransaction';
+import { TransactionRecord } from '@/features/shared/orders/hooks/useOrders';
 
 export type OrdersStackParamList = {
   OrdersHome: undefined;
+  TransactionDetail: { transaction: TransactionRecord };
   Void: {
     transactionId: string;
     date: string;
