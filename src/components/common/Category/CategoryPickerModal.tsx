@@ -1,8 +1,8 @@
 import React from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { colors } from '../../theme';
-import { Category } from '../../types/entities';
+import { colors } from '../../../theme';
+import { Category } from '../../../types/entities';
 import { categoryPickerModalStyles } from './CategoryPickerModal.styles';
 
 interface CategoryPickerModalProps {
@@ -42,9 +42,7 @@ export function CategoryPickerModal({
                   >
                     {category.name}
                   </Text>
-                  {isSelected ? (
-                    <Check size={18} color={colors.primary} />
-                  ) : null}
+                  {isSelected ? <Check size={18} color={colors.primary} /> : null}
                 </Pressable>
               );
             })}

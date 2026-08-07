@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { colors, radius, shadows, spacing, typography } from '../../theme';
+import { colors, radius, shadows, spacing, typography } from '../../../theme';
 
 export const categoryPickerModalStyles = StyleSheet.create({
   backdrop: {
