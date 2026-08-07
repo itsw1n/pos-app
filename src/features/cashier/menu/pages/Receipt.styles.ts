@@ -89,6 +89,48 @@ export const receiptStyles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
+  cashierRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.xl,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.border,
+  },
+  cashierLabel: {
+    ...typography.xs,
+    color: colors.textSecondary,
+  },
+  cashierValue: {
+    ...typography.xs,
+    fontWeight: '500' as const,
+    color: colors.textPrimary,
+  },
+  voidBanner: {
+    backgroundColor: colors.dangerSurface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    padding: spacing.sm,
+    marginVertical: spacing.sm,
+    marginHorizontal: spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  voidBannerText: {
+    ...typography.xs,
+    fontWeight: '600' as const,
+    color: colors.danger,
+    letterSpacing: 0.5,
+  },
+  voidReason: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   receiptMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -163,6 +205,25 @@ export const receiptStyles = StyleSheet.create({
     fontWeight: '600' as const,
     color: colors.textPrimary,
   },
+  amountRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xs,
+  },
+  amountLabel: {
+    ...typography.xs,
+    color: colors.textSecondary,
+  },
+  amountValue: {
+    ...typography.xs,
+    color: colors.textPrimary,
+  },
+  amountValueChange: {
+    ...typography.xs,
+    fontWeight: '600' as const,
+    color: colors.primary,
+  },
   dashedDivider: {
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -187,10 +248,6 @@ export const receiptStyles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
-  },
-  receiptEdge: {
-    height: 16,
-    backgroundColor: colors.background,
   },
   actions: {
     gap: spacing.sm,
