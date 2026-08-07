@@ -3,8 +3,8 @@
  * Seeds the Supabase Dev project with demo data (users, products, inventory,
  * transactions) so the UI can be previewed without a live backend.
  *
- *   node scripts/seed.cjs seed    -> create schema if missing, upsert demo data
- *   node scripts/seed.cjs reset    -> drop schema, recreate, insert demo data
+ *   node scripts/seed.cjs seed    -> apply schema if missing, upsert demo data
+ *   node scripts/seed.cjs reset   -> drop all app tables only (run `seed` to repopulate)
  *
  * Required env (read from .env / .env.development when present):
  *   DATABASE_URL              (Postgres connection string, service access)
@@ -131,116 +131,125 @@ const authUsers = [
 
 // Deterministic category UUIDs (stable across re-seeds).
 const CATEGORIES = [
-  { category_id: '9f5a3c3e-0000-4000-8000-000000000001', name: 'Coffee' },
-  { category_id: '9f5a3c3e-0000-4000-8000-000000000002', name: 'Non-Coffee' },
-  { category_id: '9f5a3c3e-0000-4000-8000-000000000003', name: 'Dessert' },
-];
+  { name: 'All Day Breakfast', id: 1 },
+  { name: 'Set Meal', id: 2 },
+  { name: 'Sandwiches', id: 3 },
+  { name: 'Short Order', id: 4 },
+  { name: 'Hot Drinks', id: 5 },
+  { name: 'Ice Drinks', id: 6 },
+  { name: 'Blended Coffee / Frappe', id: 7 },
+  { name: 'Blended Milkshake / Frappe', id: 8 },
+  { name: 'Fruit Smoothies', id: 9 },
+  { name: 'Fruit Soda', id: 10 },
+  { name: 'Lemonade / Tea', id: 11 },
+].map(({ name, id }) => ({
+  name,
+  category_id: `9f5a3c3e-0000-4000-8000-0000000000${String(id).padStart(2, '0')}`,
+}));
 
 const CATEGORY_ID_BY_NAME = Object.fromEntries(
   CATEGORIES.map((category) => [category.name, category.category_id]),
 );
 
-const products = [
-  {
-    product_id: 1,
-    name: 'Americano',
-    category: 'Coffee',
-    price: 100,
-    is_available: true,
-  },
-  {
-    product_id: 2,
-    name: 'Cappuccino',
-    category: 'Coffee',
-    price: 140,
-    is_available: true,
-  },
-  {
-    product_id: 3,
-    name: 'Affogato',
-    category: 'Dessert',
-    price: 160,
-    is_available: true,
-  },
-  {
-    product_id: 4,
-    name: 'Iced Coffee Milk',
-    category: 'Coffee',
-    price: 130,
-    is_available: true,
-  },
-  {
-    product_id: 5,
-    name: 'Luwak Coffee',
-    category: 'Coffee',
-    price: 250,
-    is_available: true,
-  },
-  {
-    product_id: 6,
-    name: 'Caramel Latte',
-    category: 'Coffee',
-    price: 150,
-    is_available: true,
-  },
-  {
-    product_id: 7,
-    name: 'Matcha Latte',
-    category: 'Non-Coffee',
-    price: 145,
-    is_available: true,
-  },
-  {
-    product_id: 8,
-    name: 'Chocolate Cake',
-    category: 'Dessert',
-    price: 120,
-    is_available: true,
-  },
-  {
-    product_id: 9,
-    name: 'Cheesecake',
-    category: 'Dessert',
-    price: 135,
-    is_available: true,
-  },
-].map((product) => ({
+// Full Elvira menu, grouped in menu order. product ids are deterministic so
+// transactions / inventory links stay stable across re-seeds.
+const MENU = [
+  ['All Day Breakfast', '1000000001', 'Corned Beef with Egg', 130],
+  ['All Day Breakfast', '1000000002', 'Tocino with Egg', 120],
+  ['All Day Breakfast', '1000000003', 'Longganisa with Egg', 120],
+  ['All Day Breakfast', '1000000004', 'Bacon with Egg', 130],
+  ['Set Meal', '1000000005', 'Pork Tonkatsu', 125],
+  ['Set Meal', '1000000006', 'Chicken Tonkatsu', 125],
+  ['Set Meal', '1000000007', 'Chicken Karaage', 125],
+  ['Set Meal', '1000000008', 'Shrimp Tempura', 145],
+  ['Sandwiches', '1000000009', 'Tuna Spread', 100],
+  ['Sandwiches', '1000000010', 'Ham and Cheese', 110],
+  ['Sandwiches', '1000000011', 'Club Sandwich', 125],
+  ['Sandwiches', '1000000012', 'Chicken Sandwich', 110],
+  ['Short Order', '1000000013', 'Pancit Canton w/ Egg', 69],
+  ['Short Order', '1000000014', 'Chicken Nuggets', 99],
+  ['Short Order', '1000000015', 'French Fries w/ Flavor', 95],
+  ['Short Order', '1000000016', 'Instant Ramen Noodles', 100],
+  ['Hot Drinks', '1000000017', 'Espresso', 110],
+  ['Hot Drinks', '1000000018', 'Café Americano', 110],
+  ['Hot Drinks', '1000000019', 'Latte', 120],
+  ['Hot Drinks', '1000000020', 'Café Elvira', 145],
+  ['Ice Drinks', '1000000021', 'Black', 120],
+  ['Ice Drinks', '1000000022', 'Latte', 120],
+  ['Ice Drinks', '1000000023', 'Mocha', 130],
+  ['Ice Drinks', '1000000024', 'Caramel', 130],
+  ['Blended Coffee / Frappe', '1000000025', 'Almond Mocha', 155],
+  ['Blended Coffee / Frappe', '1000000026', 'Salted Caramel', 155],
+  ['Blended Coffee / Frappe', '1000000027', 'Butterscotch Latte', 155],
+  ['Blended Coffee / Frappe', '1000000028', 'Matcha Latte', 160],
+  ['Blended Milkshake / Frappe', '1000000029', 'Matcha', 155],
+  ['Blended Milkshake / Frappe', '1000000030', 'Dark Chocolate', 150],
+  ['Blended Milkshake / Frappe', '1000000031', "Cookies N' Cream", 150],
+  ['Blended Milkshake / Frappe', '1000000032', 'White Vanilla', 150],
+  ['Fruit Smoothies', '1000000033', 'Avocado', 150],
+  ['Fruit Smoothies', '1000000034', 'Mango', 150],
+  ['Fruit Soda', '1000000035', 'Peach', 95],
+  ['Fruit Soda', '1000000036', 'Lemon', 95],
+  ['Fruit Soda', '1000000037', 'Kiwi', 95],
+  ['Fruit Soda', '1000000038', 'Strawberry', 95],
+  ['Lemonade / Tea', '1000000039', 'Cucumber Lemonade', 58],
+  ['Lemonade / Tea', '1000000040', 'Ice Tea', 55],
+  ['Lemonade / Tea', '1000000041', 'Lipton Tea', 100],
+  ['Lemonade / Tea', '1000000042', 'Ombre Tea', 100],
+];
+
+const products = MENU.map(([category, _productId, name, price], index) => ({
+  product_id: index + 1,
+  name,
+  category,
+  price,
+  is_available: true,
+})).map((product) => ({
   ...product,
   category_id: CATEGORY_ID_BY_NAME[product.category],
 }));
 
-const inventory = [
-  { stock_id: 1, product_id: 1, quantity: 40, reorder_level: 20 },
-  { stock_id: 2, product_id: 2, quantity: 12, reorder_level: 15 },
-  { stock_id: 3, product_id: 3, quantity: 8, reorder_level: 10 },
-  { stock_id: 4, product_id: 4, quantity: 0, reorder_level: 15 },
-  { stock_id: 5, product_id: 5, quantity: 25, reorder_level: 10 },
-  { stock_id: 6, product_id: 6, quantity: 30, reorder_level: 10 },
-  { stock_id: 7, product_id: 7, quantity: 18, reorder_level: 10 },
-  { stock_id: 8, product_id: 8, quantity: 22, reorder_level: 10 },
-  { stock_id: 9, product_id: 9, quantity: 0, reorder_level: 5 },
-];
+// Stock for each product (stock_id mirrors product_id). A few items are
+// intentionally low/out-of-stock so the StockBadge states are visible.
+const stockOverrides = {
+  4: [8, 10], // Bacon w/ Egg — low
+  6: [0, 10], // Chicken Tonkatsu - critical
+  19: [45, 8], // Latte - healthy
+  30: [40, 10], // Dark Chocolate - healthy
+};
+
+const inventory = products.map((product) => {
+  const [quantity, reorder_level] = stockOverrides[product.product_id] ?? [
+    30, 10,
+  ];
+  return {
+    stock_id: product.product_id,
+    product_id: product.product_id,
+    quantity,
+    reorder_level,
+  };
+});
 
 const stockMovements = [
   {
     movement_id: 1,
     stock_id: 1,
     type: 'in',
-    quantity: 40,
+    quantity: 30,
     date: '2026-08-01T09:00:00Z',
-    supplier: 'Green Bean Co.',
+    supplier: 'Fresh Provisions',
   },
   {
     movement_id: 2,
-    stock_id: 2,
+    stock_id: 6,
     type: 'out',
-    quantity: 12,
+    quantity: 6,
     date: '2026-08-02T10:00:00Z',
     supplier: null,
   },
   {
     movement_id: 3,
-    stock_id: 5,
+    stock_id: 19,
     type: 'in',
     quantity: 25,
     date: '2026-08-01T09:00:00Z',
@@ -248,9 +257,9 @@ const stockMovements = [
   },
   {
     movement_id: 4,
-    stock_id: 4,
+    stock_id: 31,
     type: 'out',
-    quantity: 25,
+    quantity: 10,
     date: '2026-08-04T12:00:00Z',
     supplier: null,
   },
@@ -267,112 +276,84 @@ const TX = {
 let adminId = ADMIN_EMAIL;
 let cashierId = CASHIER_EMAIL;
 
+const productPrice = new Map(
+  products.map((product) => [product.product_id, product.price]),
+);
+
+// [transaction_id, product_id, quantity]
+const TX_ITEMS = [
+  [TX.amer, 28], // Matcha Latte x1
+  [TX.amer, 3], // Longganisa x1
+  [TX.capp, 4], // Bacon w/ Egg x1
+  [TX.capp, 14], // Chicken Nuggets x2
+  [TX.aff, 19], // Latte x1
+  [TX.aff, 37], // Strawberry x1
+  [TX.iced, 24], // Caramel x1
+].map(([transactionId, productId, quantity]) => ({
+  transaction_id: transactionId,
+  product_id: productId,
+  quantity: quantity ?? 1,
+}));
+
 const transactions = [
   {
     id: TX.amer,
-    total_amount: 340,
     payment_mode: 'cash',
     user_id: cashierId,
     date: '2026-07-30T10:15:00Z',
     status: 'completed',
     void_reason: null,
-    amount_received: 500,
-    change_given: 160,
+    amount_received: 300,
   },
   {
     id: TX.capp,
-    total_amount: 610,
     payment_mode: 'gcash',
     user_id: adminId,
     date: '2026-07-31T13:40:00Z',
     status: 'completed',
     void_reason: null,
     amount_received: null,
-    change_given: null,
   },
   {
     id: TX.aff,
-    total_amount: 295,
     payment_mode: 'cash',
     user_id: cashierId,
     date: '2026-08-01T16:20:00Z',
     status: 'completed',
     void_reason: null,
-    amount_received: 500,
-    change_given: 205,
+    amount_received: 300,
   },
   {
     id: TX.iced,
-    total_amount: 470,
     payment_mode: 'maya',
     user_id: adminId,
     date: '2026-08-02T18:10:00Z',
     status: 'voided',
     void_reason: 'Customer refund',
     amount_received: null,
-    change_given: null,
   },
 ];
 
-// transaction_id -> items
-const transactionItems = [
-  {
-    id: '11111111-1111-1111-1111-100000000001',
-    transaction_id: TX.amer,
-    product_id: 1,
-    quantity: 2,
-    subtotal: 200,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000002',
-    transaction_id: TX.amer,
-    product_id: 2,
-    quantity: 1,
-    subtotal: 140,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000003',
-    transaction_id: TX.capp,
-    product_id: 2,
-    quantity: 2,
-    subtotal: 280,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000004',
-    transaction_id: TX.capp,
-    product_id: 7,
-    quantity: 2,
-    subtotal: 290,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000005',
-    transaction_id: TX.aff,
-    product_id: 6,
-    quantity: 1,
-    subtotal: 150,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000006',
-    transaction_id: TX.aff,
-    product_id: 1,
-    quantity: 1,
-    subtotal: 145,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000007',
-    transaction_id: TX.iced,
-    product_id: 4,
-    quantity: 2,
-    subtotal: 260,
-  },
-  {
-    id: '11111111-1111-1111-1111-100000000008',
-    transaction_id: TX.iced,
-    product_id: 1,
-    quantity: 1,
-    subtotal: 210,
-  },
-];
+function itemSubtotal({ product_id, quantity }) {
+  return (productPrice.get(product_id) ?? 0) * quantity;
+}
+
+const transactionItems = TX_ITEMS.map((item, index) => ({
+  id: `11111111-1111-1111-1111-${String(100000000000 + index + 1)}`,
+  ...item,
+  subtotal: itemSubtotal(item),
+}));
+
+// Replace the hardcoded totals / change with computed, consistent values.
+for (const txn of transactions) {
+  const items = transactionItems.filter(
+    (item) => item.transaction_id === txn.id,
+  );
+  txn.total_amount = items.reduce((sum, item) => sum + item.subtotal, 0);
+  if (txn.amount_received != null && txn.payment_mode === 'cash') {
+    txn.change_given = txn.amount_received - txn.total_amount;
+  }
+}
 
 const UPSERT_CATEGORIES = `
 insert into category (category_id, name)
@@ -435,6 +416,29 @@ async function upsertRows(client, sql, rows, columns) {
     ? sql.replace('$1', text)
     : `${sql} ${text}`;
   await client.query(expanded, values);
+}
+
+// `generated by default as identity` sequences are not advanced when rows are
+// inserted with an explicit id. After seeding identity-backed tables, push each
+// sequence past the max seeded id so runtime inserts don't collide (409).
+const IDENTITY_TABLES = [
+  { table: 'product', column: 'product_id' },
+  { table: 'inventory', column: 'stock_id' },
+  { table: 'stock_movements', column: 'movement_id' },
+];
+
+async function syncIdentitySequences(client) {
+  for (const { table, column } of IDENTITY_TABLES) {
+    // pg_get_serial_sequence resolves the sequence backing a column; setval with
+    // true sets is_called so the next nextval returns max(id)+1.
+    await client.query(
+      `select setval(
+         pg_get_serial_sequence('${table}', '${column}'),
+         coalesce((select max(${column}) from ${table}), 0),
+         true
+       )`,
+    );
+  }
 }
 
 async function upsertTransactions(client) {
@@ -524,8 +528,14 @@ async function upsertAuthUsers() {
   return resolvedIds;
 }
 
-async function runSeed(mode) {
-  console.log(`[seed] mode=${mode}`);
+async function runReset() {
+  await withDb(async (client) => {
+    await resetSchema(client);
+    await client.query("notify pgrst, 'reload schema';");
+  });
+}
+
+async function runSeed() {
   const authIds = await upsertAuthUsers();
   adminId = authIds.admin;
   cashierId = authIds.cashier;
@@ -536,10 +546,6 @@ async function runSeed(mode) {
   transactions[3].user_id = adminId;
 
   await withDb(async (client) => {
-    if (mode === 'reset') {
-      console.log('[seed] resetting schema');
-      await resetSchema(client);
-    }
     await ensureSchema(client);
     // PostgREST caches the schema; notify it to reload after DDL so the REST
     // API immediately exposes the new `category` table and product FK.
@@ -571,6 +577,13 @@ async function runSeed(mode) {
       'supplier',
     ]);
 
+    // Realign identity sequences. Rows above are inserted with explicit ids,
+    // which does NOT advance a `generated by default as identity` sequence, so
+    // the next runtime insert (a new product, stock-in, or a sale's stock
+    // movement) would collide with a seeded id and surface as a unique-violation
+    // (HTTP 409). Point each sequence past the max seeded id.
+    await syncIdentitySequences(client);
+
     // Users must be inserted after auth users resolve to their uuid.
     const rows = authUsers.map((u) => ({
       user_id: authIds[u.username],
@@ -588,12 +601,15 @@ async function runSeed(mode) {
     ]);
 
     await upsertTransactions(client);
-    console.log('[seed] seed complete');
   });
 }
 
 const mode = process.argv[2] || 'seed';
-runSeed(mode).catch((err) => {
-  console.error('[seed] failed:', err.message);
-  process.exit(1);
-});
+const task = mode === 'reset' ? runReset : runSeed;
+console.log(`[seed] mode=${mode}`);
+task()
+  .then(() => console.log(`[seed] ${mode} complete`))
+  .catch((err) => {
+    console.error('[seed] failed:', err.message);
+    process.exit(1);
+  });

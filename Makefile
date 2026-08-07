@@ -28,7 +28,7 @@ prod: ## Start Expo using the production environment
 seed: ## Apply schema + upsert demo data into the configured database
 	$(NODE) scripts/seed.cjs seed
 
-reset: ## Drop + recreate schema, then seed demo data
+reset: ## Drop all app tables (run `make seed` afterwards to repopulate)
 	$(NODE) scripts/seed.cjs reset
 
 typecheck: ## Type-check the project
