@@ -1,51 +1,53 @@
 /*
  * scripts/seed.cjs
- * Seeds the Supabase Dev project with demo data (users, products, inventory,
- * transactions) so the UI can be previewed without a live backend.
+ * Seeds the Supabase DEV database with demo data (users, categories,
+ * products, inventory, demo transactions) so the UI can be previewed.
  *
- *   node scripts/seed.cjs seed    -> apply schema if missing, upsert demo data
- *   node scripts/seed.cjs reset   -> drop all app tables only (run `seed` to repopulate)
+ * Responsibilities (DATA ONLY — this does NOT apply or modify any schema):
+ *   - upsert demo auth users + app "user" profile rows
+ *   - upsert categories / products / inventory
+ *   - upsert stock-movement history and demo transactions
+ *   - realign identity sequences so seeded explicit ids don't collide with
+ *     the next runtime insert (the runtime inserts go through the process_sale
+ *     RPC / adjust_stock RPC, not this script)
  *
- * Required env (read from .env / .env.development when present):
- *   DATABASE_URL              (Postgres connection string, service access)
- *   SUPABASE_URL              (project URL)
- *   SUPABASE_SERVICE_ROLE_KEY (service_role key for Auth admin actions)
+ * Safety:
+ *   - Refuses to run against any non-DEV database (guard below). Seeding is
+ *     DEV-only; PROD is never seeded from here.
+ *   - Assumes the DB schema is already migrated via `supabase db push`.
  *
- * Demo credentials:
+ * Usage:
+ *   node scripts/seed.cjs            # seed dev data (idempotent upserts)
+ *
+ * Required env (read from .env / .env.development / .env.local):
+ *   DATABASE_URL              (Supabase DEV pooler connection string)
+ *   SUPABASE_URL              (dev project URL)
+ *   SUPABASE_SERVICE_ROLE_KEY (dev service_role key)
+ *
+ * Demo credentials (created here):
  *   admin   @elvira.cafe / admin123   (Admin)
  *   cashier @elvira.cafe / cashier123 (Cashier)
- *
- * Run the app with the matching anon key in .env.development, then log in with
- * one of the demo credentials above.
  */
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
-
 const { Client } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 const ROOT = path.resolve(__dirname, '..');
-const MIGRATION_FILES = [
-  '0001_init.sql',
-  '0002_categories.sql',
-  '0003_rbac.sql',
-];
+
+const DEV_SUPABASE_HOST = 'mhlmskbuifatnlehvodf'; // DEV project ref (must never appear for PROD)
 
 function loadEnvFile(file) {
   const target = path.join(ROOT, file);
-  if (!fs.existsSync(target)) return;
-  for (const line of fs.readFileSync(target, 'utf8').split('\n')) {
+  if (!require('fs').existsSync(target)) return;
+  for (const line of require('fs').readFileSync(target, 'utf8').split('\n')) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
     const eq = trimmed.indexOf('=');
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
-    const value = trimmed
-      .slice(eq + 1)
-      .trim()
-      .replace(/^["']|["']$/g, '');
+    const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
     if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
       process.env[key] = value;
     }
@@ -60,20 +62,24 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const TABLES = [
-  'transaction_items',
-  'stock_movements',
-  'transactions',
-  'inventory',
-  'user',
-  'product',
-  'category',
-];
-
-function readSql() {
-  return MIGRATION_FILES.map((file) =>
-    fs.readFileSync(path.join(ROOT, 'supabase/migrations', file), 'utf8'),
-  ).join('\n');
+// --- Safety guard: DEV-only ------------------------------------------------
+function assertDevOnly() {
+  if (!DATABASE_URL) {
+    throw new Error('DATABASE_URL is required (set in .env.development / .env.local) and must point to the DEV project.');
+  }
+  // Refuse anything that doesn't resolve to the DEV pooler host.
+  try {
+    const parsed = new URL(DATABASE_URL);
+    const host = parsed.hostname;
+    if (!host.includes(DEV_SUPABASE_HOST)) {
+      throw new Error(`seed.js is DEV-only. Refusing to seed a non-DEV database (host="${host}").`);
+    }
+  } catch (e) {
+    throw new Error(`Invalid DATABASE_URL: ${e.message}`);
+  }
+  if (!SUPABASE_URL || !SUPABASE_URL.includes(DEV_SUPABASE_HOST)) {
+    throw new Error('SUPABASE_URL must point to the DEV project.');
+  }
 }
 
 // pg 8.22+ treats `sslmode=require` in the connection string as `verify-full`,
@@ -83,11 +89,11 @@ function connectionString() {
   return (DATABASE_URL ?? '').split('?')[0];
 }
 
+assertDevOnly();
+
 async function withDb(callback) {
   if (!DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL is required (set in .env.development / .env.local)',
-    );
+    throw new Error('DATABASE_URL is required (set in .env.development / .env.local)');
   }
   const client = new Client({
     connectionString: connectionString(),
@@ -101,32 +107,12 @@ async function withDb(callback) {
   }
 }
 
-async function ensureSchema(client) {
-  await client.query(readSql());
-}
-
-async function resetSchema(client) {
-  for (const table of TABLES) {
-    await client.query(`drop table if exists "${table}" cascade;`);
-  }
-}
-
 const ADMIN_EMAIL = 'admin@elvira.cafe';
 const CASHIER_EMAIL = 'cashier@elvira.cafe';
 
 const authUsers = [
-  {
-    email: ADMIN_EMAIL,
-    password: 'admin123',
-    role: 'admin',
-    username: 'admin',
-  },
-  {
-    email: CASHIER_EMAIL,
-    password: 'cashier123',
-    role: 'cashier',
-    username: 'cashier',
-  },
+  { email: ADMIN_EMAIL, password: 'admin123', role: 'admin', username: 'admin' },
+  { email: CASHIER_EMAIL, password: 'cashier123', role: 'cashier', username: 'cashier' },
 ];
 
 // Deterministic category UUIDs (stable across re-seeds).
@@ -219,9 +205,7 @@ const stockOverrides = {
 };
 
 const inventory = products.map((product) => {
-  const [quantity, reorder_level] = stockOverrides[product.product_id] ?? [
-    30, 10,
-  ];
+  const [quantity, reorder_level] = stockOverrides[product.product_id] ?? [30, 10];
   return {
     stock_id: product.product_id,
     product_id: product.product_id,
@@ -231,38 +215,10 @@ const inventory = products.map((product) => {
 });
 
 const stockMovements = [
-  {
-    movement_id: 1,
-    stock_id: 1,
-    type: 'in',
-    quantity: 30,
-    date: '2026-08-01T09:00:00Z',
-    supplier: 'Fresh Provisions',
-  },
-  {
-    movement_id: 2,
-    stock_id: 6,
-    type: 'out',
-    quantity: 6,
-    date: '2026-08-02T10:00:00Z',
-    supplier: null,
-  },
-  {
-    movement_id: 3,
-    stock_id: 19,
-    type: 'in',
-    quantity: 25,
-    date: '2026-08-01T09:00:00Z',
-    supplier: 'Bean Roasters',
-  },
-  {
-    movement_id: 4,
-    stock_id: 31,
-    type: 'out',
-    quantity: 10,
-    date: '2026-08-04T12:00:00Z',
-    supplier: null,
-  },
+  { movement_id: 1, stock_id: 1, type: 'in', quantity: 30, date: '2026-08-01T09:00:00Z', supplier: 'Fresh Provisions' },
+  { movement_id: 2, stock_id: 6, type: 'out', quantity: 6, date: '2026-08-02T10:00:00Z', supplier: null },
+  { movement_id: 3, stock_id: 19, type: 'in', quantity: 25, date: '2026-08-01T09:00:00Z', supplier: 'Bean Roasters' },
+  { movement_id: 4, stock_id: 31, type: 'out', quantity: 10, date: '2026-08-04T12:00:00Z', supplier: null },
 ];
 
 // Deterministic UUIDs for transactions (so links are stable between re-seeds).
@@ -282,13 +238,13 @@ const productPrice = new Map(
 
 // [transaction_id, product_id, quantity]
 const TX_ITEMS = [
-  [TX.amer, 28], // Matcha Latte x1
-  [TX.amer, 3], // Longganisa x1
-  [TX.capp, 4], // Bacon w/ Egg x1
-  [TX.capp, 14], // Chicken Nuggets x2
-  [TX.aff, 19], // Latte x1
-  [TX.aff, 37], // Strawberry x1
-  [TX.iced, 24], // Caramel x1
+  [TX.amer, 28, 1], // Matcha Latte x1
+  [TX.amer, 3, 1],  // Longganisa x1
+  [TX.capp, 4, 1],  // Bacon w/ Egg x1
+  [TX.capp, 14, 2], // Chicken Nuggets x2
+  [TX.aff, 19, 1],  // Latte x1
+  [TX.aff, 37, 1],  // Strawberry x1
+  [TX.iced, 24, 1], // Caramel x1
 ].map(([transactionId, productId, quantity]) => ({
   transaction_id: transactionId,
   product_id: productId,
@@ -296,42 +252,10 @@ const TX_ITEMS = [
 }));
 
 const transactions = [
-  {
-    id: TX.amer,
-    payment_mode: 'cash',
-    user_id: cashierId,
-    date: '2026-07-30T10:15:00Z',
-    status: 'completed',
-    void_reason: null,
-    amount_received: 300,
-  },
-  {
-    id: TX.capp,
-    payment_mode: 'gcash',
-    user_id: adminId,
-    date: '2026-07-31T13:40:00Z',
-    status: 'completed',
-    void_reason: null,
-    amount_received: null,
-  },
-  {
-    id: TX.aff,
-    payment_mode: 'cash',
-    user_id: cashierId,
-    date: '2026-08-01T16:20:00Z',
-    status: 'completed',
-    void_reason: null,
-    amount_received: 300,
-  },
-  {
-    id: TX.iced,
-    payment_mode: 'maya',
-    user_id: adminId,
-    date: '2026-08-02T18:10:00Z',
-    status: 'voided',
-    void_reason: 'Customer refund',
-    amount_received: null,
-  },
+  { id: TX.amer, payment_mode: 'cash', user_id: cashierId, date: '2026-07-30T10:15:00Z', status: 'completed', void_reason: null, amount_received: 300 },
+  { id: TX.capp, payment_mode: 'gcash', user_id: adminId, date: '2026-07-31T13:40:00Z', status: 'completed', void_reason: null, amount_received: null },
+  { id: TX.aff, payment_mode: 'cash', user_id: cashierId, date: '2026-08-01T16:20:00Z', status: 'completed', void_reason: null, amount_received: 300 },
+  { id: TX.iced, payment_mode: 'maya', user_id: adminId, date: '2026-08-02T18:10:00Z', status: 'voided', void_reason: 'Customer refund', amount_received: null },
 ];
 
 function itemSubtotal({ product_id, quantity }) {
@@ -346,9 +270,7 @@ const transactionItems = TX_ITEMS.map((item, index) => ({
 
 // Replace the hardcoded totals / change with computed, consistent values.
 for (const txn of transactions) {
-  const items = transactionItems.filter(
-    (item) => item.transaction_id === txn.id,
-  );
+  const items = transactionItems.filter((item) => item.transaction_id === txn.id);
   txn.total_amount = items.reduce((sum, item) => sum + item.subtotal, 0);
   if (txn.amount_received != null && txn.payment_mode === 'cash') {
     txn.change_given = txn.amount_received - txn.total_amount;
@@ -412,15 +334,15 @@ function valuesClause(rows, columns) {
 async function upsertRows(client, sql, rows, columns) {
   if (rows.length === 0) return;
   const { text, values } = valuesClause(rows, columns);
-  const expanded = sql.includes('$1')
-    ? sql.replace('$1', text)
-    : `${sql} ${text}`;
+  const expanded = sql.includes('$1') ? sql.replace('$1', text) : `${sql} ${text}`;
   await client.query(expanded, values);
 }
 
 // `generated by default as identity` sequences are not advanced when rows are
 // inserted with an explicit id. After seeding identity-backed tables, push each
-// sequence past the max seeded id so runtime inserts don't collide (409).
+// sequence past the max seeded id so runtime inserts (new products / stock-in
+// movements via adjust_stock / process_sale) don't collide with a seeded id and
+// surface as a unique-violation (HTTP 409).
 const IDENTITY_TABLES = [
   { table: 'product', column: 'product_id' },
   { table: 'inventory', column: 'stock_id' },
@@ -429,8 +351,6 @@ const IDENTITY_TABLES = [
 
 async function syncIdentitySequences(client) {
   for (const { table, column } of IDENTITY_TABLES) {
-    // pg_get_serial_sequence resolves the sequence backing a column; setval with
-    // true sets is_called so the next nextval returns max(id)+1.
     await client.query(
       `select setval(
          pg_get_serial_sequence('${table}', '${column}'),
@@ -443,19 +363,20 @@ async function syncIdentitySequences(client) {
 
 async function upsertTransactions(client) {
   // Idempotent: replace the seeded transaction set.
-  await client.query(
-    'delete from transaction_items where transaction_id = any($1::uuid[]);',
-    [transactions.map((t) => t.id)],
-  );
+  await client.query('delete from transaction_items where transaction_id = any($1::uuid[]);', [
+    transactions.map((t) => t.id),
+  ]);
   await client.query('delete from transactions where id = any($1::uuid[]);', [
     transactions.map((t) => t.id),
   ]);
 
-  // Assign daily sequential order numbers (1, 2, 3 ... per calendar day),
-  // mirroring the process_sale RPC so seeded rows look like real ones.
+  // Assign daily sequential order numbers per Manila-calendar day, mirroring
+  // the process_sale RPC so seeded rows look like real ones. The 0004
+  // order_number_counter backfill already primes the counter from the max, so
+  // these numbers continue cleanly after the seeded set.
   const dayCounters = {};
   const txRows = transactions.map((t) => {
-    const day = new Date(t.date).toISOString().slice(0, 10);
+    const day = new Date(t.date).toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' });
     const n = (dayCounters[day] ?? 0) + 1;
     dayCounters[day] = n;
     return {
@@ -475,18 +396,7 @@ async function upsertTransactions(client) {
     client,
     'insert into transactions (id, total_amount, payment_mode, user_id, date, status, void_reason, amount_received, change_given, order_number) values',
     txRows,
-    [
-      'id',
-      'total_amount',
-      'payment_mode',
-      'user_id',
-      'date',
-      'status',
-      'void_reason',
-      'amount_received',
-      'change_given',
-      'order_number',
-    ],
+    ['id', 'total_amount', 'payment_mode', 'user_id', 'date', 'status', 'void_reason', 'amount_received', 'change_given', 'order_number'],
   );
 
   await upsertRows(
@@ -499,9 +409,7 @@ async function upsertTransactions(client) {
 
 async function upsertAuthUsers() {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    throw new Error(
-      'SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users',
-    );
+    throw new Error('SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users (DEV only).');
   }
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -538,13 +446,6 @@ async function upsertAuthUsers() {
   return resolvedIds;
 }
 
-async function runReset() {
-  await withDb(async (client) => {
-    await resetSchema(client);
-    await client.query("notify pgrst, 'reload schema';");
-  });
-}
-
 async function runSeed() {
   const authIds = await upsertAuthUsers();
   adminId = authIds.admin;
@@ -556,42 +457,12 @@ async function runSeed() {
   transactions[3].user_id = adminId;
 
   await withDb(async (client) => {
-    await ensureSchema(client);
-    // PostgREST caches the schema; notify it to reload after DDL so the REST
-    // API immediately exposes the new `category` table and product FK.
-    await client.query("notify pgrst, 'reload schema';");
+    await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, ['category_id', 'name']);
+    await upsertRows(client, UPSERT_PRODUCTS, products, ['product_id', 'name', 'category_id', 'price', 'is_available']);
+    await upsertRows(client, UPSERT_INVENTORY, inventory, ['stock_id', 'product_id', 'quantity', 'reorder_level']);
+    await upsertRows(client, UPSERT_MOVEMENTS, stockMovements, ['movement_id', 'stock_id', 'type', 'quantity', 'date', 'supplier']);
 
-    await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, [
-      'category_id',
-      'name',
-    ]);
-    await upsertRows(client, UPSERT_PRODUCTS, products, [
-      'product_id',
-      'name',
-      'category_id',
-      'price',
-      'is_available',
-    ]);
-    await upsertRows(client, UPSERT_INVENTORY, inventory, [
-      'stock_id',
-      'product_id',
-      'quantity',
-      'reorder_level',
-    ]);
-    await upsertRows(client, UPSERT_MOVEMENTS, stockMovements, [
-      'movement_id',
-      'stock_id',
-      'type',
-      'quantity',
-      'date',
-      'supplier',
-    ]);
-
-    // Realign identity sequences. Rows above are inserted with explicit ids,
-    // which does NOT advance a `generated by default as identity` sequence, so
-    // the next runtime insert (a new product, stock-in, or a sale's stock
-    // movement) would collide with a seeded id and surface as a unique-violation
-    // (HTTP 409). Point each sequence past the max seeded id.
+    // Realign identity sequences so seeded ids don't collide with runtime inserts.
     await syncIdentitySequences(client);
 
     // Users must be inserted after auth users resolve to their uuid.
@@ -602,23 +473,15 @@ async function runSeed() {
       role: u.role,
       is_active: true,
     }));
-    await upsertRows(client, UPSERT_USER, rows, [
-      'user_id',
-      'username',
-      'password',
-      'role',
-      'is_active',
-    ]);
+    await upsertRows(client, UPSERT_USER, rows, ['user_id', 'username', 'password', 'role', 'is_active']);
 
     await upsertTransactions(client);
   });
 }
 
-const mode = process.argv[2] || 'seed';
-const task = mode === 'reset' ? runReset : runSeed;
-console.log(`[seed] mode=${mode}`);
-task()
-  .then(() => console.log(`[seed] ${mode} complete`))
+console.log('[seed] mode=seed (DEV data only)');
+runSeed()
+  .then(() => console.log('[seed] complete'))
   .catch((err) => {
     console.error('[seed] failed:', err.message);
     process.exit(1);
