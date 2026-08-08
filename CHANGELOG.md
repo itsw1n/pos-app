@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0](https://github.com/itsw1n/pos-app/compare/v1.0.0...v1.1.0) (2026-08-08)
+
+
+### Features
+
+* **ci:** attach android apk to releases ([9deee9c](https://github.com/itsw1n/pos-app/commit/9deee9ce3e979e18c0b92d345245030e78f82227))
+* **ci:** attach android apk to releases ([1e0417c](https://github.com/itsw1n/pos-app/commit/1e0417c1bcdea59fb5a828b1cda03bc407b19ca8))
+* **config:** add android package id and eas build profiles ([22952fd](https://github.com/itsw1n/pos-app/commit/22952fdc91bca56b6ff7a4b35a4653924a66102a))
+* **config:** register eas project owner and id ([70c9eb3](https://github.com/itsw1n/pos-app/commit/70c9eb3acab606233af4bd0b5d0fe58c83b18e8d))
+
 ## 1.0.0 (2026-08-08)
 
 
