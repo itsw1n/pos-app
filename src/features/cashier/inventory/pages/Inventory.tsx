@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  Pressable,
   SafeAreaView,
   StyleProp,
   Text,
@@ -19,6 +20,14 @@ interface InventoryProps {
   style?: StyleProp<ViewStyle>;
 }
 
+type FilterKey = 'all' | 'low' | 'critical';
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'low', label: 'Low Stock' },
+  { key: 'critical', label: 'Critical' },
+];
+
 const STATUS_LABEL: Record<StockStatus, string> = {
   ok: 'In Stock',
   low: 'Low Stock',
@@ -35,12 +44,18 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
     lowCount,
     criticalCount,
   } = useInventory();
+  const [filter, setFilter] = useState<FilterKey>('all');
 
   useFocusEffect(
     useCallback(() => {
       void loadInventory();
     }, [loadInventory]),
   );
+
+  const filteredItems = useMemo(() => {
+    if (filter === 'all') return items;
+    return items.filter((item) => getStatus(item) === filter);
+  }, [items, filter, getStatus]);
 
   const alertCount = lowCount + criticalCount;
 
@@ -121,8 +136,33 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
 
       {error ? <Text style={inventoryStyles.errorText}>{error}</Text> : null}
 
+      <View style={inventoryStyles.filterBar}>
+        {FILTERS.map((option) => {
+          const isActive = filter === option.key;
+          return (
+            <Pressable
+              key={option.key}
+              style={[
+                inventoryStyles.filterTab,
+                isActive ? inventoryStyles.filterTabActive : null,
+              ]}
+              onPress={() => setFilter(option.key)}
+            >
+              <Text
+                style={[
+                  inventoryStyles.filterTabText,
+                  isActive ? inventoryStyles.filterTabTextActive : null,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <FlatList
-        data={items}
+        data={filteredItems}
         keyExtractor={(item) => String(item.stock_id)}
         renderItem={renderItem}
         contentContainerStyle={inventoryStyles.content}
