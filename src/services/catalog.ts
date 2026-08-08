@@ -13,6 +13,7 @@ export interface ProductRow {
   category_id: string;
   price: number;
   is_available: boolean;
+  image_url: string | null;
   category?: { name: string } | string | null;
 }
 
@@ -32,6 +33,7 @@ export function toProduct(row: ProductRow): Product {
     category,
     price: Number(row.price),
     is_available: row.is_available,
+    image_url: row.image_url ?? null,
   };
 }
 
