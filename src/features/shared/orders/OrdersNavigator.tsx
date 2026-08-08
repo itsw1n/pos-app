@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { colors, typography } from '@/theme';
 import { Orders } from './pages/Orders';
 import { VoidTransaction } from './pages/VoidTransaction';
+import { TransactionDetail } from './pages/TransactionDetail';
 import { TransactionRecord } from '@/features/shared/orders/hooks/useOrders';
 
 export type OrdersStackParamList = {
@@ -31,6 +32,11 @@ export function OrdersNavigator(): React.JSX.Element {
         name="OrdersHome"
         component={Orders}
         options={{ title: 'Orders', headerShown: false }}
+      />
+      <Stack.Screen
+        name="TransactionDetail"
+        component={TransactionDetail}
+        options={{ title: 'Transaction Detail' }}
       />
       <Stack.Screen
         name="Void"
