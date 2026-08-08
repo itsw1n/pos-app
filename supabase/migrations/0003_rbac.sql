@@ -47,50 +47,39 @@ drop policy if exists "anon can read catalog" on category;
 -- ---------------------------------------------------------------------------
 
 -- Product catalog: read for everyone signed in, write for admin only.
-drop policy if exists "product_read" on product;
 create policy "product_read" on product
   for select using (get_app_role() in ('admin', 'cashier'));
-drop policy if exists "product_admin_write" on product;
 create policy "product_admin_write" on product
   for all using (get_app_role() = 'admin') with check (get_app_role() = 'admin');
 
 -- Category: same as products.
-drop policy if exists "category_read" on category;
 create policy "category_read" on category
   for select using (get_app_role() in ('admin', 'cashier'));
-drop policy if exists "category_admin_write" on category;
 create policy "category_admin_write" on category
   for all using (get_app_role() = 'admin') with check (get_app_role() = 'admin');
 
 -- Inventory: both can read; only admin writes directly (cashier stock changes
 -- via the security-definer adjust_stock / process_sale RPCs).
-drop policy if exists "inventory_read" on inventory;
 create policy "inventory_read" on inventory
   for select using (get_app_role() in ('admin', 'cashier'));
-drop policy if exists "inventory_admin_write" on inventory;
 create policy "inventory_admin_write" on inventory
   for all using (get_app_role() = 'admin') with check (get_app_role() = 'admin');
 
 -- Stock movements: admin may read the audit trail; the RPCs manage writes.
-drop policy if exists "stock_movements_read" on stock_movements;
 create policy "stock_movements_read" on stock_movements
   for select using (get_app_role() = 'admin');
 
 -- Transactions: admin sees all, cashier sees only their own. No direct
 -- insert/update/delete for either role -- mutation happens via process_sale /
 -- void_sale ONLY, so totals are recomputed server-side.
-drop policy if exists "transactions_read_admin" on transactions;
 create policy "transactions_read_admin" on transactions
   for select using (get_app_role() = 'admin');
-drop policy if exists "transactions_read_own" on transactions;
 create policy "transactions_read_own" on transactions
   for select using (get_app_role() = 'cashier' and user_id = auth.uid());
 
 -- Transaction items: reachable only through transactions you can read.
-drop policy if exists "transaction_items_read_admin" on transaction_items;
 create policy "transaction_items_read_admin" on transaction_items
   for select using (get_app_role() = 'admin');
-drop policy if exists "transaction_items_read_own" on transaction_items;
 create policy "transaction_items_read_own" on transaction_items
   for select using (
     get_app_role() = 'cashier'
@@ -103,63 +92,26 @@ create policy "transaction_items_read_own" on transaction_items
 -- User table: sign-in reads your own row; admin reads all. No direct writes
 -- for anyone -- an admin cannot even be fooled into self-promotion and there
 -- is no write path that upgrades a `role` from the client.
-drop policy if exists "user_read_own" on "user";
 create policy "user_read_own" on "user"
   for select using (user_id = auth.uid());
-drop policy if exists "user_read_admin" on "user";
 create policy "user_read_admin" on "user"
   for select using (get_app_role() = 'admin');
-
--- ---------------------------------------------------------------------------
--- 3b) Daily sequential order numbers.
--- ---------------------------------------------------------------------------
-alter table transactions
-  add column if not exists order_number int;
-
--- Backfill existing rows (seeded/demo) deterministically per day, newest-first
--- ordering by date so each calendar day has its own 1..N sequence.
-with numbered as (
-  select
-    id,
-    row_number() over (
-      partition by date_trunc('day', date)
-      order by date
-    ) as n
-  from transactions
-  where order_number is null
-)
-update transactions t
-set order_number = numbered.n
-from numbered
-where t.id = numbered.id;
 
 -- ---------------------------------------------------------------------------
 -- 4) Integrity / CHECK constraints.
 -- ---------------------------------------------------------------------------
 alter table transactions
-  drop constraint if exists transactions_payment_mode_check;
-alter table transactions
   add constraint transactions_payment_mode_check
     check (payment_mode in ('cash', 'gcash', 'maya'));
-alter table transactions
-  drop constraint if exists transactions_amounts_nonneg_check;
 alter table transactions
   add constraint transactions_amounts_nonneg_check
     check (total_amount >= 0 and (amount_received is null or amount_received >= 0));
 alter table transaction_items
-  drop constraint if exists transaction_items_qty_check;
-alter table transaction_items
   add constraint transaction_items_qty_check check (quantity > 0);
-alter table transaction_items
-  drop constraint if exists transaction_items_subtotal_check;
 alter table transaction_items
   add constraint transaction_items_subtotal_check check (subtotal >= 0);
 alter table inventory
-  drop constraint if exists inventory_qty_check;
-alter table inventory
   add constraint inventory_qty_check check (quantity >= 0);
-alter table stock_movements
-  drop constraint if exists stock_movements_qty_check;
 alter table stock_movements
   add constraint stock_movements_qty_check check (quantity > 0);
 
@@ -188,7 +140,6 @@ declare
   v_user_id  uuid     := auth.uid();
   v_role     text     := get_app_role();
   v_total    numeric  := 0;
-  v_order_no int;
   v_row      record;
   v_item     jsonb;
   v_product_id bigint;
@@ -201,24 +152,10 @@ begin
     raise exception 'Not authenticated';
   end if;
 
-  -- Idempotency guard: a network retry of an already-committed RPC re-sends
-  -- the same transaction id. Without this, the second attempt violates the
-  -- transactions primary key (PostgREST surfaces it as HTTP 409 Conflict) and
-  -- would roll back into a confusing error. Re-submission is a no-op.
-  if exists (select 1 from transactions where id = p_transaction_id) then
-    return p_transaction_id;
-  end if;
-
-  -- Assign this calendar day's next sequential order number (1, 2, 3, ...).
-  select coalesce(max(order_number), 0) + 1 into v_order_no
-  from transactions
-  where date_trunc('day', date) = date_trunc('day', p_date);
-
   insert into transactions (id, user_id, total_amount, payment_mode,
-                            date, status, amount_received, change_given,
-                            order_number)
+                            date, status, amount_received, change_given)
   values (p_transaction_id, v_user_id, 0, p_payment_mode,
-          p_date, 'completed', p_amount_received, p_change_given, v_order_no);
+          p_date, 'completed', p_amount_received, p_change_given);
 
   for v_row in
     select value from jsonb_array_elements(p_items)
