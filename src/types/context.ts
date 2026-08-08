@@ -5,6 +5,7 @@ export interface CartItem {
   name: string;
   price: number;
   qty: number;
+  image_url: string | null;
 }
 
 export interface CartContextType {
@@ -14,6 +15,7 @@ export interface CartContextType {
     product_id: number;
     name: string;
     price: number;
+    image_url: string | null;
   }) => void;
   decrementItem: (productId: number) => void;
   removeFromCart: (productId: number) => void;

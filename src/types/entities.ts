@@ -21,6 +21,7 @@ export interface Product {
   category_id: string;
   price: number;
   is_available: boolean;
+  image_url: string | null;
 }
 
 export interface Transaction {

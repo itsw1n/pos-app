@@ -22,7 +22,12 @@ export function CartProvider({
   );
 
   const addToCart = useCallback(
-    (product: { product_id: number; name: string; price: number }): void => {
+    (product: {
+      product_id: number;
+      name: string;
+      price: number;
+      image_url: string | null;
+    }): void => {
       setCart((prev) => {
         const exists = prev.find((i) => i.product_id === product.product_id);
         if (exists) {

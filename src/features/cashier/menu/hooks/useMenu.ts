@@ -19,6 +19,7 @@ export interface UseMenuResult {
     product_id: number;
     name: string;
     price: number;
+    image_url: string | null;
   }) => void;
   decrementItem: (productId: number) => void;
   removeFromCart: (productId: number) => void;
