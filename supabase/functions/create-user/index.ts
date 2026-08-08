@@ -49,6 +49,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return jsonResponse({ error: 'role must be admin or cashier' }, 400);
   }
 
+  // Only admins may provision (or deprovision) user accounts. The caller's JWT
+  // is validated against get_app_role() so a cashier cannot escalate to admin
+  // by invoking this function directly.
+  const authorization = req.headers.get('authorization');
+  if (!authorization) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+  const caller = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    {
+      global: { headers: { authorization } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    },
+  );
+  const { data: callerRole, error: roleError } = await caller.rpc(
+    'get_app_role',
+  );
+  if (roleError || callerRole !== 'admin') {
+    return jsonResponse({ error: 'Admin access required' }, 403);
+  }
+
   const admin = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
