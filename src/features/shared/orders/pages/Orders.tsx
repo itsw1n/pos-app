@@ -16,7 +16,6 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { PaymentBadge } from '@/components/common/PaymentBadge/PaymentBadge';
 import { colors } from '@/theme';
-import { UserRole } from '@/types/entities';
 import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
 import {
   useOrders,
@@ -24,7 +23,6 @@ import {
   TransactionItemRow,
 } from '@/features/shared/orders/hooks/useOrders';
 import { formatOrderNumber } from '@/utils/orderNumber';
-import { useAuth } from '@/context/AuthContext';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
 import {
@@ -80,14 +78,12 @@ function useTransactionItems(
 
 interface TransactionCardProps {
   item: TransactionRecord;
-  role: UserRole | null;
   navigation: OrdersProps['navigation'];
   getTransactionItems: (id: string) => Promise<TransactionItemRow[]>;
 }
 
 function TransactionCard({
   item,
-  role,
   navigation,
   getTransactionItems,
 }: TransactionCardProps): React.JSX.Element {
@@ -154,7 +150,7 @@ function TransactionCard({
         <Text style={[S.itemTotal, isVoided ? S.itemTotalVoided : null]}>
           {formatPeso(item.total_amount)}
         </Text>
-        {!isVoided && role === 'admin' && (
+        {!isVoided && (
           <Pressable
             style={({ pressed }) => [
               S.voidButton,
@@ -178,7 +174,6 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
     loadTransactions,
     getTransactionItems,
   } = useOrders();
-  const { role } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<DateFilter>({ type: 'all' });
 
@@ -214,7 +209,6 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
   }): React.JSX.Element => (
     <TransactionCard
       item={item}
-      role={role}
       navigation={navigation}
       getTransactionItems={getTransactionItems}
     />
