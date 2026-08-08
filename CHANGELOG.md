@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1](https://github.com/itsw1n/pos-app/compare/v1.1.0...v1.1.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **ci:** add manual trigger to release apk workflow ([bb80d97](https://github.com/itsw1n/pos-app/commit/bb80d978f9c1bc61d5b3496b192c63523ad6afdc))
+* **ci:** add manual trigger to release apk workflow ([7e082f7](https://github.com/itsw1n/pos-app/commit/7e082f74a36b1744730f623481dc80a82cb75c3a))
+* **ci:** correct apk download/attach step ([71a813d](https://github.com/itsw1n/pos-app/commit/71a813d8320ef99f6d385954f891ce61d1cafaec))
+* **ci:** download apk without --output and attach from resolved path ([c5ffb7e](https://github.com/itsw1n/pos-app/commit/c5ffb7ea805d18505ff60bf64c68ad352b67c27a))
+* **ci:** fetch apk from build artifact url via curl ([4a4a9ae](https://github.com/itsw1n/pos-app/commit/4a4a9ae77826323d88763ffcb8d6ac95ae29a1af))
+* **ci:** fetch apk from build url via curl ([8fa4770](https://github.com/itsw1n/pos-app/commit/8fa47700580ef362a08d52c7d83007a54c5174d2))
+
 ## [1.1.0](https://github.com/itsw1n/pos-app/compare/v1.0.0...v1.1.0) (2026-08-08)
 
 
