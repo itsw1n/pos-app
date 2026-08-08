@@ -64,9 +64,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       auth: { autoRefreshToken: false, persistSession: false },
     },
   );
-  const { data: callerRole, error: roleError } = await caller.rpc(
-    'get_app_role',
-  );
+  const { data: callerRole, error: roleError } =
+    await caller.rpc('get_app_role');
   if (roleError || callerRole !== 'admin') {
     return jsonResponse({ error: 'Admin access required' }, 403);
   }
