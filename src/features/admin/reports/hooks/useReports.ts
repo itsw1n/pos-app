@@ -92,6 +92,7 @@ export interface UseReportsResult {
   isLoading: boolean;
   error: string;
   loadDashboard: () => Promise<void>;
+  getTopProducts: (start: Date, end: Date) => Promise<TopProduct[]>;
   getSalesReport: (period: ReportPeriod) => Promise<SalesReport>;
   getInventoryReport: () => Promise<InventoryReport>;
 }
@@ -153,6 +154,33 @@ function isActive(transaction: StoredTransaction): boolean {
   return transaction.status !== 'voided';
 }
 
+function aggregateTopProducts(
+  items: TransactionItem[],
+  productById: Map<number, Product>,
+): TopProduct[] {
+  const soldByProduct = new Map<
+    number,
+    { quantity_sold: number; revenue: number }
+  >();
+  for (const item of items) {
+    const current = soldByProduct.get(item.product_id) ?? {
+      quantity_sold: 0,
+      revenue: 0,
+    };
+    current.quantity_sold += item.quantity;
+    current.revenue += item.subtotal;
+    soldByProduct.set(item.product_id, current);
+  }
+  return Array.from(soldByProduct.entries())
+    .map(([productId, value]) => ({
+      product_id: productId,
+      product_name: productById.get(productId)?.name ?? `Product #${productId}`,
+      quantity_sold: value.quantity_sold,
+      revenue: value.revenue,
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+}
+
 function inRange(date: string, start: Date, end: Date): boolean {
   const time = new Date(date).getTime();
   return time >= start.getTime() && time <= end.getTime();
@@ -207,33 +235,65 @@ export function useReports(): UseReportsResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getTopProducts = useCallback(
+    async (start: Date, end: Date): Promise<TopProduct[]> => {
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('transactions')
+        .select('id, status')
+        .gte('date', start.toISOString())
+        .lte('date', end.toISOString());
+      if (transactionError) throw transactionError;
+
+      const activeIds = ((transactionData as StoredTransaction[]) ?? [])
+        .filter(isActive)
+        .map((transaction) => transaction.id);
+      if (activeIds.length === 0) return [];
+
+      const [itemsRes, productsRes] = await Promise.all([
+        supabase
+          .from('transaction_items')
+          .select('product_id, quantity, subtotal')
+          .in('transaction_id', activeIds),
+        supabase.from('product').select('*'),
+      ]);
+      if (itemsRes.error) throw itemsRes.error;
+      if (productsRes.error) throw productsRes.error;
+
+      const productById = new Map(
+        ((productsRes.data as Product[]) ?? []).map((product) => [
+          product.product_id,
+          product,
+        ]),
+      );
+      return aggregateTopProducts(
+        (itemsRes.data as TransactionItem[]) ?? [],
+        productById,
+      );
+    },
+    [],
+  );
+
   const loadDashboard = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
     try {
-      const [transactionsRes, inventoryRes, productsRes, itemsRes] =
-        await Promise.all([
-          supabase
-            .from('transactions')
-            .select('id, date, total_amount, payment_mode, user_id, status')
-            .order('date', { ascending: false }),
-          supabase.from('inventory').select('*'),
-          supabase.from('product').select('*'),
-          supabase
-            .from('transaction_items')
-            .select('product_id, quantity, subtotal'),
-        ]);
+      const [transactionsRes, inventoryRes, productsRes] = await Promise.all([
+        supabase
+          .from('transactions')
+          .select('id, date, total_amount, payment_mode, user_id, status')
+          .order('date', { ascending: false }),
+        supabase.from('inventory').select('*'),
+        supabase.from('product').select('*'),
+      ]);
       if (transactionsRes.error) throw transactionsRes.error;
       if (inventoryRes.error) throw inventoryRes.error;
       if (productsRes.error) throw productsRes.error;
-      if (itemsRes.error) throw itemsRes.error;
 
       const transactions = (
         (transactionsRes.data as StoredTransaction[]) ?? []
       ).filter(isActive);
       const inventory = (inventoryRes.data as Inventory[]) ?? [];
       const products = (productsRes.data as Product[]) ?? [];
-      const items = (itemsRes.data as TransactionItem[]) ?? [];
 
       const productById = new Map(
         products.map((product) => [product.product_id, product]),
@@ -258,29 +318,11 @@ export function useReports(): UseReportsResult {
         }))
         .sort((a, b) => a.quantity - b.quantity);
 
-      const soldByProduct = new Map<
-        number,
-        { quantity_sold: number; revenue: number }
-      >();
-      for (const item of items) {
-        const current = soldByProduct.get(item.product_id) ?? {
-          quantity_sold: 0,
-          revenue: 0,
-        };
-        current.quantity_sold += item.quantity;
-        current.revenue += item.subtotal;
-        soldByProduct.set(item.product_id, current);
-      }
-      const topProducts = Array.from(soldByProduct.entries())
-        .map(([productId, value]) => ({
-          product_id: productId,
-          product_name:
-            productById.get(productId)?.name ?? `Product #${productId}`,
-          quantity_sold: value.quantity_sold,
-          revenue: value.revenue,
-        }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
+      const todayStart = startOfDay(new Date());
+      const topProducts = (await getTopProducts(todayStart, new Date())).slice(
+        0,
+        5,
+      );
 
       setDashboard({
         totalRevenue,
@@ -294,7 +336,7 @@ export function useReports(): UseReportsResult {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [getTopProducts]);
 
   const getSalesReport = useCallback(
     async (period: ReportPeriod): Promise<SalesReport> => {
@@ -372,6 +414,7 @@ export function useReports(): UseReportsResult {
     isLoading,
     error,
     loadDashboard,
+    getTopProducts,
     getSalesReport,
     getInventoryReport,
   };
