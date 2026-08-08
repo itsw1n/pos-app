@@ -79,6 +79,11 @@ export const settingsScreenStyles = StyleSheet.create({
   rowLast: {
     borderBottomWidth: 0,
   },
+  // Non-functional options are muted so they read as unavailable at a glance
+  // without hiding the fact the feature is planned.
+  rowDisabled: {
+    opacity: 0.6,
+  },
   rowPressed: {
     ...shadows.active,
     backgroundColor: colors.navActive,
@@ -104,6 +109,21 @@ export const settingsScreenStyles = StyleSheet.create({
     ...typography.xs,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  rowCaptionDisabled: {
+    color: colors.disabled,
+  },
+  badge: {
+    borderWidth: 1,
+    borderColor: colors.disabled,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  badgeText: {
+    ...typography.xs,
+    fontWeight: '500',
+    color: colors.textSecondary,
   },
   userCard: {
     backgroundColor: colors.surface,
