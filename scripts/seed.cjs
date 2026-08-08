@@ -72,11 +72,17 @@ function assertDevOnly() {
       'DATABASE_URL is required (set in .env.development / .env.local) and must point to the DEV project.',
     );
   }
-  // Refuse anything that doesn't resolve to the DEV pooler host.
+  // Refuse anything that doesn't resolve to the DEV project. Newer pooler
+  // URLs carry the project ref in the user segment (postgres.<ref>@...) rather
+  // than the hostname, so match either — the literal DEV ref must still appear.
   try {
     const parsed = new URL(DATABASE_URL);
     const host = parsed.hostname;
-    if (!host.includes(DEV_SUPABASE_HOST)) {
+    const username = parsed.username;
+    if (
+      !host.includes(DEV_SUPABASE_HOST) &&
+      !username.includes(DEV_SUPABASE_HOST)
+    ) {
       throw new Error(
         `seed.js is DEV-only. Refusing to seed a non-DEV database (host="${host}").`,
       );
