@@ -6,30 +6,10 @@ export const topSellingStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  filterBar: {
-    flexDirection: 'row',
+  filterRow: {
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  filterTab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: spacing.sm,
-  },
-  filterTabActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  filterTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  filterTabTextActive: {
-    color: colors.surface,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   errorText: {
     ...typography.sm,

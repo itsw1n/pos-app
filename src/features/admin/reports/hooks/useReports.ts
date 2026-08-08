@@ -3,8 +3,6 @@ import { supabase } from '@/services/supabase';
 import { PaymentMode } from '@/types/context';
 import { Inventory, Product, TransactionItem } from '@/types/entities';
 
-export type ReportPeriod = 'daily' | 'weekly' | 'monthly';
-
 export type StockLevel = 'ok' | 'low' | 'critical';
 
 const PAYMENT_MODES: PaymentMode[] = ['cash', 'gcash', 'maya'];
@@ -36,7 +34,6 @@ export interface PaymentModeBreakdown {
 }
 
 export interface SalesReport {
-  period: ReportPeriod;
   startDate: string;
   endDate: string;
   totalRevenue: number;
@@ -92,8 +89,8 @@ export interface UseReportsResult {
   isLoading: boolean;
   error: string;
   loadDashboard: () => Promise<void>;
-  getTopProducts: (start: Date, end: Date) => Promise<TopProduct[]>;
-  getSalesReport: (period: ReportPeriod) => Promise<SalesReport>;
+  getTopProducts: (start?: Date, end?: Date) => Promise<TopProduct[]>;
+  getSalesReport: (start: Date, end: Date) => Promise<SalesReport>;
   getInventoryReport: () => Promise<InventoryReport>;
 }
 
@@ -105,23 +102,6 @@ function dayKey(date: Date): string {
 
 function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-export function getPeriodRange(period: ReportPeriod): {
-  start: Date;
-  end: Date;
-} {
-  const now = new Date();
-  if (period === 'daily') {
-    return { start: startOfDay(now), end: now };
-  }
-  if (period === 'weekly') {
-    const start = startOfDay(now);
-    start.setDate(start.getDate() - 6);
-    return { start, end: now };
-  }
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  return { start, end: now };
 }
 
 export function buildDaySales(
@@ -187,7 +167,6 @@ function inRange(date: string, start: Date, end: Date): boolean {
 }
 
 export function buildSalesReport(
-  period: ReportPeriod,
   transactions: StoredTransaction[],
   start: Date,
   end: Date,
@@ -219,7 +198,6 @@ export function buildSalesReport(
   });
 
   return {
-    period,
     startDate: start.toLocaleDateString(),
     endDate: end.toLocaleDateString(),
     totalRevenue,
@@ -236,12 +214,15 @@ export function useReports(): UseReportsResult {
   const [error, setError] = useState('');
 
   const getTopProducts = useCallback(
-    async (start: Date, end: Date): Promise<TopProduct[]> => {
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('transactions')
-        .select('id, status')
-        .gte('date', start.toISOString())
-        .lte('date', end.toISOString());
+    async (start?: Date, end?: Date): Promise<TopProduct[]> => {
+      let query = supabase.from('transactions').select('id, status');
+      if (start !== undefined) {
+        query = query.gte('date', start.toISOString());
+      }
+      if (end !== undefined) {
+        query = query.lte('date', end.toISOString());
+      }
+      const { data: transactionData, error: transactionError } = await query;
       if (transactionError) throw transactionError;
 
       const activeIds = ((transactionData as StoredTransaction[]) ?? [])
@@ -339,8 +320,7 @@ export function useReports(): UseReportsResult {
   }, [getTopProducts]);
 
   const getSalesReport = useCallback(
-    async (period: ReportPeriod): Promise<SalesReport> => {
-      const { start, end } = getPeriodRange(period);
+    async (start: Date, end: Date): Promise<SalesReport> => {
       const { data, error } = await supabase
         .from('transactions')
         .select('id, date, total_amount, payment_mode, user_id, status')
@@ -348,7 +328,7 @@ export function useReports(): UseReportsResult {
         .lte('date', end.toISOString());
       if (error) throw error;
       const transactions = (data as StoredTransaction[]) ?? [];
-      return buildSalesReport(period, transactions, start, end);
+      return buildSalesReport(transactions, start, end);
     },
     [],
   );

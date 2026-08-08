@@ -17,6 +17,7 @@ interface DateFilterPickerModalProps {
   value: DateFilter;
   onChange: (filter: DateFilter) => void;
   onClose: () => void;
+  allowAll?: boolean;
 }
 
 const calendarTheme: CalendarTheme = {
@@ -99,10 +100,17 @@ function isCurrentMonth(date: Date): boolean {
   );
 }
 
-function getHintText(value: DateFilter, anchor: Date | null): string {
+function getHintText(
+  value: DateFilter,
+  anchor: Date | null,
+  allowAll: boolean,
+): string {
   if (anchor !== null) return 'Tap another date to complete the range.';
-  if (value.type === 'single')
-    return 'Tap the date again to clear, or pick a second date for a range.';
+  if (value.type === 'single') {
+    return allowAll
+      ? 'Tap the date again to clear, or pick a second date for a range.'
+      : 'Tap another date to create a range.';
+  }
   if (value.type === 'range')
     return 'Range selected. Tap a date to start a new selection.';
   return 'Tap a date for a single day, then a second date for a range.';
@@ -112,6 +120,7 @@ function CalendarSection({
   value,
   onChange,
   onClose,
+  allowAll,
 }: Omit<DateFilterPickerModalProps, 'visible'>): React.JSX.Element {
   const [anchor, setAnchor] = useState<Date | null>(null);
   const [monthDate, setMonthDate] = useState<Date>(() => initialMonth(value));
@@ -155,7 +164,8 @@ function CalendarSection({
       const day = fromDateKey(dateId);
       if (anchor === null) {
         if (value.type === 'single' && sameDay(day, value.date)) {
-          onChange({ type: 'all' });
+          if (allowAll) onChange({ type: 'all' });
+          setAnchor(null);
           return;
         }
         setAnchor(day);
@@ -164,7 +174,7 @@ function CalendarSection({
       }
       if (sameDay(day, anchor)) {
         setAnchor(null);
-        onChange({ type: 'all' });
+        if (allowAll) onChange({ type: 'all' });
         return;
       }
       const from = startOfDay(day) < startOfDay(anchor) ? day : anchor;
@@ -172,7 +182,7 @@ function CalendarSection({
       setAnchor(null);
       onChange({ type: 'range', from, to });
     },
-    [anchor, onChange, value],
+    [anchor, onChange, allowAll, value],
   );
 
   return (
@@ -238,7 +248,7 @@ function CalendarSection({
       />
 
       <Text style={dateFilterPickerModalStyles.hint}>
-        {getHintText(value, anchor)}
+        {getHintText(value, anchor, allowAll ?? true)}
       </Text>
 
       <Button
@@ -257,6 +267,7 @@ export function DateFilterPickerModal({
   value,
   onChange,
   onClose,
+  allowAll = true,
 }: DateFilterPickerModalProps): React.JSX.Element {
   return (
     <Modal
@@ -275,6 +286,7 @@ export function DateFilterPickerModal({
               value={value}
               onChange={onChange}
               onClose={onClose}
+              allowAll={allowAll}
             />
           ) : null}
         </View>

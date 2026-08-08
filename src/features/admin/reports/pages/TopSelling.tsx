@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   SafeAreaView,
   StyleProp,
   Text,
@@ -9,12 +8,11 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
+import { DateFilter } from '@/components/common/DateFilter/types';
 import { colors } from '@/theme';
 import {
   useReports,
-  getPeriodRange,
-  ReportPeriod,
   TopProduct,
 } from '@/features/admin/reports/hooks/useReports';
 import { topSellingStyles as S } from './TopSelling.styles';
@@ -22,12 +20,6 @@ import { topSellingStyles as S } from './TopSelling.styles';
 interface TopSellingProps {
   style?: StyleProp<ViewStyle>;
 }
-
-const PERIODS: { key: ReportPeriod; label: string }[] = [
-  { key: 'daily', label: 'Daily' },
-  { key: 'weekly', label: 'Weekly' },
-  { key: 'monthly', label: 'Monthly' },
-];
 
 function formatPeso(value: number): string {
   return `₱${value.toLocaleString(undefined, {
@@ -59,19 +51,49 @@ function TopProductRow({
   );
 }
 
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date): Date {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+}
+
+function filterToRange(filter: DateFilter): { start?: Date; end?: Date } {
+  switch (filter.type) {
+    case 'all':
+      return {};
+    case 'single':
+      return { start: startOfDay(filter.date), end: endOfDay(filter.date) };
+    case 'range':
+      return {
+        start: startOfDay(filter.from),
+        end: endOfDay(filter.to),
+      };
+  }
+}
+
 export function TopSelling({ style }: TopSellingProps): React.JSX.Element {
   const { getTopProducts } = useReports();
-  const [period, setPeriod] = useState<ReportPeriod>('daily');
+  const [dateFilter, setDateFilter] = useState<DateFilter>({ type: 'all' });
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   const loadTopProducts = useCallback(
-    async (selectedPeriod: ReportPeriod): Promise<void> => {
+    async (filter: DateFilter): Promise<void> => {
       setIsLoading(true);
       setError('');
       try {
-        const { start, end } = getPeriodRange(selectedPeriod);
+        const { start, end } = filterToRange(filter);
         const products = await getTopProducts(start, end);
         setTopProducts(products);
       } catch (err) {
@@ -87,34 +109,17 @@ export function TopSelling({ style }: TopSellingProps): React.JSX.Element {
 
   useFocusEffect(
     useCallback(() => {
-      void loadTopProducts(period);
-    }, [loadTopProducts, period]),
+      void loadTopProducts(dateFilter);
+    }, [loadTopProducts, dateFilter]),
   );
 
   return (
     <SafeAreaView style={[S.container, style]}>
-      <AppHeader pageTitle="Top Selling" />
-      <View style={S.filterBar}>
-        {PERIODS.map((option) => {
-          const isActive = period === option.key;
-          return (
-            <Pressable
-              key={option.key}
-              style={[S.filterTab, isActive ? S.filterTabActive : null]}
-              onPress={() => setPeriod(option.key)}
-            >
-              <Text
-                style={[
-                  S.filterTabText,
-                  isActive ? S.filterTabTextActive : null,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <DateFilterPicker
+        style={S.filterRow}
+        value={dateFilter}
+        onChange={setDateFilter}
+      />
 
       {error ? <Text style={S.errorText}>{error}</Text> : null}
 
@@ -135,7 +140,9 @@ export function TopSelling({ style }: TopSellingProps): React.JSX.Element {
         </View>
       ) : (
         <View style={S.emptyContainer}>
-          <Text style={S.emptyText}>No sales recorded for this period</Text>
+          <Text style={S.emptyText}>
+            No sales recorded for the selected dates
+          </Text>
         </View>
       )}
     </SafeAreaView>

@@ -28,29 +28,9 @@ export const reportsStyles = StyleSheet.create({
     marginBottom: spacing.md,
     textAlign: 'center',
   },
-  filterBar: {
-    flexDirection: 'row',
+  dateFilter: {
     marginBottom: spacing.md,
-  },
-  filterTab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    marginRight: spacing.sm,
-  },
-  filterTabActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  filterTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  filterTabTextActive: {
-    color: colors.surface,
+    paddingHorizontal: 0,
   },
   card: {
     backgroundColor: colors.surface,
@@ -104,6 +84,8 @@ export const reportsStyles = StyleSheet.create({
   listRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
@@ -129,7 +111,13 @@ export const reportsStyles = StyleSheet.create({
     borderRadius: radius.full,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.success,
+  },
+  stockBadgeLow: {
+    backgroundColor: colors.warning,
+  },
+  stockBadgeCritical: {
+    backgroundColor: colors.danger,
   },
   stockBadgeText: {
     ...typography.xs,

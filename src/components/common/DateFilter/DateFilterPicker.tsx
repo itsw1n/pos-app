@@ -10,6 +10,7 @@ interface DateFilterPickerProps {
   value: DateFilter;
   onChange: (filter: DateFilter) => void;
   style?: StyleProp<ViewStyle>;
+  allowAll?: boolean;
 }
 
 const DATE_LABEL_OPTIONS: Intl.DateTimeFormatOptions = {
@@ -36,6 +37,7 @@ export function DateFilterPicker({
   value,
   onChange,
   style,
+  allowAll = true,
 }: DateFilterPickerProps): React.JSX.Element {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -47,24 +49,26 @@ export function DateFilterPicker({
 
   return (
     <View style={[dateFilterPickerStyles.row, style]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Show all dates"
-        style={[
-          dateFilterPickerStyles.chip,
-          isAll ? dateFilterPickerStyles.chipActive : null,
-        ]}
-        onPress={clearFilter}
-      >
-        <Text
+      {allowAll ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Show all dates"
           style={[
-            dateFilterPickerStyles.chipText,
-            isAll ? dateFilterPickerStyles.chipTextActive : null,
+            dateFilterPickerStyles.chip,
+            isAll ? dateFilterPickerStyles.chipActive : null,
           ]}
+          onPress={clearFilter}
         >
-          All
-        </Text>
-      </Pressable>
+          <Text
+            style={[
+              dateFilterPickerStyles.chipText,
+              isAll ? dateFilterPickerStyles.chipTextActive : null,
+            ]}
+          >
+            All
+          </Text>
+        </Pressable>
+      ) : null}
 
       <View
         style={[
@@ -93,7 +97,7 @@ export function DateFilterPicker({
             {formatDateFilter(value)}
           </Text>
         </Pressable>
-        {!isAll ? (
+        {!isAll && allowAll ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Clear date filter"
@@ -111,6 +115,7 @@ export function DateFilterPicker({
         value={value}
         onChange={onChange}
         onClose={closeModal}
+        allowAll={allowAll}
       />
     </View>
   );
