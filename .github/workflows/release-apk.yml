@@ -46,10 +46,8 @@ jobs:
       - name: Download APK
         id: download
         run: |
-          id=$(npx eas-cli build:list --platform android --limit 1 --json --non-interactive | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{process.stdout.write(JSON.parse(d)[0].id)})")
-          npx eas-cli build:download "$id" --platform android --non-interactive
-          apk=$(find . -name '*.apk' | head -1)
-          mv "$apk" /tmp/pos-application.apk
+          url=$(npx eas-cli build:list --platform android --limit 1 --json --non-interactive | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{process.stdout.write(JSON.parse(d)[0].artifacts.buildUrl)})")
+          curl -fsSL -o /tmp/pos-application.apk "$url"
           echo "apk_path=/tmp/pos-application.apk" >> "$GITHUB_OUTPUT"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
