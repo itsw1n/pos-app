@@ -44,16 +44,20 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Download APK
+        id: download
         run: |
-          id=$(npx eas-cli build:list --platform android --limit 1 --json --non-interactive | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const j=JSON.parse(d);process.stdout.write(j[0].id)})")
-          npx eas-cli build:download "$id" --platform android --output /tmp/pos-application.apk --non-interactive
+          id=$(npx eas-cli build:list --platform android --limit 1 --json --non-interactive | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{process.stdout.write(JSON.parse(d)[0].id)})")
+          npx eas-cli build:download "$id" --platform android --non-interactive
+          apk=$(find . -name '*.apk' | head -1)
+          mv "$apk" /tmp/pos-application.apk
+          echo "apk_path=/tmp/pos-application.apk" >> "$GITHUB_OUTPUT"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Attach APK to release
         run: |
           if [ -n "$TAG" ]; then :; elif [ -n "$RELEASE_TAG" ]; then TAG="$RELEASE_TAG"; else TAG="$(gh release list --limit 1 --json tagName -q '.[0].tagName')"; fi
-          gh release upload "$TAG" /tmp/pos-application.apk
+          gh release upload "$TAG" "${{ steps.download.outputs.apk_path }}"
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
