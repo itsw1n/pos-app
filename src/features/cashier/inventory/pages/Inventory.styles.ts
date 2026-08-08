@@ -83,6 +83,10 @@ export const inventoryStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  searchBar: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
   filterTab: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,

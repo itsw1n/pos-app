@@ -11,6 +11,7 @@ import {
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { StockBadge } from '@/components/common/StockBadge/StockBadge';
 import { colors } from '@/theme';
 import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
@@ -45,6 +46,7 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
     criticalCount,
   } = useInventory();
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -53,9 +55,18 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
   );
 
   const filteredItems = useMemo(() => {
-    if (filter === 'all') return items;
-    return items.filter((item) => getStatus(item) === filter);
-  }, [items, filter, getStatus]);
+    const query = searchQuery.trim().toLowerCase();
+    const statusFiltered =
+      filter === 'all'
+        ? items
+        : items.filter((item) => getStatus(item) === filter);
+    if (!query) return statusFiltered;
+    return statusFiltered.filter(
+      (item) =>
+        item.product_name.toLowerCase().includes(query) ||
+        item.product_category.toLowerCase().includes(query),
+    );
+  }, [items, filter, searchQuery, getStatus]);
 
   const alertCount = lowCount + criticalCount;
 
@@ -135,6 +146,13 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
       ) : null}
 
       {error ? <Text style={inventoryStyles.errorText}>{error}</Text> : null}
+
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search by name or category"
+        style={inventoryStyles.searchBar}
+      />
 
       <View style={inventoryStyles.filterBar}>
         {FILTERS.map((option) => {
