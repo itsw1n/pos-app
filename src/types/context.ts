@@ -5,11 +5,18 @@ export interface CartItem {
   name: string;
   price: number;
   qty: number;
+  image_url: string | null;
 }
 
 export interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: { product_id: number; name: string; price: number }) => void;
+  total: number;
+  addToCart: (product: {
+    product_id: number;
+    name: string;
+    price: number;
+    image_url: string | null;
+  }) => void;
   decrementItem: (productId: number) => void;
   removeFromCart: (productId: number) => void;
   getTotal: () => number;
@@ -26,5 +33,6 @@ export interface POSTransaction {
   date: string;
   status: 'completed';
   items: CartItem[];
+  order_number?: number;
   synced: boolean;
 }

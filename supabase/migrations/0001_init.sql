@@ -89,14 +89,24 @@ alter table transaction_items enable row level security;
 alter table stock_movements   enable row level security;
 
 -- Authenticated role may manage everything.
+-- (drop-if-exists keeps this file idempotent so `make seed` can re-run.)
+drop policy if exists "authenticated full access" on product;
 create policy "authenticated full access" on product using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "authenticated full access" on "user";
 create policy "authenticated full access" on "user" using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "authenticated full access" on inventory;
 create policy "authenticated full access" on inventory using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "authenticated full access" on transactions;
 create policy "authenticated full access" on transactions using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "authenticated full access" on transaction_items;
 create policy "authenticated full access" on transaction_items using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+drop policy if exists "authenticated full access" on stock_movements;
 create policy "authenticated full access" on stock_movements using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 -- Anon role may read the catalog while unauthenticated.
+drop policy if exists "anon can read catalog" on product;
 create policy "anon can read catalog" on product using (auth.role() = 'anon');
+drop policy if exists "anon can read catalog" on "user";
 create policy "anon can read catalog" on "user" using (false);
+drop policy if exists "anon can read catalog" on inventory;
 create policy "anon can read catalog" on inventory using (auth.role() = 'anon');

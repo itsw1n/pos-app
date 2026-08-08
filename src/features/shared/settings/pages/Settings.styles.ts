@@ -1,0 +1,161 @@
+import { StyleSheet } from 'react-native';
+import { colors, radius, shadows, spacing, typography } from '@/theme';
+
+export const settingsScreenStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing['3xl'],
+  },
+  profileCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    ...shadows.resting,
+  },
+  avatarCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.hover,
+  },
+  avatarInitials: {
+    ...typography['3xl'],
+    fontWeight: '700',
+    color: colors.surface,
+  },
+  userName: {
+    ...typography.xl,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginTop: spacing.sm,
+  },
+  roleBadge: {
+    backgroundColor: colors.iconCircle,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  roleBadgeText: {
+    ...typography.xs,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  sectionLabel: {
+    ...typography.xs,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 0.8,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  group: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    ...shadows.resting,
+    marginBottom: spacing.lg,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.lg,
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.lg,
+    borderBottomWidth: 0.5,
+    borderBottomColor: colors.border,
+  },
+  rowLast: {
+    borderBottomWidth: 0,
+  },
+  // Non-functional options are muted so they read as unavailable at a glance
+  // without hiding the fact the feature is planned.
+  rowDisabled: {
+    opacity: 0.6,
+  },
+  rowPressed: {
+    ...shadows.active,
+    backgroundColor: colors.navActive,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: colors.iconCircle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowText: {
+    flex: 1,
+    marginHorizontal: spacing.md,
+  },
+  rowTitle: {
+    ...typography.md,
+    fontWeight: '500',
+    color: colors.textPrimary,
+  },
+  rowCaption: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  rowCaptionDisabled: {
+    color: colors.disabled,
+  },
+  badge: {
+    borderWidth: 1,
+    borderColor: colors.disabled,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  badgeText: {
+    ...typography.xs,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  userCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    ...shadows.resting,
+    marginBottom: spacing.lg,
+  },
+  logout: {
+    backgroundColor: colors.dangerSurface,
+    borderRadius: radius.xl,
+    height: 52,
+    borderWidth: 1,
+    borderColor: colors.dangerBorder,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  logoutPressed: {
+    ...shadows.active,
+  },
+  logoutText: {
+    ...typography.md,
+    fontWeight: '600',
+    color: colors.danger,
+  },
+  footer: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    opacity: 0.5,
+    textAlign: 'center',
+    marginTop: spacing.lg,
+  },
+});

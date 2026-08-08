@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# build / expo
+dist/
+.expo/
+web-build/
+
+# lockfiles (handled by npm)
+package-lock.json
+
+# local env files
+.env
+.env.local
+.env.development
+.env.production
+
+# documentation artifacts (not formatter code)
+IPSS_CodingGuide.jsx
+
+# planning scratch docs
+.opencode/plans/

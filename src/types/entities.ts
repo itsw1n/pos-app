@@ -8,12 +8,20 @@ export interface User {
   is_active?: boolean;
 }
 
+export interface Category {
+  category_id: string;
+  name: string;
+  created_at?: string;
+}
+
 export interface Product {
   product_id: number;
   name: string;
   category: string;
+  category_id: string;
   price: number;
   is_available: boolean;
+  image_url: string | null;
 }
 
 export interface Transaction {

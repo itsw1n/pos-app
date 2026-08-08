@@ -23,7 +23,15 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-font"
+      "expo-font",
+      "expo-sharing",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to set a product image"
+        }
+      ]
     ]
   }
 }

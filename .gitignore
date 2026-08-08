@@ -47,5 +47,11 @@ yarn-error.*
 .vscode/
 .superpowers/
 
+# planning scratch docs (never committed)
+.opencode/plans/
+
+# Supabase CLI link cache
+supabase/.temp/
+
 # editor lock files
 .~lock.*#
