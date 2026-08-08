@@ -89,40 +89,6 @@ export const checkoutStyles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  orderItemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    ...shadows.resting,
-  },
-  productImage: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.lg,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  productImageEmoji: {
-    fontSize: 24,
-  },
-  productInfo: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  productName: {
-    ...typography.md,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  productPrice: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
   divider: {
     height: 0.5,
     backgroundColor: colors.border,

@@ -26,40 +26,7 @@ export const menuManagementStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   productRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.md,
     marginBottom: spacing.sm,
-    ...shadows.resting,
-  },
-  emojiTile: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.lg,
-    backgroundColor: colors.iconCircle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  emojiText: {
-    fontSize: 24,
-  },
-  productInfo: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  productName: {
-    ...typography.md,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  productPrice: {
-    ...typography.sm,
-    fontWeight: '500' as const,
-    color: colors.primary,
   },
   editButton: {
     width: 36,

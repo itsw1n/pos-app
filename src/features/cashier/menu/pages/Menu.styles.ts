@@ -67,45 +67,8 @@ export const menuStyles = StyleSheet.create({
     paddingHorizontal: spacing['2xl'],
     paddingBottom: 80,
   },
-  productCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.md,
+  productRow: {
     marginBottom: spacing.sm,
-    ...shadows.resting,
-  },
-  productCardInCart: {
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  productImage: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.lg,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  productImageEmoji: {
-    fontSize: 28,
-  },
-  productInfo: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  productName: {
-    ...typography.md,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  productPrice: {
-    ...typography.sm,
-    fontWeight: '500' as const,
-    color: colors.primary,
   },
   addButton: {
     width: 36,
