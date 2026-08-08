@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.elvira.pos",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -32,6 +33,12 @@
           "photosPermission": "Allow access to your photos to set a product image"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4b435660-faed-4bdc-8c3d-7b5926ad795e"
+      }
+    },
+    "owner": "itsw1n2s-team"
   }
 }
