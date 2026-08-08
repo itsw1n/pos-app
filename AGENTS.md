@@ -144,7 +144,7 @@ src/
 │       ├── inventory/        # InventoryManagement, StockIn (pages/)
 │       └── reports/          # Dashboard, Reports (pages/ + hooks/ + ReportsNavigator)
 ├── components/
-│   └── common/           # shared UI: Button, Card, ProductCard, StockBadge, TextField
+│   └── common/           # shared UI: Button, Card, ProductRow, ProductImage, StockBadge, TextField
 │       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
 ├── context/              # AuthContext (user+role), CartContext (cart state)
 ├── hooks/                # cross-role hooks: useInventory, useCategories
@@ -197,7 +197,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 ### Shared components (`src/components/common/`)
 
-`Button` (variant/size/disabled), `Card`, `ProductCard`, `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error). All named exports, all accept `style`.
+`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error). All named exports, all accept `style`.
 
 ---
 
