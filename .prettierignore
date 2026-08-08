@@ -18,5 +18,8 @@ package-lock.json
 # documentation artifacts (not formatter code)
 IPSS_CodingGuide.jsx
 
+# generated release changelog (managed by release-please)
+CHANGELOG.md
+
 # planning scratch docs
 .opencode/plans/
