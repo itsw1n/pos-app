@@ -11,7 +11,7 @@ create policy "product-images authenticated update" on storage.objects
   to authenticated
   using (
     bucket_id = 'product-images'
-      and (owner_id = auth.uid() or get_app_role() = 'admin')
+      and (owner_id = auth.uid()::text or get_app_role() = 'admin')
   )
   with check (bucket_id = 'product-images');
 
@@ -21,7 +21,7 @@ create policy "product-images authenticated delete" on storage.objects
   to authenticated
   using (
     bucket_id = 'product-images'
-      and (owner_id = auth.uid() or get_app_role() = 'admin')
+      and (owner_id = auth.uid()::text or get_app_role() = 'admin')
   );
 
 drop policy if exists "product-images authenticated upload" on storage.objects;
