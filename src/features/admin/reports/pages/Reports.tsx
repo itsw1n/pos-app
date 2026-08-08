@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   SafeAreaView,
   ScrollView,
   StyleProp,
@@ -11,12 +10,12 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
+import { DateFilter } from '@/components/common/DateFilter/types';
 import { colors } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import {
   useReports,
-  ReportPeriod,
   SalesReport,
   InventoryReport,
   PaymentModeBreakdown,
@@ -27,12 +26,6 @@ import { reportsStyles } from './Reports.styles';
 type ReportsProps = StackScreenProps<ReportsStackParamList, 'Reports'> & {
   style?: StyleProp<ViewStyle>;
 };
-
-const PERIODS: { key: ReportPeriod; label: string }[] = [
-  { key: 'daily', label: 'Daily' },
-  { key: 'weekly', label: 'Weekly' },
-  { key: 'monthly', label: 'Monthly' },
-];
 
 const PAYMENT_MODE_LABEL: Record<PaymentModeBreakdown['payment_mode'], string> =
   {
@@ -52,6 +45,34 @@ function formatPeso(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date): Date {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+}
+
+function filterToRange(filter: DateFilter): { start: Date; end: Date } {
+  if (filter.type === 'all') {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    return { start, end };
+  }
+  if (filter.type === 'single') {
+    return { start: startOfDay(filter.date), end: endOfDay(filter.date) };
+  }
+  return { start: startOfDay(filter.from), end: endOfDay(filter.to) };
 }
 
 function SalesSummary({ report }: { report: SalesReport }): React.JSX.Element {
@@ -153,7 +174,15 @@ function InventorySummary({
               {item.quantity} on hand · reorder at {item.reorder_level}
             </Text>
           </View>
-          <View style={reportsStyles.stockBadge}>
+          <View
+            style={[
+              reportsStyles.stockBadge,
+              item.status === 'critical'
+                ? reportsStyles.stockBadgeCritical
+                : null,
+              item.status === 'low' ? reportsStyles.stockBadgeLow : null,
+            ]}
+          >
             <Text style={reportsStyles.stockBadgeText}>
               {STOCK_LABEL[item.status]}
             </Text>
@@ -166,7 +195,10 @@ function InventorySummary({
 
 export function Reports({ style }: ReportsProps): React.JSX.Element {
   const { getSalesReport, getInventoryReport } = useReports();
-  const [period, setPeriod] = useState<ReportPeriod>('daily');
+  const [dateFilter, setDateFilter] = useState<DateFilter>({
+    type: 'single',
+    date: new Date(),
+  });
   const [salesReport, setSalesReport] = useState<SalesReport | null>(null);
   const [inventoryReport, setInventoryReport] =
     useState<InventoryReport | null>(null);
@@ -174,12 +206,13 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
   const [error, setError] = useState('');
 
   const loadReports = useCallback(
-    async (selectedPeriod: ReportPeriod): Promise<void> => {
+    async (filter: DateFilter): Promise<void> => {
       setIsLoading(true);
       setError('');
       try {
+        const { start, end } = filterToRange(filter);
         const [sales, inventory] = await Promise.all([
-          getSalesReport(selectedPeriod),
+          getSalesReport(start, end),
           getInventoryReport(),
         ]);
         setSalesReport(sales);
@@ -195,42 +228,23 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
 
   useFocusEffect(
     useCallback(() => {
-      void loadReports(period);
-    }, [loadReports, period]),
+      void loadReports(dateFilter);
+    }, [loadReports, dateFilter]),
   );
 
   return (
     <SafeAreaView style={[reportsStyles.container, style]}>
-      <AppHeader pageTitle="Reports" />
       <ScrollView
         style={reportsStyles.scrollContainer}
         contentContainerStyle={reportsStyles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={reportsStyles.filterBar}>
-          {PERIODS.map((option) => {
-            const isActive = period === option.key;
-            return (
-              <Pressable
-                key={option.key}
-                style={[
-                  reportsStyles.filterTab,
-                  isActive ? reportsStyles.filterTabActive : null,
-                ]}
-                onPress={() => setPeriod(option.key)}
-              >
-                <Text
-                  style={[
-                    reportsStyles.filterTabText,
-                    isActive ? reportsStyles.filterTabTextActive : null,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <DateFilterPicker
+          value={dateFilter}
+          onChange={setDateFilter}
+          allowAll={false}
+          style={reportsStyles.dateFilter}
+        />
 
         {error ? <Text style={reportsStyles.errorText}>{error}</Text> : null}
 

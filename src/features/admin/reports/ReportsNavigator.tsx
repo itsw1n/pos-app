@@ -5,10 +5,12 @@ import { InventoryManagement } from '@/features/admin/inventory-management/pages
 import { StockIn } from '@/features/admin/inventory-management/pages/StockIn';
 import { Dashboard } from './pages/Dashboard';
 import { Reports } from './pages/Reports';
+import { TopSelling } from './pages/TopSelling';
 
 export type ReportsStackParamList = {
   DashboardHome: undefined;
   Reports: undefined;
+  TopSelling: undefined;
   Inventory: undefined;
   StockIn: {
     stockId: number;
@@ -37,7 +39,12 @@ export function ReportsNavigator(): React.JSX.Element {
       <Stack.Screen
         name="Reports"
         component={Reports}
-        options={{ title: 'Reports', headerShown: false }}
+        options={{ title: 'Sales Report' }}
+      />
+      <Stack.Screen
+        name="TopSelling"
+        component={TopSelling}
+        options={{ title: 'Top Selling' }}
       />
       <Stack.Screen
         name="Inventory"

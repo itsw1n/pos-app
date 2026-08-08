@@ -17,6 +17,24 @@ export interface UseUsersResult {
   setUserActive: (userId: number, isActive: boolean) => Promise<void>;
 }
 
+async function errorMessage(err: unknown): Promise<string> {
+  if (err instanceof Error) {
+    const context = (err as unknown as Record<string, unknown>).context;
+    if (context instanceof Response) {
+      try {
+        const body = (await context.json()) as { error?: string };
+        if (typeof body.error === 'string' && body.error.trim()) {
+          return body.error;
+        }
+      } catch {
+        // fall through to the generic message
+      }
+    }
+    return err.message;
+  }
+  return 'Failed to create user';
+}
+
 function validatePayload(payload: UserPayload): void {
   if (!payload.username.trim()) {
     throw new Error('Username is required');
@@ -61,7 +79,7 @@ export function useUsers(): UseUsersResult {
           role: payload.role,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await errorMessage(error));
       const created = {
         user_id: typeof data?.user_id === 'string' ? data.user_id : '',
         username: payload.username.trim(),

@@ -1,20 +1,53 @@
-# Makefile — IPSS (Cafe Elvira)
-# Drives the Supabase dev environment, seeding, builds, and Docker tooling.
-# Requires: docker, docker compose, node, npm (or use the `docker-*` targets).
-
-# --- Environment selection ---------------------------------------------------
-# `make dev`     -> uses .env.development (NODE_ENV=development), seeds dev DB
-# `make prod`    -> uses .env.production   (NODE_ENV=production)
-# Secrets for seeding live in .env.local (never committed).
+# Makefile — IPSS (Cafe Elvira POS)
+# Drives local development (Expo), DEV-only data seeding, and remote schema
+# migrations via the Supabase CLI.
+#
+# Environment targets:
+#   `make dev`  -> Expo dev server against .env.development
+#   `make prod` -> Expo dev server against .env.production
+#
+# Database:
+#   DEV and PROD are BOTH remote Supabase projects. The Supabase CLI is linked
+#   to whichever project you point it at via `supabase link`. `migrate-dev`
+#   targets DEV; `migrate-prod` targets PROD. There is intentionally NO
+#   local Docker database in this workflow — use the Supabase CLI against remote.
+#
+# Safety:
+#   `make seed` seeds DEV data only and refuses to run against PROD.
+#   `make reset-dev` re-applies ALL migrations (rebuilds the DEV schema from
+#   local migrations) — destructive to DEV, guarded to refuse unless the DEV
+#   project is linked, and does NOT seed. Run `make seed` separately.
+#   There is NO `seed-prod`. PROD is never seeded.
 
 EXPO := npx expo
 NODE := node
+SUPABASE := supabase
 
-.PHONY: help setup dev prod seed reset typecheck lint format format-check build \
-        docker-seed docker-reset docker-typecheck docker-build docker-lint
+# DEV project reference (fixed; used to guard destructive reset-dev).
+DEV_SUPABASE_REF := mhlmskbuifatnlehvodf
+# The CLI writes the linked project ref here after `supabase link`.
+LINKED_REF_FILE := supabase/.temp/project-ref
+
+.PHONY: help setup dev prod seed reset-dev typecheck lint format format-check \
+        build migrate-dev migrate-prod
 
 help: ## Show available commands
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
+	@echo "===== DEVELOPMENT ====="
+	@printf "  %-12s %s\n" "make dev"      "Start Expo dev server (development env)"
+	@printf "  %-12s %s\n" "make prod"     "Start Expo using the production env"
+	@printf "  %-12s %s\n" "make seed"     "Seed DEV database with demo data (data only; DEV-only)"
+	@printf "  %-12s %s\n" "make reset-dev" "REBUILD the linked DEV DB from local migrations (destructive, DEV-only, no seed)"
+	@printf "  %-12s %s\n" "make typecheck" "Type-check the project (npx tsc --noEmit)"
+	@printf "  %-12s %s\n" "make lint"      "Lint with ESLint (npx expo lint)"
+	@printf "  %-12s %s\n" "make format"   "Format codebase (prettier --write .)"
+	@printf "  %-12s %s\n" "make format-check" "Verify formatting (prettier --check .)"
+	@echo ""
+	@echo "===== DATABASE / MIGRATIONS ====="
+	@printf "  %-12s %s\n" "make migrate-dev"  "Apply migrations to DEV (supabase db push, linked project)"
+	@printf "  %-12s %s\n" "make migrate-prod" "Apply migrations to PROD (supabase db push, linked project)"
+	@echo ""
+	@echo "===== DEPLOYMENT ====="
+	@echo "  (no automated deployment targets in this repo)"
 
 setup: ## Install npm dependencies
 	npm install
@@ -25,11 +58,32 @@ dev: ## Start Expo dev server (development env)
 prod: ## Start Expo using the production environment
 	NODE_ENV=production $(EXPO) start
 
-seed: ## Apply schema + upsert demo data into the configured database
-	$(NODE) scripts/seed.cjs seed
+seed: ## Seed DEV database with demo data ONLY (refuses PROD; assumes schema migrated)
+	$(NODE) scripts/seed.cjs
 
-reset: ## Drop + recreate schema, then seed demo data
-	$(NODE) scripts/seed.cjs reset
+# --- Destructive DEV reset (rebuild DEV schema from local migrations) ---------
+# Resets the LINKED project, re-running ALL local migrations (0001-0004+).
+# Guarded so it only runs when the linked project is the DEV project. It does
+# NOT seed — use `make seed` afterwards if demo data is wanted.
+reset-dev: ## Rebuild the linked DEV database from local migrations (destructive; DEV-only, no seed)
+	@if [ ! -f "$(LINKED_REF_FILE)" ]; then \
+	  echo "error: not linked to any Supabase project."; \
+	  echo "       Run: supabase login && supabase link --project-ref $(DEV_SUPABASE_REF)"; \
+	  exit 1; \
+	fi; \
+	LINKED_REF=$$(cat "$(LINKED_REF_FILE)"); \
+	if [ "$$LINKED_REF" != "$(DEV_SUPABASE_REF)" ]; then \
+	  echo "REFUSED: linked project is $$LINKED_REF, expected DEV $(DEV_SUPABASE_REF)."; \
+	  echo "reset-dev only runs against the DEV project."; \
+	  exit 1; \
+	fi; \
+	echo "WARNING: this REBUILDS the DEV database $(DEV_SUPABASE_REF) from local migrations (destructive)."; \
+	read -r -p "Type DEV to confirm: " CONFIRM; \
+	if [ "$$CONFIRM" != "DEV" ]; then \
+	  echo "Aborted."; \
+	  exit 1; \
+	fi; \
+	$(SUPABASE) db reset --linked
 
 typecheck: ## Type-check the project
 	npx tsc --noEmit
@@ -46,18 +100,12 @@ format-check: ## Verify Prettier formatting
 build: ## Produce a static export bundle (android; mobile-only app)
 	npx expo export --platform android
 
-# --- Docker tooling (backend is hosted Supabase; Docker runs the tooling) ---
-docker-seed: ## Seed the DB from a container
-	@docker compose run --rm seed
+# --- Remote migrations (DEV / PROD via the Supabase CLI) ---------------------
+# Both operate on whatever remote project is currently linked (`supabase link`).
+# Use these intentionally; there is no generic `migrate` shortcut so that
+# DEV and PROD are never confused.
+migrate-dev: ## Apply pending migrations to the linked DEV project
+	$(SUPABASE) db push
 
-docker-reset: ## Reset + seed the DB from a container
-	@docker compose run --rm reset
-
-docker-typecheck: ## Type-check inside a container
-	@docker compose run --rm typecheck
-
-docker-lint: ## Lint inside a container
-	@docker compose run --rm lint
-
-docker-build: ## Build the static export bundle inside a container
-	@docker compose run --rm build
+migrate-prod: ## Apply pending migrations to the linked PROD project (controlled deployment)
+	$(SUPABASE) db push

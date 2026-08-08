@@ -1,5 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { code128ToSvg } from '@/utils/code128';
 
 export interface ReceiptData {
   transaction_id: string;
@@ -12,6 +13,7 @@ export interface ReceiptData {
 export async function generateReceipt(
   transaction: ReceiptData,
 ): Promise<string> {
+  const barcodeSvg = code128ToSvg(transaction.transaction_id, 280, 48);
   const html = `
     <html><body style="font-family: monospace; padding: 20px;">
       <h3>IPSS - Cafe Elvira</h3>
@@ -22,6 +24,7 @@ export async function generateReceipt(
       ${transaction.items.map((i) => `<p>${i.name} x${i.quantity} = ${i.subtotal}</p>`).join('')}
       <hr />
       <p><strong>Total: ${transaction.total_amount}</strong></p>
+      <div style="text-align: center; margin-top: 12px;">${barcodeSvg}</div>
     </body></html>
   `;
   const { uri } = await Print.printToFileAsync({ html });

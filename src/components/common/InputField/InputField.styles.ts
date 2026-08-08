@@ -1,5 +1,14 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { colors, radius, spacing, typography } from '../../../theme';
+
+// React Native Web renders browser inputs with their default focus ring
+// (orange in Chrome). Our custom focus border already signals focus, so the
+// browser ring is suppressed on web only. RN 0.86's `outlineStyle` type only
+// allows 'solid'|'dotted'|'dashed', so the ring is instead cleared via a zero
+// outline width + transparent color, which is the CSS-equivalent of
+// `outline-style: none`. Native (iOS/Android) styles are untouched.
+const webOnlyOutlineReset =
+  Platform.OS === 'web' ? { outlineWidth: 0, outlineColor: 'transparent' } : {};
 
 export const inputFieldStyles = StyleSheet.create({
   root: {
@@ -48,6 +57,7 @@ export const inputFieldStyles = StyleSheet.create({
     paddingHorizontal: 0,
     height: 'auto',
     minHeight: undefined,
+    ...webOnlyOutlineReset,
   },
   inputMultiline: {
     ...typography.md,
@@ -56,6 +66,7 @@ export const inputFieldStyles = StyleSheet.create({
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: 0,
+    ...webOnlyOutlineReset,
   },
   inputDisabled: {
     color: colors.textSecondary,

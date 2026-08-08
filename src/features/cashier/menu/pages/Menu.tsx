@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   SafeAreaView,
@@ -14,6 +14,7 @@ import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { QtyControls } from '@/components/common/QtyControls/QtyControls';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { CategoryBar } from '@/components/common/Category/CategoryBar';
+import { ProductRow } from '@/components/common/ProductRow/ProductRow';
 import { useCategories } from '@/hooks/useCategories';
 import { Product } from '@/types/entities';
 import { colors, spacing } from '@/theme';
@@ -49,41 +50,35 @@ const MenuProductRow = React.memo(function MenuProductRow({
   const inCart = qty > 0;
   const canAdd = product.is_available;
   return (
-    <View
-      style={[
-        menuStyles.productCard,
-        inCart ? menuStyles.productCardInCart : null,
-      ]}
-    >
-      <View style={menuStyles.productImage}>
-        <Text style={menuStyles.productImageEmoji}>☕</Text>
-      </View>
-      <View style={menuStyles.productInfo}>
-        <Text style={menuStyles.productName} numberOfLines={1}>
-          {product.name}
-        </Text>
-        <Text style={menuStyles.productPrice}>₱{product.price.toFixed(2)}</Text>
-      </View>
-      {inCart ? (
-        <QtyControls
-          qty={qty}
-          onDecrement={() => onDecrement(product.product_id)}
-          onIncrement={() => onAdd(product)}
-        />
-      ) : (
-        <Pressable
-          style={({ pressed }) => [
-            menuStyles.addButton,
-            pressed ? menuStyles.addButtonPressed : null,
-            !canAdd ? menuStyles.addButtonDisabled : null,
-          ]}
-          disabled={!canAdd}
-          onPress={() => canAdd && onAdd(product)}
-        >
-          <ShoppingCart size={18} color={colors.textSecondary} />
-        </Pressable>
-      )}
-    </View>
+    <ProductRow
+      imageUrl={product.image_url}
+      name={product.name}
+      price={product.price}
+      imageSize={64}
+      inCart={inCart}
+      style={menuStyles.productRow}
+      trailing={
+        inCart ? (
+          <QtyControls
+            qty={qty}
+            onDecrement={() => onDecrement(product.product_id)}
+            onIncrement={() => onAdd(product)}
+          />
+        ) : (
+          <Pressable
+            style={({ pressed }) => [
+              menuStyles.addButton,
+              pressed ? menuStyles.addButtonPressed : null,
+              !canAdd ? menuStyles.addButtonDisabled : null,
+            ]}
+            disabled={!canAdd}
+            onPress={() => canAdd && onAdd(product)}
+          >
+            <ShoppingCart size={18} color={colors.textSecondary} />
+          </Pressable>
+        )
+      }
+    />
   );
 });
 
@@ -91,9 +86,13 @@ export function Menu({ navigation, style }: MenuProps): React.JSX.Element {
   const { cart, products, isLoading, error, addToCart, decrementItem } =
     useMenu();
   const { total } = useCart();
-  const { categories } = useCategories();
+  const { categories, loadCategories } = useCategories();
   const [activeCategory, setActiveCategory] = useState<string>(ALL_CATEGORIES);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
 
   const categoryNames = useMemo(
     () => categories.map((category) => category.name),

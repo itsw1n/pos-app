@@ -226,7 +226,12 @@ export function Dashboard({
         </View>
 
         <View style={dashboardStyles.section}>
-          <Text style={dashboardStyles.topSellingTitle}>Top Selling</Text>
+          <View style={dashboardStyles.sectionHeader}>
+            <Text style={dashboardStyles.topSellingTitle}>Top Selling</Text>
+            <Pressable onPress={() => navigation.navigate('TopSelling')}>
+              <Text style={dashboardStyles.viewAll}>View All</Text>
+            </Pressable>
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}

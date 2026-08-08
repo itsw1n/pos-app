@@ -10,6 +10,7 @@ import {
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { StockBadge } from '@/components/common/StockBadge/StockBadge';
 import { colors } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
@@ -51,6 +52,7 @@ export function InventoryManagement({
     criticalCount,
   } = useInventory();
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -59,9 +61,18 @@ export function InventoryManagement({
   );
 
   const filteredItems = useMemo(() => {
-    if (filter === 'all') return items;
-    return items.filter((item) => getStatus(item) === filter);
-  }, [items, filter, getStatus]);
+    const query = searchQuery.trim().toLowerCase();
+    const statusFiltered =
+      filter === 'all'
+        ? items
+        : items.filter((item) => getStatus(item) === filter);
+    if (!query) return statusFiltered;
+    return statusFiltered.filter(
+      (item) =>
+        item.product_name.toLowerCase().includes(query) ||
+        item.product_category.toLowerCase().includes(query),
+    );
+  }, [items, filter, searchQuery, getStatus]);
 
   const alertCount = lowCount + criticalCount;
 
@@ -172,6 +183,13 @@ export function InventoryManagement({
       {error ? (
         <Text style={inventoryManagementStyles.errorText}>{error}</Text>
       ) : null}
+
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search by name or category"
+        style={inventoryManagementStyles.searchBar}
+      />
 
       <View style={inventoryManagementStyles.filterBar}>
         {FILTERS.map((option) => {

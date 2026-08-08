@@ -17,3 +17,6 @@ package-lock.json
 
 # documentation artifacts (not formatter code)
 IPSS_CodingGuide.jsx
+
+# planning scratch docs
+.opencode/plans/

@@ -12,6 +12,7 @@ import { ArrowLeft, Utensils, User } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { QtyControls } from '@/components/common/QtyControls/QtyControls';
+import { ProductRow } from '@/components/common/ProductRow/ProductRow';
 import { colors } from '@/theme';
 import { MenuStackParamList } from '@/features/cashier/menu/MenuNavigator';
 import { useMenu } from '@/features/cashier/menu/hooks/useMenu';
@@ -78,27 +79,20 @@ export function Checkout({
 
         <View style={checkoutStyles.orderItems}>
           {cart.map((item) => (
-            <View
+            <ProductRow
               key={String(item.product_id)}
-              style={checkoutStyles.orderItemCard}
-            >
-              <View style={checkoutStyles.productImage}>
-                <Text style={checkoutStyles.productImageEmoji}>☕</Text>
-              </View>
-              <View style={checkoutStyles.productInfo}>
-                <Text style={checkoutStyles.productName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={checkoutStyles.productPrice}>
-                  ₱{item.price.toFixed(2)}
-                </Text>
-              </View>
-              <QtyControls
-                qty={item.qty}
-                onDecrement={() => decrementItem(item.product_id)}
-                onIncrement={() => addToCart(item)}
-              />
-            </View>
+              imageUrl={item.image_url}
+              name={item.name}
+              price={item.price}
+              imageSize={56}
+              trailing={
+                <QtyControls
+                  qty={item.qty}
+                  onDecrement={() => decrementItem(item.product_id)}
+                  onIncrement={() => addToCart(item)}
+                />
+              }
+            />
           ))}
         </View>
 

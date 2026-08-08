@@ -13,6 +13,9 @@ interface StoredTransaction {
   user_id: number;
   status?: string | null;
   void_reason?: string | null;
+  order_number?: number | null;
+  amount_received?: number | null;
+  change_given?: number | null;
 }
 
 export interface TransactionRecord {
@@ -23,8 +26,11 @@ export interface TransactionRecord {
   user_id: number;
   user_name: string;
   items_count: number;
+  order_number?: number;
   status: 'completed' | 'voided';
   void_reason?: string | null;
+  amount_received?: number | null;
+  change_given?: number | null;
 }
 
 export interface TransactionItemRow {
@@ -59,7 +65,7 @@ export function useOrders(): UseTransactionsResult {
       let query = supabase
         .from('transactions')
         .select(
-          'id, date, total_amount, payment_mode, user_id, status, void_reason',
+          'id, date, total_amount, payment_mode, user_id, status, void_reason, order_number, amount_received, change_given',
         )
         .order('date', { ascending: false });
       if (role !== 'admin' && user) {
@@ -107,8 +113,11 @@ export function useOrders(): UseTransactionsResult {
           user_id: row.user_id,
           user_name: userById.get(row.user_id) ?? 'Cashier',
           items_count: itemsCount.get(row.id) ?? 0,
+          order_number: row.order_number ?? undefined,
           status: row.status === 'voided' ? 'voided' : 'completed',
           void_reason: row.void_reason ?? null,
+          amount_received: row.amount_received ?? null,
+          change_given: row.change_given ?? null,
         })),
       );
     } catch (err) {

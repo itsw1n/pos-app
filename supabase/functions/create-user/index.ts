@@ -1,18 +1,41 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+function jsonResponse(
+  body: unknown,
+  status: number,
+  extraHeaders: Record<string, string> = {},
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      ...corsHeaders,
+      ...extraHeaders,
+    },
+  });
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+    return jsonResponse({ error: 'Method not allowed' }, 405);
   }
 
   let body: { username?: string; password?: string; role?: string };
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Invalid JSON body' }, 400);
   }
 
   const username = body.username?.trim();
@@ -20,16 +43,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const role = body.role;
 
   if (!username || !password) {
-    return new Response(
-      JSON.stringify({ error: 'username and password are required' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'username and password are required' }, 400);
   }
   if (role !== 'admin' && role !== 'cashier') {
-    return new Response(
-      JSON.stringify({ error: 'role must be admin or cashier' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'role must be admin or cashier' }, 400);
+  }
+
+  // Only admins may provision (or deprovision) user accounts. The caller's JWT
+  // is validated against get_app_role() so a cashier cannot escalate to admin
+  // by invoking this function directly.
+  const authorization = req.headers.get('authorization');
+  if (!authorization) {
+    return jsonResponse({ error: 'Unauthorized' }, 401);
+  }
+  const caller = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    {
+      global: { headers: { authorization } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    },
+  );
+  const { data: callerRole, error: roleError } =
+    await caller.rpc('get_app_role');
+  if (roleError || callerRole !== 'admin') {
+    return jsonResponse({ error: 'Admin access required' }, 403);
   }
 
   const admin = createClient(
@@ -46,10 +84,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       user_metadata: { role },
     });
   if (authError) {
-    return new Response(JSON.stringify({ error: authError.message }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: authError.message }, 400);
   }
 
   const { error: profileError } = await admin.from('user').insert({
@@ -60,14 +95,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     is_active: true,
   });
   if (profileError) {
-    return new Response(JSON.stringify({ error: profileError.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: profileError.message }, 500);
   }
 
-  return new Response(JSON.stringify({ user_id: authUser.user.id }), {
-    status: 201,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse({ user_id: authUser.user.id }, 201);
 });

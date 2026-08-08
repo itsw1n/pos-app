@@ -19,6 +19,8 @@ export async function initDb(): Promise<void> {
       id TEXT PRIMARY KEY,
       total_amount REAL NOT NULL,
       payment_mode TEXT NOT NULL,
+      amount_received REAL,
+      change_given REAL,
       user_id INTEGER NOT NULL,
       date TEXT NOT NULL,
       synced INTEGER DEFAULT 0
@@ -53,6 +55,13 @@ export async function initDb(): Promise<void> {
     );
   } catch {
     // Column already exists on newer local DBs.
+  }
+  for (const column of ['amount_received', 'change_given']) {
+    try {
+      await db.execAsync(`ALTER TABLE transactions ADD COLUMN ${column} REAL;`);
+    } catch {
+      // Column already exists on newer local DBs.
+    }
   }
 }
 

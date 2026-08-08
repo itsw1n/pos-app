@@ -23,6 +23,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { CategoryBar } from '@/components/common/Category/CategoryBar';
 import { CategoryPickerModal } from '@/components/common/Category/CategoryPickerModal';
+import { ProductRow } from '@/components/common/ProductRow/ProductRow';
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
 import { toErrorMessage } from '@/services/errors';
@@ -46,13 +47,6 @@ type ProductSection = {
 };
 
 const ALL_CATEGORIES = 'All';
-
-function formatPeso(value: number): string {
-  return `₱${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 export function MenuManagement({
   navigation,
@@ -169,28 +163,24 @@ export function MenuManagement({
   }
 
   const renderItem = ({ item }: { item: Product }): React.JSX.Element => (
-    <View style={menuManagementStyles.productRow}>
-      <View style={menuManagementStyles.emojiTile}>
-        <Text style={menuManagementStyles.emojiText}>☕</Text>
-      </View>
-      <View style={menuManagementStyles.productInfo}>
-        <Text style={menuManagementStyles.productName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={menuManagementStyles.productPrice}>
-          {formatPeso(item.price)}
-        </Text>
-      </View>
-      <Pressable
-        hitSlop={8}
-        style={menuManagementStyles.editButton}
-        onPress={() =>
-          navigation.navigate('AddEditMenuItem', { product: item })
-        }
-      >
-        <Pencil size={16} color={colors.textSecondary} />
-      </Pressable>
-    </View>
+    <ProductRow
+      imageUrl={item.image_url}
+      name={item.name}
+      price={item.price}
+      imageSize={52}
+      style={menuManagementStyles.productRow}
+      trailing={
+        <Pressable
+          hitSlop={8}
+          style={menuManagementStyles.editButton}
+          onPress={() =>
+            navigation.navigate('AddEditMenuItem', { product: item })
+          }
+        >
+          <Pencil size={16} color={colors.textSecondary} />
+        </Pressable>
+      }
+    />
   );
 
   const renderSectionHeader = ({

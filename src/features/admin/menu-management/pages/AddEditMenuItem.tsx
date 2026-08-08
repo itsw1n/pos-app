@@ -21,9 +21,14 @@ import { CategoryPickerModal } from '@/components/common/Category/CategoryPicker
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
 import { toErrorMessage } from '@/services/errors';
+import { uploadProductImage } from '@/services/storage';
 import { colors } from '@/theme';
 import { MenuManagementStackParamList } from '@/features/admin/menu-management/MenuManagementNavigator';
 import { useMenuManagement } from '@/features/admin/menu-management/hooks/useMenuManagement';
+import {
+  ImagePickerField,
+  PickedImage,
+} from '@/features/admin/menu-management/components/ImagePickerField';
 import { addEditMenuItemStyles } from './AddEditMenuItem.styles';
 
 type AddEditMenuItemProps = StackScreenProps<
@@ -51,6 +56,9 @@ export function AddEditMenuItem({
     product ? String(product.price) : '',
   );
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true);
+  const imageUrl = product?.image_url ?? null;
+  const [pickedImage, setPickedImage] = useState<PickedImage | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
@@ -93,11 +101,20 @@ export function AddEditMenuItem({
     setError('');
     setIsSubmitting(true);
     try {
+      let nextImageUrl = imageUrl;
+      if (pickedImage) {
+        // Upload the newly picked photo; then drop the previous one if any.
+        nextImageUrl = await uploadProductImage(pickedImage.file);
+      } else if (imageRemoved) {
+        nextImageUrl = null;
+      }
+
       const payload = {
         name,
         category_id: categoryId,
         price,
         is_available: isAvailable,
+        image_url: nextImageUrl,
       };
       if (isEditing && product) {
         await updateProduct(product.product_id, payload);
@@ -109,6 +126,11 @@ export function AddEditMenuItem({
       setError(toErrorMessage(err, 'Failed to save product'));
       setIsSubmitting(false);
     }
+  };
+
+  const handleImageChange = (picked: PickedImage | null): void => {
+    setPickedImage(picked);
+    setImageRemoved(!picked);
   };
 
   const handleDelete = async (): Promise<void> => {
@@ -143,6 +165,10 @@ export function AddEditMenuItem({
           keyboardShouldPersistTaps="handled"
         >
           <View style={addEditMenuItemStyles.formCard}>
+            <ImagePickerField
+              initialUrl={imageUrl}
+              onChange={handleImageChange}
+            />
             <TextField
               label="Name"
               value={name}

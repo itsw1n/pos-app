@@ -78,6 +78,35 @@ export const inventoryStyles = StyleSheet.create({
     color: colors.warning,
     flex: 1,
   },
+  filterBar: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  searchBar: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  filterTab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    marginRight: spacing.sm,
+  },
+  filterTabActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  filterTabText: {
+    ...typography.sm,
+    color: colors.textSecondary,
+  },
+  filterTabTextActive: {
+    color: colors.surface,
+  },
   itemCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,

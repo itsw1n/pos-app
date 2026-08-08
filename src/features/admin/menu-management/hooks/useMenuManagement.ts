@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/services/supabase';
+import { deleteProductImage } from '@/services/storage';
 import { ProductRow, toProduct, UNCATEGORIZED } from '@/services/catalog';
 import { Product } from '@/types/entities';
 
@@ -8,6 +9,7 @@ export interface ProductPayload {
   category_id: string;
   price: number;
   is_available: boolean;
+  image_url: string | null;
 }
 
 export interface UseMenuManagementResult {
@@ -64,6 +66,7 @@ export function useMenuManagement(): UseMenuManagementResult {
           category_id: payload.category_id,
           price: payload.price,
           is_available: payload.is_available,
+          image_url: payload.image_url,
         })
         .select()
         .single();
@@ -78,6 +81,7 @@ export function useMenuManagement(): UseMenuManagementResult {
   const updateProduct = useCallback(
     async (productId: number, payload: ProductPayload): Promise<void> => {
       validatePayload(payload);
+      const current = products.find((p) => p.product_id === productId);
       const { error: updateError } = await supabase
         .from('product')
         .update({
@@ -85,9 +89,14 @@ export function useMenuManagement(): UseMenuManagementResult {
           category_id: payload.category_id,
           price: payload.price,
           is_available: payload.is_available,
+          image_url: payload.image_url,
         })
         .eq('product_id', productId);
       if (updateError) throw updateError;
+      // Remove the replaced image from storage only after the DB update succeeds.
+      if (current?.image_url && current.image_url !== payload.image_url) {
+        await deleteProductImage(current.image_url);
+      }
       setProducts((prev) =>
         prev.map((product) =>
           product.product_id === productId
@@ -101,16 +110,18 @@ export function useMenuManagement(): UseMenuManagementResult {
                     : UNCATEGORIZED,
                 price: payload.price,
                 is_available: payload.is_available,
+                image_url: payload.image_url,
               }
             : product,
         ),
       );
     },
-    [],
+    [products],
   );
 
   const deleteProduct = useCallback(
     async (productId: number): Promise<void> => {
+      const current = products.find((p) => p.product_id === productId);
       const { error: inventoryError } = await supabase
         .from('inventory')
         .delete()
@@ -121,11 +132,14 @@ export function useMenuManagement(): UseMenuManagementResult {
         .delete()
         .eq('product_id', productId);
       if (deleteError) throw deleteError;
+      if (current) {
+        await deleteProductImage(current.image_url);
+      }
       setProducts((prev) =>
         prev.filter((product) => product.product_id !== productId),
       );
     },
-    [],
+    [products],
   );
 
   return {

@@ -10,32 +10,6 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     marginHorizontal: spacing['2xl'],
     marginVertical: spacing.md,
   },
-  filterTabs: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing['2xl'],
-    marginBottom: spacing.md,
-  },
-  filterTab: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    marginRight: spacing.sm,
-  },
-  filterTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  filterTabText: {
-    ...typography.sm,
-    color: colors.textSecondary,
-  },
-  filterTabTextActive: {
-    fontWeight: '600' as const,
-    color: colors.surface,
-  },
   summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -93,58 +67,68 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     marginBottom: spacing.md,
     textAlign: 'center',
   },
-  itemCard: {
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing['5xl'],
+  },
+  emptyText: {
+    ...typography.md,
+    color: colors.textSecondary,
+  },
+
+  /* ---- transaction card ---- */
+  card: {
     backgroundColor: colors.surface,
     borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     ...shadows.resting,
   },
-  itemCardVoided: {
-    backgroundColor: colors.dangerSurface,
+  cardVoided: {
+    backgroundColor: '#FEF9F9',
     borderWidth: 1,
     borderColor: colors.dangerBorder,
-    opacity: 0.85,
+    opacity: 0.8,
   },
-  topRow: {
+  row1: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
-  itemId: {
+  txnId: {
     ...typography.sm,
-    fontWeight: '600' as const,
+    fontWeight: '700' as const,
     color: colors.textPrimary,
-  },
-  modeBadge: {
-    backgroundColor: colors.iconCircle,
-    borderRadius: radius.full,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  modeBadgeText: {
-    ...typography.xs,
-    color: colors.primary,
-  },
-  itemMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  itemDate: {
-    ...typography.xs,
-    color: colors.textSecondary,
   },
   itemCount: {
     ...typography.xs,
     color: colors.textSecondary,
   },
-  itemFooter: {
+  row1Right: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+  },
+  itemDate: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  itemSummary: {
+    ...typography.xs,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  divider: {
+    height: 0.5,
+    backgroundColor: colors.border,
+    marginVertical: spacing.sm,
+  },
+  row4: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   itemTotal: {
     ...typography.lg,
@@ -154,19 +138,15 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
   itemTotalVoided: {
     color: colors.textSecondary,
   },
-  itemActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  voidedBadge: {
+  voidBadge: {
     backgroundColor: colors.dangerSurface,
-    borderRadius: radius.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    marginLeft: spacing.sm,
   },
-  voidedBadgeText: {
-    ...typography.sm,
+  voidBadgeText: {
+    ...typography.xs,
     fontWeight: '600' as const,
     color: colors.danger,
   },
@@ -175,22 +155,15 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.dangerBorder,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   voidButtonPressed: {
     backgroundColor: colors.dangerBorder,
   },
   voidButtonText: {
     ...typography.sm,
+    fontWeight: '500' as const,
     color: colors.danger,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing['5xl'],
-  },
-  emptyText: {
-    ...typography.md,
-    color: colors.textSecondary,
   },
 });

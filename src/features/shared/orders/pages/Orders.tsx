@@ -1,45 +1,39 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
   SafeAreaView,
+  GestureResponderEvent,
   StyleProp,
   Text,
+  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { PaymentBadge } from '@/components/common/PaymentBadge/PaymentBadge';
 import { colors } from '@/theme';
 import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
 import {
   useOrders,
   TransactionRecord,
+  TransactionItemRow,
 } from '@/features/shared/orders/hooks/useOrders';
-import { useAuth } from '@/context/AuthContext';
+import { formatOrderNumber } from '@/utils/orderNumber';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
-import { transactionHistoryScreenStyles } from './Orders.styles';
+import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
+import {
+  DateFilter,
+  matchesDateFilter,
+} from '@/components/common/DateFilter/types';
+import { transactionHistoryScreenStyles as S } from './Orders.styles';
 
 type OrdersProps = StackScreenProps<OrdersStackParamList, 'OrdersHome'> & {
   style?: StyleProp<ViewStyle>;
 };
-
-const PAYMENT_MODE_LABEL: Record<TransactionRecord['payment_mode'], string> = {
-  cash: 'Cash',
-  gcash: 'GCash',
-  maya: 'Maya',
-};
-
-const DATE_FILTERS: { key: string; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'today', label: 'Today' },
-  { key: 'week', label: 'This Week' },
-  { key: 'month', label: 'This Month' },
-];
-
-type DateFilterKey = 'all' | 'today' | 'week' | 'month';
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleString();
@@ -52,28 +46,136 @@ function formatPeso(value: number): string {
   })}`;
 }
 
-function getDateBoundary(filter: DateFilterKey): number {
-  const now = new Date();
-  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (filter === 'today') return day.getTime();
-  if (filter === 'week') {
-    const offset = (day.getDay() + 6) % 7;
-    return new Date(
-      day.getFullYear(),
-      day.getMonth(),
-      day.getDate() - offset,
-    ).getTime();
-  }
-  if (filter === 'month')
-    return new Date(day.getFullYear(), day.getMonth(), 1).getTime();
-  return 0;
+const itemsCache = new Map<string, TransactionItemRow[]>();
+
+const emptyItems: TransactionItemRow[] = [];
+
+function useTransactionItems(
+  transactionId: string,
+  getTransactionItems: (id: string) => Promise<TransactionItemRow[]>,
+): TransactionItemRow[] {
+  const [items, setItems] = useState<TransactionItemRow[]>(
+    () => itemsCache.get(transactionId) ?? emptyItems,
+  );
+
+  useEffect(() => {
+    if (itemsCache.has(transactionId)) {
+      return;
+    }
+    let active = true;
+    void getTransactionItems(transactionId).then((resolved) => {
+      if (!active) return;
+      itemsCache.set(transactionId, resolved);
+      setItems(resolved);
+    });
+    return () => {
+      active = false;
+    };
+  }, [transactionId, getTransactionItems]);
+
+  return items;
+}
+
+interface TransactionCardProps {
+  item: TransactionRecord;
+  navigation: OrdersProps['navigation'];
+  getTransactionItems: (id: string) => Promise<TransactionItemRow[]>;
+}
+
+function TransactionCard({
+  item,
+  navigation,
+  getTransactionItems,
+}: TransactionCardProps): React.JSX.Element {
+  const isVoided = item.status === 'voided';
+
+  const onPress = useCallback(() => {
+    navigation.navigate('TransactionDetail', { transaction: item });
+  }, [navigation, item]);
+
+  const onVoid = useCallback(
+    (event: GestureResponderEvent) => {
+      event.stopPropagation();
+      navigation.navigate('Void', {
+        transactionId: item.id,
+        order_number: item.order_number,
+        date: item.date,
+        total: item.total_amount,
+      });
+    },
+    [navigation, item],
+  );
+
+  const items = useTransactionItems(item.id, getTransactionItems);
+  const summary =
+    items.length > 0
+      ? items.map((i) => `${i.product_name} x${i.quantity}`).join(', ')
+      : `${item.items_count} item(s)`;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      style={[S.card, isVoided ? S.cardVoided : null]}
+      onPress={onPress}
+    >
+      {/* ROW 1 */}
+      <View style={S.row1}>
+        <Text style={S.txnId}>
+          {formatOrderNumber(item.order_number, item.id)}
+        </Text>
+        {isVoided ? (
+          <View style={S.voidBadge}>
+            <Text style={S.voidBadgeText}>VOIDED</Text>
+          </View>
+        ) : (
+          <View style={S.row1Right}>
+            <PaymentBadge mode={item.payment_mode} />
+            <Text style={S.itemCount}>{item.items_count} item(s)</Text>
+          </View>
+        )}
+      </View>
+
+      {/* ROW 2 */}
+      <Text style={S.itemDate}>{formatDate(item.date)}</Text>
+
+      {/* ROW 3 */}
+      <Text style={S.itemSummary} numberOfLines={1} ellipsizeMode="tail">
+        {summary}
+      </Text>
+
+      <View style={S.divider} />
+
+      {/* ROW 4 */}
+      <View style={S.row4}>
+        <Text style={[S.itemTotal, isVoided ? S.itemTotalVoided : null]}>
+          {formatPeso(item.total_amount)}
+        </Text>
+        {!isVoided && (
+          <Pressable
+            style={({ pressed }) => [
+              S.voidButton,
+              pressed ? S.voidButtonPressed : null,
+            ]}
+            onPress={onVoid}
+          >
+            <Text style={S.voidButtonText}>Void</Text>
+          </Pressable>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 }
 
 export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
-  const { transactions, isLoading, error, loadTransactions } = useOrders();
-  const { role } = useAuth();
+  const {
+    transactions,
+    isLoading,
+    error,
+    loadTransactions,
+    getTransactionItems,
+  } = useOrders();
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState<DateFilterKey>('all');
+  const [dateFilter, setDateFilter] = useState<DateFilter>({ type: 'all' });
 
   useFocusEffect(
     useCallback(() => {
@@ -83,13 +185,9 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
 
   const filteredTransactions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const boundary = getDateBoundary(dateFilter);
-    const dateFiltered =
-      dateFilter === 'all'
-        ? transactions
-        : transactions.filter(
-            (item) => new Date(item.date).getTime() >= boundary,
-          );
+    const dateFiltered = transactions.filter((item) =>
+      matchesDateFilter(dateFilter, new Date(item.date)),
+    );
     if (!query) return dateFiltered;
     return dateFiltered.filter(
       (item) =>
@@ -108,166 +206,59 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
     item,
   }: {
     item: TransactionRecord;
-  }): React.JSX.Element => {
-    const isVoided = item.status === 'voided';
-    return (
-      <View
-        style={[
-          transactionHistoryScreenStyles.itemCard,
-          isVoided ? transactionHistoryScreenStyles.itemCardVoided : null,
-        ]}
-      >
-        <View style={transactionHistoryScreenStyles.topRow}>
-          <Text style={transactionHistoryScreenStyles.itemId}>
-            # {item.id.slice(-4)}
-          </Text>
-          <View style={transactionHistoryScreenStyles.modeBadge}>
-            <Text style={transactionHistoryScreenStyles.modeBadgeText}>
-              {PAYMENT_MODE_LABEL[item.payment_mode]}
-            </Text>
-          </View>
-        </View>
-        <View style={transactionHistoryScreenStyles.itemMetaRow}>
-          <Text style={transactionHistoryScreenStyles.itemDate}>
-            {formatDate(item.date)}
-          </Text>
-          <Text style={transactionHistoryScreenStyles.itemCount}>
-            {item.items_count} item(s)
-          </Text>
-        </View>
-        <View style={transactionHistoryScreenStyles.itemFooter}>
-          <Text
-            style={[
-              transactionHistoryScreenStyles.itemTotal,
-              isVoided ? transactionHistoryScreenStyles.itemTotalVoided : null,
-            ]}
-          >
-            {formatPeso(item.total_amount)}
-          </Text>
-          <View style={transactionHistoryScreenStyles.itemActions}>
-            {isVoided ? (
-              <View style={transactionHistoryScreenStyles.voidedBadge}>
-                <Text style={transactionHistoryScreenStyles.voidedBadgeText}>
-                  VOIDED
-                </Text>
-              </View>
-            ) : (
-              <>
-                {role === 'admin' && (
-                  <Pressable
-                    style={({ pressed }) => [
-                      transactionHistoryScreenStyles.voidButton,
-                      pressed
-                        ? transactionHistoryScreenStyles.voidButtonPressed
-                        : null,
-                    ]}
-                    onPress={() =>
-                      navigation.navigate('Void', {
-                        transactionId: item.id,
-                        date: item.date,
-                        total: item.total_amount,
-                      })
-                    }
-                  >
-                    <Text style={transactionHistoryScreenStyles.voidButtonText}>
-                      Void
-                    </Text>
-                  </Pressable>
-                )}
-              </>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  };
+  }): React.JSX.Element => (
+    <TransactionCard
+      item={item}
+      navigation={navigation}
+      getTransactionItems={getTransactionItems}
+    />
+  );
 
   if (isLoading && transactions.length === 0) {
     return (
-      <View style={[transactionHistoryScreenStyles.loadingContainer, style]}>
+      <View style={[S.loadingContainer, style]}>
         <ActivityIndicator color={colors.primary} />
-        <Text style={transactionHistoryScreenStyles.loadingText}>
-          Loading transactions...
-        </Text>
+        <Text style={S.loadingText}>Loading transactions...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[transactionHistoryScreenStyles.container, style]}>
+    <SafeAreaView style={[S.container, style]}>
       <AppHeader pageTitle="Orders" />
 
       <SearchBar
         placeholder="Search by ID or user"
         value={searchQuery}
         onChangeText={setSearchQuery}
-        style={transactionHistoryScreenStyles.searchBar}
+        style={S.searchBar}
       />
 
-      <View style={transactionHistoryScreenStyles.filterTabs}>
-        {DATE_FILTERS.map((filter) => {
-          const isActive = filter.key === dateFilter;
-          return (
-            <Pressable
-              key={filter.key}
-              style={[
-                transactionHistoryScreenStyles.filterTab,
-                isActive
-                  ? transactionHistoryScreenStyles.filterTabActive
-                  : null,
-              ]}
-              onPress={() => setDateFilter(filter.key as DateFilterKey)}
-            >
-              <Text
-                style={[
-                  transactionHistoryScreenStyles.filterTabText,
-                  isActive
-                    ? transactionHistoryScreenStyles.filterTabTextActive
-                    : null,
-                ]}
-              >
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <DateFilterPicker value={dateFilter} onChange={setDateFilter} />
 
-      <View style={transactionHistoryScreenStyles.summaryBar}>
-        <View style={transactionHistoryScreenStyles.summaryBlock}>
-          <Text style={transactionHistoryScreenStyles.summaryLabel}>
-            Total Sales
-          </Text>
-          <Text style={transactionHistoryScreenStyles.summaryValue}>
-            {formatPeso(totalSales)}
-          </Text>
+      <View style={S.summaryBar}>
+        <View style={S.summaryBlock}>
+          <Text style={S.summaryLabel}>Total Sales</Text>
+          <Text style={S.summaryValue}>{formatPeso(totalSales)}</Text>
         </View>
-        <View style={transactionHistoryScreenStyles.summaryDivider} />
-        <View style={transactionHistoryScreenStyles.summaryBlock}>
-          <Text style={transactionHistoryScreenStyles.summaryLabel}>
-            Transactions
-          </Text>
-          <Text style={transactionHistoryScreenStyles.summaryCount}>
-            {filteredTransactions.length}
-          </Text>
+        <View style={S.summaryDivider} />
+        <View style={S.summaryBlock}>
+          <Text style={S.summaryLabel}>Transactions</Text>
+          <Text style={S.summaryCount}>{filteredTransactions.length}</Text>
         </View>
       </View>
 
-      {error ? (
-        <Text style={transactionHistoryScreenStyles.errorText}>{error}</Text>
-      ) : null}
+      {error ? <Text style={S.errorText}>{error}</Text> : null}
 
       <FlatList
         data={filteredTransactions}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={transactionHistoryScreenStyles.content}
+        contentContainerStyle={S.content}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={transactionHistoryScreenStyles.emptyContainer}>
-            <Text style={transactionHistoryScreenStyles.emptyText}>
-              No transactions yet
-            </Text>
+          <View style={S.emptyContainer}>
+            <Text style={S.emptyText}>No transactions yet</Text>
           </View>
         }
       />

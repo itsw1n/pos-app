@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleProp,
-  Switch,
   Text,
   View,
   ViewStyle,
@@ -25,7 +24,6 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-import { useOrders } from '@/features/shared/orders/hooks/useOrders';
 import { colors } from '@/theme';
 import { SettingsStackParamList } from '@/features/shared/settings/SettingsNavigator';
 import { settingsScreenStyles as styles } from './Settings.styles';
@@ -44,6 +42,9 @@ interface SettingsRow {
   caption?: string;
   onPress?: () => void;
   trailing?: React.JSX.Element;
+  // When set, the row is rendered gray and non-interactive with a small pill
+  // label (e.g. "Coming soon") signalling the option is not available yet.
+  badge?: string;
 }
 
 export function Settings({
@@ -51,8 +52,6 @@ export function Settings({
   style,
 }: SettingsProps): React.JSX.Element {
   const { user, role, logout } = useAuth();
-  const { transactions: txs } = useOrders();
-  const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const initials = (user?.username ?? '?').slice(0, 2).toUpperCase();
 
@@ -68,14 +67,43 @@ export function Settings({
             <View style={styles.rowText}>
               <Text style={styles.rowTitle}>{row.title}</Text>
               {row.caption ? (
-                <Text style={styles.rowCaption}>{row.caption}</Text>
+                <Text
+                  style={[
+                    styles.rowCaption,
+                    row.badge ? styles.rowCaptionDisabled : null,
+                  ]}
+                >
+                  {row.caption}
+                </Text>
               ) : null}
             </View>
-            {row.trailing ?? (
-              <ChevronRight size={18} color={colors.textSecondary} />
+            {row.badge ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{row.badge}</Text>
+              </View>
+            ) : (
+              (row.trailing ?? (
+                <ChevronRight size={18} color={colors.textSecondary} />
+              ))
             )}
           </>
         );
+        // Rows with a badge are not implemented yet: keep them visible but
+        // gray and inert so users know the option exists but is unavailable.
+        if (row.badge) {
+          return (
+            <View
+              key={row.key}
+              style={[
+                styles.row,
+                styles.rowDisabled,
+                isLast ? styles.rowLast : null,
+              ]}
+            >
+              {content}
+            </View>
+          );
+        }
         if (row.onPress) {
           return (
             <Pressable
@@ -109,12 +137,14 @@ export function Settings({
       icon: User,
       title: 'Personal Information',
       caption: 'Update your name, email, and phone',
+      badge: 'Coming soon',
     },
     {
       key: 'security',
       icon: Lock,
       title: 'Security & Password',
       caption: 'Change your password and enable 2FA',
+      badge: 'Coming soon',
     },
   ];
   if (role === 'admin') {
@@ -133,19 +163,14 @@ export function Settings({
       icon: Bell,
       title: 'Notification Preferences',
       caption: 'Manage sales and stock notifications',
+      badge: 'Coming soon',
     },
     {
       key: 'dark-mode',
       icon: Moon,
       title: 'Dark Mode',
-      trailing: (
-        <Switch
-          value={darkMode}
-          onValueChange={setDarkMode}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={colors.surface}
-        />
-      ),
+      caption: 'Switch the app to a dark color scheme',
+      badge: 'Coming soon',
     },
   ];
 
@@ -183,10 +208,6 @@ export function Settings({
             <Text style={styles.roleBadgeText}>
               {role === 'admin' ? 'Admin' : `Cashier ID #${user?.user_id}`}
             </Text>
-          </View>
-          <View style={styles.ordersChip}>
-            <Text style={styles.ordersChipLabel}>Orders Processed</Text>
-            <Text style={styles.ordersChipValue}>{txs.length}</Text>
           </View>
         </View>
 

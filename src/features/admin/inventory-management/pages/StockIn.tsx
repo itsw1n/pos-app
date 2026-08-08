@@ -81,7 +81,7 @@ export function StockIn({
             onChangeText={setQuantityText}
             keyboardType="number-pad"
             placeholder="0"
-            disabled={!quantityIsValid || isSubmitting}
+            disabled={isSubmitting}
           />
 
           <Text style={stockInStyles.inputLabel}>Supplier (optional)</Text>
