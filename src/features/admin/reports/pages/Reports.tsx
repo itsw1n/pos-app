@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
 import { DateFilter } from '@/components/common/DateFilter/types';
 import { colors } from '@/theme';
@@ -235,7 +234,6 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
 
   return (
     <SafeAreaView style={[reportsStyles.container, style]}>
-      <AppHeader pageTitle="Reports" />
       <ScrollView
         style={reportsStyles.scrollContainer}
         contentContainerStyle={reportsStyles.content}

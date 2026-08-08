@@ -39,7 +39,7 @@ export function ReportsNavigator(): React.JSX.Element {
       <Stack.Screen
         name="Reports"
         component={Reports}
-        options={{ title: 'Reports', headerShown: false }}
+        options={{ title: 'Sales Report' }}
       />
       <Stack.Screen
         name="TopSelling"
