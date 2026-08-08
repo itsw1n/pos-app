@@ -25,7 +25,6 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-import { useOrders } from '@/features/shared/orders/hooks/useOrders';
 import { colors } from '@/theme';
 import { SettingsStackParamList } from '@/features/shared/settings/SettingsNavigator';
 import { settingsScreenStyles as styles } from './Settings.styles';
@@ -51,7 +50,6 @@ export function Settings({
   style,
 }: SettingsProps): React.JSX.Element {
   const { user, role, logout } = useAuth();
-  const { transactions: txs } = useOrders();
   const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const initials = (user?.username ?? '?').slice(0, 2).toUpperCase();
@@ -183,10 +181,6 @@ export function Settings({
             <Text style={styles.roleBadgeText}>
               {role === 'admin' ? 'Admin' : `Cashier ID #${user?.user_id}`}
             </Text>
-          </View>
-          <View style={styles.ordersChip}>
-            <Text style={styles.ordersChipLabel}>Orders Processed</Text>
-            <Text style={styles.ordersChipValue}>{txs.length}</Text>
           </View>
         </View>
 

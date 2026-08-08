@@ -51,22 +51,6 @@ export const settingsScreenStyles = StyleSheet.create({
     fontWeight: '500',
     color: colors.primary,
   },
-  ordersChip: {
-    backgroundColor: colors.background,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  ordersChipLabel: {
-    ...typography.xs,
-    color: colors.textSecondary,
-  },
-  ordersChipValue: {
-    ...typography.xl,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
   sectionLabel: {
     ...typography.xs,
     fontWeight: '600',
