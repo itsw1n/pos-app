@@ -47,7 +47,10 @@ function loadEnvFile(file) {
     const eq = trimmed.indexOf('=');
     if (eq === -1) continue;
     const key = trimmed.slice(0, eq).trim();
-    const value = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+    const value = trimmed
+      .slice(eq + 1)
+      .trim()
+      .replace(/^["']|["']$/g, '');
     if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
       process.env[key] = value;
     }
@@ -65,14 +68,18 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // --- Safety guard: DEV-only ------------------------------------------------
 function assertDevOnly() {
   if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL is required (set in .env.development / .env.local) and must point to the DEV project.');
+    throw new Error(
+      'DATABASE_URL is required (set in .env.development / .env.local) and must point to the DEV project.',
+    );
   }
   // Refuse anything that doesn't resolve to the DEV pooler host.
   try {
     const parsed = new URL(DATABASE_URL);
     const host = parsed.hostname;
     if (!host.includes(DEV_SUPABASE_HOST)) {
-      throw new Error(`seed.js is DEV-only. Refusing to seed a non-DEV database (host="${host}").`);
+      throw new Error(
+        `seed.js is DEV-only. Refusing to seed a non-DEV database (host="${host}").`,
+      );
     }
   } catch (e) {
     throw new Error(`Invalid DATABASE_URL: ${e.message}`);
@@ -93,7 +100,9 @@ assertDevOnly();
 
 async function withDb(callback) {
   if (!DATABASE_URL) {
-    throw new Error('DATABASE_URL is required (set in .env.development / .env.local)');
+    throw new Error(
+      'DATABASE_URL is required (set in .env.development / .env.local)',
+    );
   }
   const client = new Client({
     connectionString: connectionString(),
@@ -111,8 +120,18 @@ const ADMIN_EMAIL = 'admin@elvira.cafe';
 const CASHIER_EMAIL = 'cashier@elvira.cafe';
 
 const authUsers = [
-  { email: ADMIN_EMAIL, password: 'admin123', role: 'admin', username: 'admin' },
-  { email: CASHIER_EMAIL, password: 'cashier123', role: 'cashier', username: 'cashier' },
+  {
+    email: ADMIN_EMAIL,
+    password: 'admin123',
+    role: 'admin',
+    username: 'admin',
+  },
+  {
+    email: CASHIER_EMAIL,
+    password: 'cashier123',
+    role: 'cashier',
+    username: 'cashier',
+  },
 ];
 
 // Deterministic category UUIDs (stable across re-seeds).
@@ -205,7 +224,9 @@ const stockOverrides = {
 };
 
 const inventory = products.map((product) => {
-  const [quantity, reorder_level] = stockOverrides[product.product_id] ?? [30, 10];
+  const [quantity, reorder_level] = stockOverrides[product.product_id] ?? [
+    30, 10,
+  ];
   return {
     stock_id: product.product_id,
     product_id: product.product_id,
@@ -215,10 +236,38 @@ const inventory = products.map((product) => {
 });
 
 const stockMovements = [
-  { movement_id: 1, stock_id: 1, type: 'in', quantity: 30, date: '2026-08-01T09:00:00Z', supplier: 'Fresh Provisions' },
-  { movement_id: 2, stock_id: 6, type: 'out', quantity: 6, date: '2026-08-02T10:00:00Z', supplier: null },
-  { movement_id: 3, stock_id: 19, type: 'in', quantity: 25, date: '2026-08-01T09:00:00Z', supplier: 'Bean Roasters' },
-  { movement_id: 4, stock_id: 31, type: 'out', quantity: 10, date: '2026-08-04T12:00:00Z', supplier: null },
+  {
+    movement_id: 1,
+    stock_id: 1,
+    type: 'in',
+    quantity: 30,
+    date: '2026-08-01T09:00:00Z',
+    supplier: 'Fresh Provisions',
+  },
+  {
+    movement_id: 2,
+    stock_id: 6,
+    type: 'out',
+    quantity: 6,
+    date: '2026-08-02T10:00:00Z',
+    supplier: null,
+  },
+  {
+    movement_id: 3,
+    stock_id: 19,
+    type: 'in',
+    quantity: 25,
+    date: '2026-08-01T09:00:00Z',
+    supplier: 'Bean Roasters',
+  },
+  {
+    movement_id: 4,
+    stock_id: 31,
+    type: 'out',
+    quantity: 10,
+    date: '2026-08-04T12:00:00Z',
+    supplier: null,
+  },
 ];
 
 // Deterministic UUIDs for transactions (so links are stable between re-seeds).
@@ -239,11 +288,11 @@ const productPrice = new Map(
 // [transaction_id, product_id, quantity]
 const TX_ITEMS = [
   [TX.amer, 28, 1], // Matcha Latte x1
-  [TX.amer, 3, 1],  // Longganisa x1
-  [TX.capp, 4, 1],  // Bacon w/ Egg x1
+  [TX.amer, 3, 1], // Longganisa x1
+  [TX.capp, 4, 1], // Bacon w/ Egg x1
   [TX.capp, 14, 2], // Chicken Nuggets x2
-  [TX.aff, 19, 1],  // Latte x1
-  [TX.aff, 37, 1],  // Strawberry x1
+  [TX.aff, 19, 1], // Latte x1
+  [TX.aff, 37, 1], // Strawberry x1
   [TX.iced, 24, 1], // Caramel x1
 ].map(([transactionId, productId, quantity]) => ({
   transaction_id: transactionId,
@@ -252,10 +301,42 @@ const TX_ITEMS = [
 }));
 
 const transactions = [
-  { id: TX.amer, payment_mode: 'cash', user_id: cashierId, date: '2026-07-30T10:15:00Z', status: 'completed', void_reason: null, amount_received: 300 },
-  { id: TX.capp, payment_mode: 'gcash', user_id: adminId, date: '2026-07-31T13:40:00Z', status: 'completed', void_reason: null, amount_received: null },
-  { id: TX.aff, payment_mode: 'cash', user_id: cashierId, date: '2026-08-01T16:20:00Z', status: 'completed', void_reason: null, amount_received: 300 },
-  { id: TX.iced, payment_mode: 'maya', user_id: adminId, date: '2026-08-02T18:10:00Z', status: 'voided', void_reason: 'Customer refund', amount_received: null },
+  {
+    id: TX.amer,
+    payment_mode: 'cash',
+    user_id: cashierId,
+    date: '2026-07-30T10:15:00Z',
+    status: 'completed',
+    void_reason: null,
+    amount_received: 300,
+  },
+  {
+    id: TX.capp,
+    payment_mode: 'gcash',
+    user_id: adminId,
+    date: '2026-07-31T13:40:00Z',
+    status: 'completed',
+    void_reason: null,
+    amount_received: null,
+  },
+  {
+    id: TX.aff,
+    payment_mode: 'cash',
+    user_id: cashierId,
+    date: '2026-08-01T16:20:00Z',
+    status: 'completed',
+    void_reason: null,
+    amount_received: 300,
+  },
+  {
+    id: TX.iced,
+    payment_mode: 'maya',
+    user_id: adminId,
+    date: '2026-08-02T18:10:00Z',
+    status: 'voided',
+    void_reason: 'Customer refund',
+    amount_received: null,
+  },
 ];
 
 function itemSubtotal({ product_id, quantity }) {
@@ -270,7 +351,9 @@ const transactionItems = TX_ITEMS.map((item, index) => ({
 
 // Replace the hardcoded totals / change with computed, consistent values.
 for (const txn of transactions) {
-  const items = transactionItems.filter((item) => item.transaction_id === txn.id);
+  const items = transactionItems.filter(
+    (item) => item.transaction_id === txn.id,
+  );
   txn.total_amount = items.reduce((sum, item) => sum + item.subtotal, 0);
   if (txn.amount_received != null && txn.payment_mode === 'cash') {
     txn.change_given = txn.amount_received - txn.total_amount;
@@ -334,7 +417,9 @@ function valuesClause(rows, columns) {
 async function upsertRows(client, sql, rows, columns) {
   if (rows.length === 0) return;
   const { text, values } = valuesClause(rows, columns);
-  const expanded = sql.includes('$1') ? sql.replace('$1', text) : `${sql} ${text}`;
+  const expanded = sql.includes('$1')
+    ? sql.replace('$1', text)
+    : `${sql} ${text}`;
   await client.query(expanded, values);
 }
 
@@ -363,9 +448,10 @@ async function syncIdentitySequences(client) {
 
 async function upsertTransactions(client) {
   // Idempotent: replace the seeded transaction set.
-  await client.query('delete from transaction_items where transaction_id = any($1::uuid[]);', [
-    transactions.map((t) => t.id),
-  ]);
+  await client.query(
+    'delete from transaction_items where transaction_id = any($1::uuid[]);',
+    [transactions.map((t) => t.id)],
+  );
   await client.query('delete from transactions where id = any($1::uuid[]);', [
     transactions.map((t) => t.id),
   ]);
@@ -376,7 +462,12 @@ async function upsertTransactions(client) {
   // these numbers continue cleanly after the seeded set.
   const dayCounters = {};
   const txRows = transactions.map((t) => {
-    const day = new Date(t.date).toLocaleString('en-PH', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const day = new Date(t.date).toLocaleString('en-PH', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
     const n = (dayCounters[day] ?? 0) + 1;
     dayCounters[day] = n;
     return {
@@ -396,7 +487,18 @@ async function upsertTransactions(client) {
     client,
     'insert into transactions (id, total_amount, payment_mode, user_id, date, status, void_reason, amount_received, change_given, order_number) values',
     txRows,
-    ['id', 'total_amount', 'payment_mode', 'user_id', 'date', 'status', 'void_reason', 'amount_received', 'change_given', 'order_number'],
+    [
+      'id',
+      'total_amount',
+      'payment_mode',
+      'user_id',
+      'date',
+      'status',
+      'void_reason',
+      'amount_received',
+      'change_given',
+      'order_number',
+    ],
   );
 
   await upsertRows(
@@ -409,7 +511,9 @@ async function upsertTransactions(client) {
 
 async function upsertAuthUsers() {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users (DEV only).');
+    throw new Error(
+      'SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are required to seed auth users (DEV only).',
+    );
   }
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -457,10 +561,31 @@ async function runSeed() {
   transactions[3].user_id = adminId;
 
   await withDb(async (client) => {
-    await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, ['category_id', 'name']);
-    await upsertRows(client, UPSERT_PRODUCTS, products, ['product_id', 'name', 'category_id', 'price', 'is_available']);
-    await upsertRows(client, UPSERT_INVENTORY, inventory, ['stock_id', 'product_id', 'quantity', 'reorder_level']);
-    await upsertRows(client, UPSERT_MOVEMENTS, stockMovements, ['movement_id', 'stock_id', 'type', 'quantity', 'date', 'supplier']);
+    await upsertRows(client, UPSERT_CATEGORIES, CATEGORIES, [
+      'category_id',
+      'name',
+    ]);
+    await upsertRows(client, UPSERT_PRODUCTS, products, [
+      'product_id',
+      'name',
+      'category_id',
+      'price',
+      'is_available',
+    ]);
+    await upsertRows(client, UPSERT_INVENTORY, inventory, [
+      'stock_id',
+      'product_id',
+      'quantity',
+      'reorder_level',
+    ]);
+    await upsertRows(client, UPSERT_MOVEMENTS, stockMovements, [
+      'movement_id',
+      'stock_id',
+      'type',
+      'quantity',
+      'date',
+      'supplier',
+    ]);
 
     // Realign identity sequences so seeded ids don't collide with runtime inserts.
     await syncIdentitySequences(client);
@@ -473,7 +598,13 @@ async function runSeed() {
       role: u.role,
       is_active: true,
     }));
-    await upsertRows(client, UPSERT_USER, rows, ['user_id', 'username', 'password', 'role', 'is_active']);
+    await upsertRows(client, UPSERT_USER, rows, [
+      'user_id',
+      'username',
+      'password',
+      'role',
+      'is_active',
+    ]);
 
     await upsertTransactions(client);
   });
