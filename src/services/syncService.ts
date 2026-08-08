@@ -13,6 +13,8 @@ export interface UnsyncedTransaction {
   user_id: number;
   date: string;
   synced: number;
+  amount_received: number | null;
+  change_given: number | null;
 }
 
 export interface UnsyncedStockMovement {
@@ -51,8 +53,8 @@ export async function syncPendingRecords(): Promise<void> {
     const { error } = await supabase.rpc('process_sale', {
       p_transaction_id: record.id,
       p_payment_mode: record.payment_mode,
-      p_amount_received: null,
-      p_change_given: null,
+      p_amount_received: record.amount_received,
+      p_change_given: record.change_given,
       p_items: items.map((item) => ({
         product_id: item.product_id,
         quantity: item.quantity,

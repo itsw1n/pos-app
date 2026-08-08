@@ -106,6 +106,8 @@ export function useMenu(): UseMenuResult {
           id: transaction.id,
           total_amount: transaction.total_amount,
           payment_mode: transaction.payment_mode,
+          amount_received: transaction.amount_received,
+          change_given: transaction.change_given,
           user_id: transaction.user_id,
           date: transaction.date,
           synced: false,
