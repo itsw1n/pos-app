@@ -37,7 +37,7 @@
         "expo-build-properties",
         {
           "android": {
-            "abiFilters": ["arm64-v8a", "armeabi-v7a"]
+            "buildArchs": ["arm64-v8a", "armeabi-v7a"]
           }
         }
       ]
