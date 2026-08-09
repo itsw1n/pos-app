@@ -20,6 +20,7 @@
 #   There is NO `seed-prod`. PROD is never seeded.
 
 EXPO := npx expo
+EAS := npx eas-cli
 NODE := node
 SUPABASE := supabase
 
@@ -28,13 +29,14 @@ DEV_SUPABASE_REF := mhlmskbuifatnlehvodf
 # The CLI writes the linked project ref here after `supabase link`.
 LINKED_REF_FILE := supabase/.temp/project-ref
 
-.PHONY: help setup dev prod seed reset-dev typecheck lint format format-check \
+.PHONY: help setup dev prod preview seed reset-dev typecheck lint format format-check \
         build migrate-dev migrate-prod
 
 help: ## Show available commands
 	@echo "===== DEVELOPMENT ====="
 	@printf "  %-12s %s\n" "make dev"      "Start Expo dev server (development env)"
 	@printf "  %-12s %s\n" "make prod"     "Start Expo using the production env"
+	@printf "  %-12s %s\n" "make preview"  "Build a test APK (EAS preview; gives a QR/URL to install & test on your phone)"
 	@printf "  %-12s %s\n" "make seed"     "Seed DEV database with demo data (data only; DEV-only)"
 	@printf "  %-12s %s\n" "make reset-dev" "REBUILD the linked DEV DB from local migrations (destructive, DEV-only, no seed)"
 	@printf "  %-12s %s\n" "make typecheck" "Type-check the project (npx tsc --noEmit)"
@@ -57,6 +59,12 @@ dev: ## Start Expo dev server (development env)
 
 prod: ## Start Expo using the production environment
 	NODE_ENV=production $(EXPO) start
+
+preview: ## Build a test APK via EAS (preview profile; QR/URL to install on your phone)
+	@bash -c 'set -a; . ./.env.production; set +a; $(EAS) build --platform android --profile preview --non-interactive'
+	@echo ""
+	@echo "APK is ready. Scan the QR or open the URL above on your phone to download"
+	@echo "and install it. The build inlines EXPO_PUBLIC_* from .env.production."
 
 seed: ## Seed DEV database with demo data ONLY (refuses PROD; assumes schema migrated)
 	$(NODE) scripts/seed.cjs
