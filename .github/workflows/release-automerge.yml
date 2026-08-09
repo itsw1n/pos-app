@@ -15,6 +15,9 @@ jobs:
       startsWith(github.event.pull_request.title, 'chore(main): release')
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Enable auto-merge on release PR
         env:
           GH_TOKEN: ${{ github.token }}
