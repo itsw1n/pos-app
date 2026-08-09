@@ -1,0 +1,49 @@
+name: Sync dev with main
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+
+      - name: Check if dev is behind main
+        run: |
+          behind=$(gh api repos/itsw1n/pos-app/compare/dev...main --jq '.behind_by' 2>/dev/null || echo 0)
+          echo "dev_behind=$behind"
+          echo "dev_behind=$behind" >> "$GITHUB_ENV"
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+
+      - name: Create sync branch from main, merge dev in
+        if: env.dev_behind > 0
+        run: |
+          BRANCH="sync/dev-realign-${GITHUB_REF_NAME#v}"
+          git checkout -b "$BRANCH" origin/main
+          git merge origin/dev --no-edit -m "chore: realign dev with main"
+          git push origin "$BRANCH"
+          echo "sync_branch=$BRANCH" >> "$GITHUB_ENV"
+
+      - name: Open and enable auto-merge PR into dev
+        if: env.dev_behind > 0
+        run: |
+          PR_NUMBER=$(gh pr create --base dev --head "${{ env.sync_branch }}" \
+            --title "sync: realign dev with main" \
+            --body "Auto-opened after release ${GITHUB_REF_NAME}.
+
+          Merges \`main\` into \`dev\` so the next \`dev → main\` promote is clean.
+
+          The \`${{ env.sync_branch }}\` branch is left on the remote for manual cleanup." \
+            | sed -E 's#.*/pull/([0-9]+).*#\1#')
+          gh pr merge --auto --merge "$PR_NUMBER"
