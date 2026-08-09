@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
-import { TextField } from '@/components/common/TextField/TextField';
+import { InputField } from '@/components/common/InputField/InputField';
 import { addCategoryModalStyles } from './AddCategoryModal.styles';
 
 interface AddCategoryModalProps {
@@ -54,7 +54,7 @@ export function AddCategoryModal({
       <Pressable style={addCategoryModalStyles.backdrop} onPress={onClose}>
         <Pressable style={addCategoryModalStyles.sheet} onPress={() => {}}>
           <Text style={addCategoryModalStyles.title}>New Category</Text>
-          <TextField
+          <InputField
             label="Category name"
             value={name}
             onChangeText={setName}

@@ -34,6 +34,13 @@
         }
       ],
       [
+        "react-native-thermal-printer-driver",
+        {
+          "bluetoothAlwaysUsageDescription": "Elvira Cafe uses Bluetooth to connect to your receipt printer.",
+          "bluetoothPeripheralUsageDescription": "Elvira Cafe uses Bluetooth to connect to your receipt printer."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
