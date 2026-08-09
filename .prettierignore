@@ -21,5 +21,8 @@ IPSS_CodingGuide.jsx
 # generated release changelog (managed by release-please)
 CHANGELOG.md
 
+# app version rewritten by release-please expo updater (format differs from prettier)
+app.json
+
 # planning scratch docs
 .opencode/plans/
