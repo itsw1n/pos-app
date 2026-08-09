@@ -330,8 +330,20 @@ to `main`:
   `feat` → minor, `fix` → patch, `BREAKING CHANGE`/`!` → major.
 - Opens a release PR and, once merged back to `main`, tags `vX.Y.Z`,
   bumps `package.json`/`package-lock.json`, and updates `CHANGELOG.md`.
-- Because tags are driven by commit types, keep Commit Rules (above) accurate —
+- Because tags are driven by commit types, keep Commit Rules accurate —
   a mis-typed `feat` mis-bumps the version.
+
+**Auto-sync (`sync-dev.yml`)** — runs on `release.published`. Each release
+adds main-only commits (version bump + release-please merges), leaving `dev`
+behind `main`. `sync-dev.yml` re-aligns automatically so the next `dev → main`
+promote is clean:
+
+- Creates branch `sync/dev-realign-<version>` from `main`, merges `dev` into
+  it, then opens + auto-merges a PR back into `dev` (`RELEASE_PLEASE_TOKEN`).
+- The branch is **intentionally NOT auto-deleted** (left for manual cleanup;
+  unique per-release names prevent collisions on re-runs). Delete leftovers
+  manually via GitHub UI or `git push origin --delete sync/dev-realign-<v>`.
+- No manual `sync/dev-realign` PR is needed anymore before promoting.
 
 **Branch protection (apply in GitHub UI — Settings → Branches → Add rule)**
 
