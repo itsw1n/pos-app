@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/itsw1n/pos-app/compare/v1.1.1...v1.1.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ci:** checkout repo before enabling release auto-merge ([22adbca](https://github.com/itsw1n/pos-app/commit/22adbcadace6636eb969e198f235bfa5a2407991))
+
 ## [1.1.1](https://github.com/itsw1n/pos-app/compare/v1.1.0...v1.1.1) (2026-08-09)
 
 
