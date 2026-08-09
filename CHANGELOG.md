@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.1](https://github.com/itsw1n/pos-app/compare/v1.1.0...v1.1.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **api:** guard supabase client creation against missing env config ([8116727](https://github.com/itsw1n/pos-app/commit/811672749f7fc3d9d99e446ed635aa5c5ce577d3))
+* **ci:** add manual trigger to release apk workflow ([bb80d97](https://github.com/itsw1n/pos-app/commit/bb80d978f9c1bc61d5b3496b192c63523ad6afdc))
+* **ci:** add manual trigger to release apk workflow ([7e082f7](https://github.com/itsw1n/pos-app/commit/7e082f74a36b1744730f623481dc80a82cb75c3a))
+* **ci:** correct apk download/attach step ([71a813d](https://github.com/itsw1n/pos-app/commit/71a813d8320ef99f6d385954f891ce61d1cafaec))
+* **ci:** download apk without --output and attach from resolved path ([c5ffb7e](https://github.com/itsw1n/pos-app/commit/c5ffb7ea805d18505ff60bf64c68ad352b67c27a))
+* **ci:** fetch apk from build artifact url via curl ([4a4a9ae](https://github.com/itsw1n/pos-app/commit/4a4a9ae77826323d88763ffcb8d6ac95ae29a1af))
+* **ci:** fetch apk from build url via curl ([8fa4770](https://github.com/itsw1n/pos-app/commit/8fa47700580ef362a08d52c7d83007a54c5174d2))
+* **config:** correct ABI key to slim android APK ([73737c9](https://github.com/itsw1n/pos-app/commit/73737c9298cfbf40288bedc011ba0ba4b2a77f74))
+* **config:** use correct ABI key in expo-build-properties plugin ([676ad8d](https://github.com/itsw1n/pos-app/commit/676ad8d4e05538845df0db44f18ab2364eb961f5))
+* **frontend:** render config-missing screen instead of crashing on startup ([f3cea3f](https://github.com/itsw1n/pos-app/commit/f3cea3fbce175a170d3a14f5453039e592fd4d69))
+* **startup:** crash-proof supabase config, slim APK, add README ([8ba3632](https://github.com/itsw1n/pos-app/commit/8ba36328e3b0a83fe016269bcdc74f8bf3918361))
+
 ## [1.1.0](https://github.com/itsw1n/pos-app/compare/v1.0.0...v1.1.0) (2026-08-08)
 
 
