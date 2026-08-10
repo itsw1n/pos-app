@@ -14,6 +14,7 @@ import {
   signOut,
   StoredUserProfile,
 } from '../api/authApi';
+import { getLocalUsers, upsertLocalUser } from '../services/sqlite';
 import { User, UserRole } from '../types/entities';
 
 export interface AuthContextType {
@@ -40,6 +41,49 @@ function toAppUser(
   };
 }
 
+/**
+ * Persist the signed-in app profile to the local cache so a later cold start
+ * can restore the session while offline. Best-effort; never blocks login.
+ */
+async function persistProfile(
+  profile: StoredUserProfile | undefined,
+): Promise<void> {
+  if (!profile) return;
+  try {
+    await upsertLocalUser({
+      user_id: String(profile.user_id),
+      username: profile.username,
+      role: profile.role,
+    });
+  } catch {
+    // Cache write is best-effort.
+  }
+}
+
+/**
+ * Fall back to the cached profile when the remote profile fetch fails
+ * (no connectivity). Prefers a username matching the session email, else the
+ * only/most-recent cached user.
+ */
+async function resolveProfileOffline(
+  email: string,
+): Promise<StoredUserProfile | undefined> {
+  try {
+    const cached = await getLocalUsers();
+    const match = cached.find((user) => user.username === email) ?? cached[0];
+    if (match) {
+      return {
+        user_id: match.user_id as unknown as number,
+        username: match.username,
+        role: match.role,
+      };
+    }
+  } catch {
+    // No local cache yet; the app falls back to the login screen.
+  }
+  return undefined;
+}
+
 export function AuthProvider({
   children,
 }: {
@@ -61,6 +105,7 @@ export function AuthProvider({
   const login = async (username: string, password: string): Promise<void> => {
     const authUser = await signInWithPassword(username, password);
     const profile = await getUserProfile(authUser.id);
+    await persistProfile(profile ?? undefined);
     applyProfile(profile ?? undefined, username);
   };
 
@@ -74,15 +119,21 @@ export function AuthProvider({
     let active = true;
 
     getSession()
-      .then((session) => {
+      .then(async (session) => {
         if (!active) return;
         if (session) {
-          return getCurrentUser().then((authUser) =>
-            getUserProfile(authUser?.id ?? '').then((profile) => {
-              if (active)
-                applyProfile(profile ?? undefined, authUser?.email ?? '');
-            }),
-          );
+          const email = session.user.email ?? '';
+          let profile: StoredUserProfile | undefined;
+          try {
+            profile = (await getUserProfile(session.user.id)) ?? undefined;
+            await persistProfile(profile);
+          } catch {
+            profile = undefined;
+          }
+          if (!profile) {
+            profile = await resolveProfileOffline(email);
+          }
+          if (active) applyProfile(profile, email);
         }
         return undefined;
       })
@@ -97,12 +148,25 @@ export function AuthProvider({
           setRole(null);
         }
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        getCurrentUser().then((authUser) =>
-          getUserProfile(authUser?.id ?? '').then((profile) => {
-            if (active)
-              applyProfile(profile ?? undefined, authUser?.email ?? '');
-          }),
-        );
+        getCurrentUser()
+          .then(async (authUser) => {
+            if (!authUser) return;
+            const email = authUser.email ?? '';
+            let profile: StoredUserProfile | undefined;
+            try {
+              profile = (await getUserProfile(authUser.id)) ?? undefined;
+              await persistProfile(profile);
+            } catch {
+              profile = undefined;
+            }
+            if (!profile) {
+              profile = await resolveProfileOffline(email);
+            }
+            if (active) applyProfile(profile, email);
+          })
+          .catch(() => {
+            // Profile resolution failed; session state drives navigation.
+          });
       }
     });
 
