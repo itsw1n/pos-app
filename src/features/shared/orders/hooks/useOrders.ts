@@ -1,22 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/services/supabase';
+import {
+  getTransactionItems as fetchRemoteItems,
+  getTransactionItemsByIds,
+  getTransactionsList,
+  voidSale,
+} from '@/api/transactionApi';
+import { getProductIdNamePrice } from '@/api/productApi';
+import { getUsersIdName } from '@/api/userApi';
 import { PaymentMode } from '@/types/context';
-import { Product, TransactionItem } from '@/types/entities';
-
-interface StoredTransaction {
-  id: string;
-  date: string;
-  total_amount: number;
-  payment_mode: PaymentMode;
-  user_id: number;
-  status?: string | null;
-  void_reason?: string | null;
-  order_number?: number | null;
-  amount_received?: number | null;
-  change_given?: number | null;
-}
 
 export interface TransactionRecord {
   id: string;
@@ -62,46 +55,29 @@ export function useOrders(): UseTransactionsResult {
     setIsLoading(true);
     setError('');
     try {
-      let query = supabase
-        .from('transactions')
-        .select(
-          'id, date, total_amount, payment_mode, user_id, status, void_reason, order_number, amount_received, change_given',
-        )
-        .order('date', { ascending: false });
-      if (role !== 'admin' && user) {
-        query = query.eq('user_id', user.user_id);
-      }
-      const { data, error: transactionsError } = await query;
-      if (transactionsError) throw transactionsError;
-      const rows = (data as StoredTransaction[]) ?? [];
+      const rows = await getTransactionsList(role, user?.user_id);
 
       let itemsCount = new Map<string, number>();
       if (rows.length > 0) {
-        const { data: items, error: itemsError } = await supabase
-          .from('transaction_items')
-          .select('transaction_id')
-          .in(
-            'transaction_id',
+        try {
+          const items = await getTransactionItemsByIds(
             rows.map((row) => row.id),
           );
-        if (!itemsError) {
           itemsCount = new Map<string, number>();
-          for (const item of (items as { transaction_id: string }[]) ?? []) {
+          for (const item of items) {
             itemsCount.set(
               item.transaction_id,
               (itemsCount.get(item.transaction_id) ?? 0) + 1,
             );
           }
+        } catch {
+          // Items count is secondary; the list still renders without it.
         }
       }
 
-      const { data: users } = await supabase
-        .from('user')
-        .select('user_id, username');
+      const users = await getUsersIdName();
       const userById = new Map(
-        ((users as { user_id: number; username: string }[]) ?? []).map(
-          (row) => [row.user_id, row.username],
-        ),
+        (users ?? []).map((row) => [row.user_id, row.username]),
       );
 
       setTransactions(
@@ -131,20 +107,12 @@ export function useOrders(): UseTransactionsResult {
 
   const getTransactionItems = useCallback(
     async (transactionId: string): Promise<TransactionItemRow[]> => {
-      const [itemsRes, productsRes] = await Promise.all([
-        supabase
-          .from('transaction_items')
-          .select('*')
-          .eq('transaction_id', transactionId),
-        supabase.from('product').select('product_id, name, price'),
+      const [items, productRows] = await Promise.all([
+        fetchRemoteItems(transactionId),
+        getProductIdNamePrice(),
       ]);
-      if (itemsRes.error) throw itemsRes.error;
-      if (productsRes.error) throw productsRes.error;
-
-      const items = (itemsRes.data as TransactionItem[]) ?? [];
-      const products = (productsRes.data as Product[]) ?? [];
       const productById = new Map(
-        products.map((product) => [product.product_id, product]),
+        productRows.map((product) => [product.product_id, product]),
       );
 
       return items.map((item) => {
@@ -177,11 +145,7 @@ export function useOrders(): UseTransactionsResult {
       setIsVoiding(true);
       setError('');
       try {
-        const { error: voidError } = await supabase.rpc('void_sale', {
-          p_transaction_id: transactionId,
-          p_reason: trimmedReason,
-        });
-        if (voidError) throw voidError;
+        await voidSale(transactionId, trimmedReason);
 
         await loadTransactions();
       } catch (err) {

@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/services/supabase';
+import {
+  getTransactionsForDashboard,
+  getTransactionsInRange,
+  getTransactionItemsForProducts,
+  getTransactionStatusRange,
+  TransactionRow,
+} from '@/api/transactionApi';
+import { getInventory } from '@/api/inventoryApi';
+import { getProducts } from '@/api/productApi';
 import { PaymentMode } from '@/types/context';
-import { Inventory, Product, TransactionItem } from '@/types/entities';
+import { Product, TransactionItem } from '@/types/entities';
 
 export type StockLevel = 'ok' | 'low' | 'critical';
 
@@ -10,15 +18,6 @@ const PAYMENT_MODES: PaymentMode[] = ['cash', 'gcash', 'maya'];
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-interface StoredTransaction {
-  id: string;
-  date: string;
-  total_amount: number;
-  payment_mode: PaymentMode;
-  user_id: number;
-  status?: string | null;
-}
 
 export type DaySales = {
   date: string;
@@ -105,7 +104,7 @@ function startOfDay(date: Date): Date {
 }
 
 export function buildDaySales(
-  transactions: StoredTransaction[],
+  transactions: TransactionRow[],
   dayCount: number,
 ): DaySales[] {
   const now = new Date();
@@ -130,7 +129,7 @@ export function buildDaySales(
   return buckets;
 }
 
-function isActive(transaction: StoredTransaction): boolean {
+function isActive(transaction: Pick<TransactionRow, 'status'>): boolean {
   return transaction.status !== 'voided';
 }
 
@@ -167,7 +166,7 @@ function inRange(date: string, start: Date, end: Date): boolean {
 }
 
 export function buildSalesReport(
-  transactions: StoredTransaction[],
+  transactions: TransactionRow[],
   start: Date,
   end: Date,
 ): SalesReport {
@@ -215,41 +214,22 @@ export function useReports(): UseReportsResult {
 
   const getTopProducts = useCallback(
     async (start?: Date, end?: Date): Promise<TopProduct[]> => {
-      let query = supabase.from('transactions').select('id, status');
-      if (start !== undefined) {
-        query = query.gte('date', start.toISOString());
-      }
-      if (end !== undefined) {
-        query = query.lte('date', end.toISOString());
-      }
-      const { data: transactionData, error: transactionError } = await query;
-      if (transactionError) throw transactionError;
+      const transactionRows = await getTransactionStatusRange(start, end);
 
-      const activeIds = ((transactionData as StoredTransaction[]) ?? [])
+      const activeIds = transactionRows
         .filter(isActive)
         .map((transaction) => transaction.id);
       if (activeIds.length === 0) return [];
 
-      const [itemsRes, productsRes] = await Promise.all([
-        supabase
-          .from('transaction_items')
-          .select('product_id, quantity, subtotal')
-          .in('transaction_id', activeIds),
-        supabase.from('product').select('*'),
+      const [items, products] = await Promise.all([
+        getTransactionItemsForProducts(activeIds),
+        getProducts(),
       ]);
-      if (itemsRes.error) throw itemsRes.error;
-      if (productsRes.error) throw productsRes.error;
 
       const productById = new Map(
-        ((productsRes.data as Product[]) ?? []).map((product) => [
-          product.product_id,
-          product,
-        ]),
+        products.map((product) => [product.product_id, product]),
       );
-      return aggregateTopProducts(
-        (itemsRes.data as TransactionItem[]) ?? [],
-        productById,
-      );
+      return aggregateTopProducts(items, productById);
     },
     [],
   );
@@ -258,33 +238,22 @@ export function useReports(): UseReportsResult {
     setIsLoading(true);
     setError('');
     try {
-      const [transactionsRes, inventoryRes, productsRes] = await Promise.all([
-        supabase
-          .from('transactions')
-          .select('id, date, total_amount, payment_mode, user_id, status')
-          .order('date', { ascending: false }),
-        supabase.from('inventory').select('*'),
-        supabase.from('product').select('*'),
+      const [transactions, inventory, products] = await Promise.all([
+        getTransactionsForDashboard(),
+        getInventory(),
+        getProducts(),
       ]);
-      if (transactionsRes.error) throw transactionsRes.error;
-      if (inventoryRes.error) throw inventoryRes.error;
-      if (productsRes.error) throw productsRes.error;
 
-      const transactions = (
-        (transactionsRes.data as StoredTransaction[]) ?? []
-      ).filter(isActive);
-      const inventory = (inventoryRes.data as Inventory[]) ?? [];
-      const products = (productsRes.data as Product[]) ?? [];
-
+      const activeTransactions = transactions.filter(isActive);
       const productById = new Map(
         products.map((product) => [product.product_id, product]),
       );
 
-      const totalRevenue = transactions.reduce(
+      const totalRevenue = activeTransactions.reduce(
         (sum, transaction) => sum + transaction.total_amount,
         0,
       );
-      const weeklyBreakdown = buildDaySales(transactions, 7);
+      const weeklyBreakdown = buildDaySales(activeTransactions, 7);
 
       const lowStock = inventory
         .filter((record) => record.quantity <= record.reorder_level)
@@ -307,7 +276,7 @@ export function useReports(): UseReportsResult {
 
       setDashboard({
         totalRevenue,
-        totalOrders: transactions.length,
+        totalOrders: activeTransactions.length,
         weeklyBreakdown,
         lowStock,
         topProducts,
@@ -321,28 +290,17 @@ export function useReports(): UseReportsResult {
 
   const getSalesReport = useCallback(
     async (start: Date, end: Date): Promise<SalesReport> => {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('id, date, total_amount, payment_mode, user_id, status')
-        .gte('date', start.toISOString())
-        .lte('date', end.toISOString());
-      if (error) throw error;
-      const transactions = (data as StoredTransaction[]) ?? [];
+      const transactions = await getTransactionsInRange(start, end);
       return buildSalesReport(transactions, start, end);
     },
     [],
   );
 
   const getInventoryReport = useCallback(async (): Promise<InventoryReport> => {
-    const [inventoryRes, productsRes] = await Promise.all([
-      supabase.from('inventory').select('*'),
-      supabase.from('product').select('*'),
+    const [inventory, products] = await Promise.all([
+      getInventory(),
+      getProducts(),
     ]);
-    if (inventoryRes.error) throw inventoryRes.error;
-    if (productsRes.error) throw productsRes.error;
-
-    const inventory = (inventoryRes.data as Inventory[]) ?? [];
-    const products = (productsRes.data as Product[]) ?? [];
     const productById = new Map(
       products.map((product) => [product.product_id, product]),
     );

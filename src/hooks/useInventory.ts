@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { supabase } from '@/services/supabase';
+import { adjustStock, getInventory } from '@/api/inventoryApi';
+import { getCatalog } from '@/api/productApi';
 import { saveToSQLite } from '@/services/sqlite';
-import { ProductRow, toProduct } from '@/services/catalog';
+import { toProduct } from '@/services/catalog';
 import { Inventory } from '@/types/entities';
 
 export type StockStatus = 'ok' | 'low' | 'critical';
@@ -40,14 +41,11 @@ export function useInventory(): UseInventoryResult {
     setIsLoading(true);
     setError('');
     try {
-      const [inventoryRes, productRes] = await Promise.all([
-        supabase.from('inventory').select('*'),
-        supabase.from('product').select('*, category(name)'),
+      const [inventory, productRows] = await Promise.all([
+        getInventory(),
+        getCatalog(),
       ]);
-      const inventory = (inventoryRes.data as Inventory[]) ?? [];
-      const products = ((productRes.data as unknown as ProductRow[]) ?? []).map(
-        toProduct,
-      );
+      const products = productRows.map(toProduct);
       const productById = new Map(products.map((p) => [p.product_id, p]));
       setItems(
         inventory.map((record) => {
@@ -96,12 +94,11 @@ export function useInventory(): UseInventoryResult {
       const date = new Date().toISOString();
       const { isConnected } = await NetInfo.fetch();
       if (isConnected) {
-        const { error: adjustError } = await supabase.rpc('adjust_stock', {
-          p_stock_id: payload.stockId,
-          p_quantity: payload.quantity,
-          p_supplier: payload.supplier ?? null,
-        });
-        if (adjustError) throw adjustError;
+        await adjustStock(
+          payload.stockId,
+          payload.quantity,
+          payload.supplier ?? null,
+        );
       } else {
         await saveToSQLite('stock_movements', {
           stock_id: payload.stockId,
