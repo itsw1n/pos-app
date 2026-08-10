@@ -3,9 +3,10 @@ import NetInfo from '@react-native-community/netinfo';
 import uuid from 'react-native-uuid';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { supabase } from '@/services/supabase';
+import { getCatalog } from '@/api/productApi';
+import { processSale } from '@/api/transactionApi';
 import { saveToSQLite } from '@/services/sqlite';
-import { ProductRow, toProduct } from '@/services/catalog';
+import { toProduct } from '@/services/catalog';
 import { CartItem, PaymentMode, POSTransaction } from '@/types/context';
 import { Product } from '@/types/entities';
 
@@ -48,11 +49,8 @@ export function useMenu(): UseMenuResult {
     setIsLoading(true);
     setError('');
     try {
-      const { data } = await supabase
-        .from('product')
-        .select('*, category(name)')
-        .order('name', { ascending: true });
-      setProducts((data as unknown as ProductRow[])?.map(toProduct) ?? []);
+      const rows = await getCatalog();
+      setProducts(rows.map(toProduct));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
@@ -89,18 +87,17 @@ export function useMenu(): UseMenuResult {
 
       const { isConnected } = await NetInfo.fetch();
       if (isConnected) {
-        const { error: processError } = await supabase.rpc('process_sale', {
-          p_transaction_id: transaction.id,
-          p_payment_mode: transaction.payment_mode,
-          p_amount_received: transaction.amount_received,
-          p_change_given: transaction.change_given,
-          p_items: cart.map((item) => ({
+        await processSale({
+          transactionId: transaction.id,
+          paymentMode: transaction.payment_mode,
+          amountReceived: transaction.amount_received,
+          changeGiven: transaction.change_given,
+          items: cart.map((item) => ({
             product_id: item.product_id,
             quantity: item.qty,
           })),
-          p_date: transaction.date,
+          date: transaction.date,
         });
-        if (processError) throw processError;
       } else {
         await saveToSQLite('transactions', {
           id: transaction.id,

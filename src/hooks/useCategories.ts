@@ -1,6 +1,12 @@
 import { useCallback, useState } from 'react';
-import { supabase } from '@/services/supabase';
-import { CategoryRow, toCategory, UNCATEGORIZED } from '@/services/catalog';
+import {
+  createCategory as createRemoteCategory,
+  deleteCategory as deleteRemoteCategory,
+  getCategories,
+  getOrCreateUncategorized,
+  reassignProducts,
+} from '@/api/categoryApi';
+import { toCategory, UNCATEGORIZED } from '@/services/catalog';
 import { Category } from '@/types/entities';
 
 let sharedCache: Category[] | null = null;
@@ -32,12 +38,7 @@ export function useCategories(): UseCategoriesResult {
     setIsLoading(true);
     setError('');
     try {
-      const { data, error: loadError } = await supabase
-        .from('category')
-        .select('*')
-        .order('name', { ascending: true });
-      if (loadError) throw loadError;
-      const rows = (data as unknown as CategoryRow[]) ?? [];
+      const rows = await getCategories();
       sharedCache = rows.map(toCategory);
       setCategories(sharedCache);
     } catch (err) {
@@ -55,13 +56,7 @@ export function useCategories(): UseCategoriesResult {
       if (!trimmed) {
         throw new Error('Category name is required');
       }
-      const { data, error: insertError } = await supabase
-        .from('category')
-        .insert({ name: trimmed })
-        .select()
-        .single();
-      if (insertError) throw insertError;
-      const category = toCategory(data as CategoryRow);
+      const category = toCategory(await createRemoteCategory(trimmed));
       sharedCache = sharedCache ? [...sharedCache, category] : [category];
       setCategories(sharedCache);
       return category;
@@ -79,36 +74,11 @@ export function useCategories(): UseCategoriesResult {
         throw new Error(`The ${UNCATEGORIZED} category cannot be deleted`);
       }
 
-      let { data: uncategorized, error: uncatError } = await supabase
-        .from('category')
-        .select('*')
-        .eq('name', UNCATEGORIZED)
-        .maybeSingle();
-      if (uncatError) throw uncatError;
+      const uncategorized = await getOrCreateUncategorized();
+      const uncategorizedId = uncategorized.category_id;
 
-      if (!uncategorized) {
-        const insert = await supabase
-          .from('category')
-          .insert({ name: UNCATEGORIZED })
-          .select()
-          .single();
-        if (insert.error) throw insert.error;
-        uncategorized = insert.data;
-      }
-
-      const uncategorizedId = (uncategorized as CategoryRow).category_id;
-
-      const { error: reassignError } = await supabase
-        .from('product')
-        .update({ category_id: uncategorizedId })
-        .eq('category_id', categoryId);
-      if (reassignError) throw reassignError;
-
-      const { error: deleteError } = await supabase
-        .from('category')
-        .delete()
-        .eq('category_id', categoryId);
-      if (deleteError) throw deleteError;
+      await reassignProducts(categoryId, uncategorizedId);
+      await deleteRemoteCategory(categoryId);
 
       const remaining = (sharedCache ?? []).filter(
         (category) => category.category_id !== categoryId,
@@ -116,7 +86,7 @@ export function useCategories(): UseCategoriesResult {
       if (
         !remaining.some((category) => category.category_id === uncategorizedId)
       ) {
-        remaining.unshift(toCategory(uncategorized as CategoryRow));
+        remaining.unshift(toCategory(uncategorized));
       }
       sharedCache = remaining;
       setCategories(sharedCache);
