@@ -1,16 +1,15 @@
 import { useCallback, useState } from 'react';
-import { supabase } from '@/services/supabase';
-import { deleteProductImage } from '@/services/storage';
-import { ProductRow, toProduct, UNCATEGORIZED } from '@/services/catalog';
+import {
+  createProduct as createRemoteProduct,
+  deleteProduct as deleteRemoteProduct,
+  getCatalog,
+  ProductPayload,
+  updateProduct as updateRemoteProduct,
+} from '@/api/productApi';
+import { deleteInventoryByProduct } from '@/api/inventoryApi';
+import { deleteProductImage } from '@/api/storageApi';
+import { toProduct, UNCATEGORIZED } from '@/services/catalog';
 import { Product } from '@/types/entities';
-
-export interface ProductPayload {
-  name: string;
-  category_id: string;
-  price: number;
-  is_available: boolean;
-  image_url: string | null;
-}
 
 export interface UseMenuManagementResult {
   products: Product[];
@@ -43,12 +42,8 @@ export function useMenuManagement(): UseMenuManagementResult {
     setIsLoading(true);
     setError('');
     try {
-      const { data, error: loadError } = await supabase
-        .from('product')
-        .select('*, category(name)')
-        .order('name', { ascending: true });
-      if (loadError) throw loadError;
-      setProducts((data as unknown as ProductRow[])?.map(toProduct) ?? []);
+      const rows = await getCatalog();
+      setProducts(rows.map(toProduct));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
@@ -59,19 +54,7 @@ export function useMenuManagement(): UseMenuManagementResult {
   const createProduct = useCallback(
     async (payload: ProductPayload): Promise<Product> => {
       validatePayload(payload);
-      const { data, error: insertError } = await supabase
-        .from('product')
-        .insert({
-          name: payload.name.trim(),
-          category_id: payload.category_id,
-          price: payload.price,
-          is_available: payload.is_available,
-          image_url: payload.image_url,
-        })
-        .select()
-        .single();
-      if (insertError) throw insertError;
-      const created = toProduct(data as ProductRow);
+      const created = toProduct(await createRemoteProduct(payload));
       setProducts((prev) => [...prev, created]);
       return created;
     },
@@ -82,17 +65,7 @@ export function useMenuManagement(): UseMenuManagementResult {
     async (productId: number, payload: ProductPayload): Promise<void> => {
       validatePayload(payload);
       const current = products.find((p) => p.product_id === productId);
-      const { error: updateError } = await supabase
-        .from('product')
-        .update({
-          name: payload.name.trim(),
-          category_id: payload.category_id,
-          price: payload.price,
-          is_available: payload.is_available,
-          image_url: payload.image_url,
-        })
-        .eq('product_id', productId);
-      if (updateError) throw updateError;
+      await updateRemoteProduct(productId, payload);
       // Remove the replaced image from storage only after the DB update succeeds.
       if (current?.image_url && current.image_url !== payload.image_url) {
         await deleteProductImage(current.image_url);
@@ -122,16 +95,8 @@ export function useMenuManagement(): UseMenuManagementResult {
   const deleteProduct = useCallback(
     async (productId: number): Promise<void> => {
       const current = products.find((p) => p.product_id === productId);
-      const { error: inventoryError } = await supabase
-        .from('inventory')
-        .delete()
-        .eq('product_id', productId);
-      if (inventoryError) throw inventoryError;
-      const { error: deleteError } = await supabase
-        .from('product')
-        .delete()
-        .eq('product_id', productId);
-      if (deleteError) throw deleteError;
+      await deleteInventoryByProduct(productId);
+      await deleteRemoteProduct(productId);
       if (current) {
         await deleteProductImage(current.image_url);
       }

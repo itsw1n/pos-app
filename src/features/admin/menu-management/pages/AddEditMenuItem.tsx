@@ -21,7 +21,7 @@ import { CategoryPickerModal } from '@/components/common/Category/CategoryPicker
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
 import { toErrorMessage } from '@/services/errors';
-import { uploadProductImage } from '@/services/storage';
+import { uploadProductImage } from '@/api/storageApi';
 import { colors } from '@/theme';
 import { MenuManagementStackParamList } from '@/features/admin/menu-management/MenuManagementNavigator';
 import { useMenuManagement } from '@/features/admin/menu-management/hooks/useMenuManagement';
