@@ -1,18 +1,78 @@
 import * as Print from 'expo-print';
-import ThermalPrinter, {
+import { Platform } from 'react-native';
+import type {
+  BarcodeFormat,
+  ColumnDef,
   Device,
-  ScanResult,
   Node,
-  text,
-  line,
-  barcode,
-  columns,
-  feed,
-  cut,
+  ScanResult,
+  TextStyle,
 } from 'react-native-thermal-printer-driver';
 import { RECEIPT_WIDTH_PX, buildReceiptHtml } from './receiptService';
 import { getPrinterConfig } from './printerStorage';
 import type { PrinterConfig } from './printerStorage';
+
+/**
+ * Minimal typed surface of the thermal driver used by this service. Declared
+ * explicitly (instead of `typeof import(...)`) so the web bundle never
+ * resolves or evaluates the native TurboModule.
+ */
+interface ThermalDriverModule {
+  scan(): Promise<ScanResult>;
+  connect(address: string, options?: { timeout?: number }): Promise<void>;
+  testConnection(address: string): Promise<{
+    success: boolean;
+    deviceName?: string;
+    error?: { code?: string; message?: string };
+  }>;
+  print(
+    address: string,
+    nodes: Node[],
+    options?: {
+      paperWidthMm?: 58 | 80;
+      keepAlive?: boolean;
+      timeout?: number;
+      copies?: number;
+      disableCutPaper?: boolean;
+    },
+  ): Promise<{
+    success: boolean;
+    bytesWritten?: number;
+    error?: { code?: string; message?: string };
+  }>;
+  text(content: string, style?: TextStyle): Node;
+  line(options?: { style?: 'solid' | 'dashed'; character?: string }): Node;
+  barcode(
+    content: string,
+    options: {
+      format: BarcodeFormat;
+      height?: number;
+      width?: number;
+      hri?: 'none' | 'above' | 'below' | 'both';
+    },
+  ): Node;
+  columns(defs: ColumnDef[]): Node;
+  feed(lines: number): Node;
+  cut(options?: { partial?: boolean }): Node;
+}
+
+let thermalDriverPromise: Promise<ThermalDriverModule> | null = null;
+
+/**
+ * The thermal driver native module throws at import time on platforms where it
+ * is unavailable (web, Expo Go). It is loaded lazily so importing this service
+ * never crashes the bundle; callers guard with {@link THERMAL_SUPPORTED}.
+ */
+function loadDriver(): Promise<ThermalDriverModule> {
+  if (!thermalDriverPromise) {
+    thermalDriverPromise = import('react-native-thermal-printer-driver').then(
+      (m) => m.default as unknown as ThermalDriverModule,
+    );
+  }
+  return thermalDriverPromise;
+}
+
+export const THERMAL_SUPPORTED = Platform.OS !== 'web';
 
 export interface ThermalDevice {
   name: string;
@@ -47,8 +107,10 @@ function lanAddress(host: string, port: number): string {
  * when Bluetooth is unsupported (e.g. web preview).
  */
 export async function scanBluetoothPrinters(): Promise<ThermalDevice[]> {
+  if (!THERMAL_SUPPORTED) return [];
   try {
-    const result: ScanResult = await ThermalPrinter.scan();
+    const driver = await loadDriver();
+    const result: ScanResult = await driver.scan();
     const devices = [...result.paired, ...result.found];
     return devices.map(toThermalDevice);
   } catch {
@@ -61,8 +123,12 @@ export async function scanBluetoothPrinters(): Promise<ThermalDevice[]> {
  * `lan:host:port` address built with {@link buildWifiAddress}.
  */
 export async function connectPrinter(config: PrinterConfig): Promise<void> {
+  if (!THERMAL_SUPPORTED) {
+    throw new Error('Thermal printing is not available on this platform');
+  }
   const address = configAddress(config);
-  await ThermalPrinter.connect(address, { timeout: 10000 });
+  const driver = await loadDriver();
+  await driver.connect(address, { timeout: 10000 });
 }
 
 function configAddress(config: PrinterConfig): string {
@@ -79,9 +145,11 @@ export function buildWifiAddress(host: string, port: number): string {
 export async function testPrinterConnection(
   config: PrinterConfig,
 ): Promise<ThermalPrinterTestResult> {
+  if (!THERMAL_SUPPORTED) return { ok: false };
   const address = configAddress(config);
   try {
-    const result = await ThermalPrinter.testConnection(address);
+    const driver = await loadDriver();
+    const result = await driver.testConnection(address);
     return { ok: result.success, deviceName: result.deviceName };
   } catch {
     return { ok: false };
@@ -96,7 +164,8 @@ export interface ThermalPrinterTestResult {
 export const PRINT_FEED_LINES_AFTER = 3;
 
 /** Minimal ESC/POS document used by the PrinterSettings test button. */
-export function buildTestDocument(): Node[] {
+export function buildTestDocument(driverModule: ThermalDriverModule): Node[] {
+  const { text, line, feed, cut } = driverModule;
   return [
     text('Elvira Cafe', { align: 'center', bold: true, size: 2 }),
     text('Printer Test', { align: 'center', bold: true }),
@@ -115,13 +184,17 @@ export function buildTestDocument(): Node[] {
  * unreachable.
  */
 export async function printThermalTest(config: PrinterConfig): Promise<void> {
+  if (!THERMAL_SUPPORTED) {
+    throw new Error('Thermal printing is not available on this platform');
+  }
   const address = configAddress(config);
+  const driver = await loadDriver();
   try {
-    await ThermalPrinter.connect(address, { timeout: 10000 });
+    await driver.connect(address, { timeout: 10000 });
   } catch {
     // Connection may be pooled; attempt the print anyway.
   }
-  const result = await ThermalPrinter.print(address, buildTestDocument(), {
+  const result = await driver.print(address, buildTestDocument(driver), {
     paperWidthMm: 80,
     timeout: 15000,
   });
@@ -137,8 +210,12 @@ const ITEM_QTY_FRACTION = 0.13;
 /**
  * Build the ESC/POS document for a transaction. Uses 80mm paper.
  */
-export function buildReceiptDocument(transaction: ReceiptDocumentData): Node[] {
+export function buildReceiptDocument(
+  transaction: ReceiptDocumentData,
+  driverModule: ThermalDriverModule,
+): Node[] {
   const width = RECEIPT_WIDTH_PX;
+  const { text, line, barcode, columns, feed, cut } = driverModule;
 
   return [
     text(transaction.business_name ?? 'Elvira Cafe', {
@@ -293,19 +370,21 @@ function paymentLabel(mode: string): string {
 export async function printReceiptToThermal(
   transaction: ReceiptDocumentData,
 ): Promise<{ address: string } | null> {
+  if (!THERMAL_SUPPORTED) return null;
   const config = await getPrinterConfig();
   if (!config) return null;
 
   const address = configAddress(config);
-  const document = buildReceiptDocument(transaction);
+  const driver = await loadDriver();
+  const document = buildReceiptDocument(transaction, driver);
 
   try {
-    await ThermalPrinter.connect(address, { timeout: 10000 });
+    await driver.connect(address, { timeout: 10000 });
   } catch {
     // Connection may be reused; still attempt the print below.
   }
 
-  const result = await ThermalPrinter.print(address, document, {
+  const result = await driver.print(address, document, {
     paperWidthMm: 80,
     timeout: 15000,
   });
