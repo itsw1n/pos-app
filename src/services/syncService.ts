@@ -1,5 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
-import { supabase } from './supabase';
+import { adjustStock } from '../api/inventoryApi';
+import { processSale, transactionExists } from '../api/transactionApi';
 import {
   getTransactionItemsLocal,
   getUnsyncedRecords,
@@ -38,44 +39,40 @@ export async function syncPendingRecords(): Promise<void> {
   const transactions =
     await getUnsyncedRecords<UnsyncedTransaction>('transactions');
   for (const record of transactions) {
-    const { data: existing } = await supabase
-      .from('transactions')
-      .select('id')
-      .eq('id', record.id)
-      .maybeSingle();
-
-    if (existing) {
+    try {
+      if (await transactionExists(record.id)) {
+        await markSynced('transactions', record.id);
+        continue;
+      }
+      await processSale({
+        transactionId: record.id,
+        paymentMode: record.payment_mode as 'cash' | 'gcash' | 'maya',
+        amountReceived: record.amount_received,
+        changeGiven: record.change_given,
+        items: (await getTransactionItemsLocal(record.id)).map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+        })),
+        date: record.date,
+      });
       await markSynced('transactions', record.id);
-      continue;
-    }
-
-    const items = await getTransactionItemsLocal(record.id);
-    const { error } = await supabase.rpc('process_sale', {
-      p_transaction_id: record.id,
-      p_payment_mode: record.payment_mode,
-      p_amount_received: record.amount_received,
-      p_change_given: record.change_given,
-      p_items: items.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-      })),
-      p_date: record.date,
-    });
-    if (!error) {
-      await markSynced('transactions', record.id);
+    } catch {
+      // Remote insert failed or is unreachable; retry next sync.
     }
   }
 
   const movements =
     await getUnsyncedRecords<UnsyncedStockMovement>('stock_movements');
   for (const movement of movements) {
-    const { error } = await supabase.rpc('adjust_stock', {
-      p_stock_id: movement.stock_id,
-      p_quantity: movement.quantity,
-      p_supplier: movement.supplier ?? null,
-    });
-    if (!error) {
+    try {
+      await adjustStock(
+        movement.stock_id,
+        movement.quantity,
+        movement.supplier ?? null,
+      );
       await markSynced('stock_movements', movement.movement_id);
+    } catch {
+      // Remote adjustment failed; retry next sync.
     }
   }
 }
