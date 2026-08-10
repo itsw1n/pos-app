@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { supabase } from '@/services/supabase';
+import { refreshLocalCache } from '@/services/catalogSync';
 import { initDb } from '@/services/sqlite';
 import { syncPendingRecords } from '@/services/syncService';
 
 async function initAndSync(): Promise<void> {
   try {
     await initDb();
+    await refreshLocalCache();
     await syncPendingRecords();
   } catch {
     // Offline sync is best-effort; failures are surfaced next reconnect.
