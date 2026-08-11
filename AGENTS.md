@@ -8,19 +8,19 @@ Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System
 
 ## Tech Stack
 
-| Concern          | Choice                                                                           |
-| ---------------- | -------------------------------------------------------------------------------- |
-| Platform         | Mobile-only (Expo Go / Android APK via EAS)                                      |
-| Framework        | Expo SDK 57, React Native 0.86, React 19                                         |
-| Language         | TypeScript (~6.0, `strict: true`)                                                |
-| UI styling       | React Native `StyleSheet` + design tokens (no Tailwind, no inline style objects) |
-| Navigation       | `@react-navigation/native` (Stack + Bottom Tabs), role-based                     |
-| Online DB / Auth | Supabase (`@supabase/supabase-js`) — Auth + Postgres                             |
-| Offline storage  | `expo-sqlite` (modern async API)                                                 |
-| Connectivity     | `@react-native-community/netinfo`                                                |
-| Receipts         | `expo-print`, `expo-sharing` (+ Bluetooth/WiFi printer skeleton)                 |
-| Charts           | `victory-native` + `react-native-svg`                                            |
-| IDs              | `react-native-uuid` (transaction dedup)                                          |
+| Concern          | Choice                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Platform         | Mobile-only (Expo Go / Android APK via EAS)                                                                        |
+| Framework        | Expo SDK 57, React Native 0.86, React 19                                                                           |
+| Language         | TypeScript (~6.0, `strict: true`)                                                                                  |
+| UI styling       | React Native `StyleSheet` + design tokens (no Tailwind, no inline style objects)                                   |
+| Navigation       | `@react-navigation/native` (Stack + Bottom Tabs), role-based                                                       |
+| Online DB / Auth | Supabase (`@supabase/supabase-js`) — Auth + Postgres                                                               |
+| Offline storage  | `expo-sqlite` (modern async API)                                                                                   |
+| Connectivity     | `@react-native-community/netinfo`                                                                                  |
+| Receipts         | `expo-print`, `expo-sharing` + `react-native-thermal-printer-driver` (ESC/POS for Bluetooth/WiFi thermal printers) |
+| Charts           | `victory-native` + `react-native-svg`                                                                              |
+| IDs              | `react-native-uuid` (transaction dedup)                                                                            |
 
 ### Key versions
 
@@ -161,7 +161,7 @@ src/
 │       ├── inventory/        # InventoryManagement, StockIn (pages/)
 │       └── reports/          # Dashboard, Reports (pages/ + hooks/ + ReportsNavigator)
 ├── components/
-│   └── common/           # shared UI: Button, Card, ProductRow, ProductImage, StockBadge, TextField
+│   └── common/           # shared UI: Button, Card, ProductRow, ProductImage, StockBadge, InputField
 │       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
 ├── context/              # AuthContext (user+role), CartContext (cart state)
 ├── hooks/                # cross-role hooks: useInventory, useCategories, useConnectivity
@@ -216,7 +216,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 ### Shared components (`src/components/common/`)
 
-`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error), `OfflineBanner` (warning strip shown when `useConnectivity()` reports no network). All named exports, all accept `style`.
+`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `InputField` (label/error), `OfflineBanner` (warning strip shown when `useConnectivity()` reports no network). All named exports, all accept `style`.
 
 ---
 
@@ -262,29 +262,31 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 Pure Supabase transport modules — the **only** place screens/hooks/services may
 touch Supabase. One file per domain. All imports are relative.
 
-| File             | Purpose                        |
-| ---------------- | ------------------------------ |
-| `authApi.ts`     | sign-in/out, session, profile  |
-| `productApi.ts`  | catalog CRUD                   |
-| `categoryApi.ts` | category CRUD                  |
-| `inventoryApi.ts`| inventory reads, `adjust_stock`|
+| File                | Purpose                                   |
+| ------------------- | ----------------------------------------- |
+| `authApi.ts`        | sign-in/out, session, profile             |
+| `productApi.ts`     | catalog CRUD                              |
+| `categoryApi.ts`    | category CRUD                             |
+| `inventoryApi.ts`   | inventory reads, `adjust_stock`           |
 | `transactionApi.ts` | transactions, items, `process_sale`, void |
-| `userApi.ts`     | user list/roles                |
-| `storageApi.ts`  | product image upload/delete    |
+| `userApi.ts`        | user list/roles                           |
+| `storageApi.ts`     | product image upload/delete               |
 
 ## Services (`src/services/`)
 
-| File                 | Purpose                                                                                                                       |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `supabase.ts`        | `createClient` from `EXPO_PUBLIC_*` env vars                                                                                  |
-| `sqlite.ts`          | `initDb` (7 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced`, cache getters/setters (products, categories, users, inventory) — modern async `expo-sqlite` API |
-| `syncService.ts`     | `syncPendingRecords()` pushes unsynced transactions/stock movements, dedup via remote id check                                 |
-| `catalogSync.ts`     | `refreshLocalCache()` mirrors products/categories/inventory/users into SQLite (best-effort)                                   |
-| `receiptService.ts`  | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)`                                                                 |
-| `printerService.ts`  | `printReceipt(html)`                                                                                                          |
-| `printerStorage.ts`  | persisted printer settings                                                                                                   |
+| File                | Purpose                                                                                                                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase.ts`       | `createClient` from `EXPO_PUBLIC_*` env vars                                                                                                                                                 |
+| `sqlite.ts`         | `initDb` (7 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced`, cache getters/setters (products, categories, users, inventory) — modern async `expo-sqlite` API         |
+| `syncService.ts`    | `syncPendingRecords()` pushes unsynced transactions/stock movements, dedup via remote id check                                                                                               |
+| `catalogSync.ts`    | `refreshLocalCache()` mirrors products/categories/inventory/users into SQLite (best-effort)                                                                                                  |
+| `receiptService.ts` | `generateReceipt(ReceiptData)` → 80mm PDF URI, `shareReceipt(uri)`, `buildReceiptHtml` (shared print/send HTML source of truth)                                                              |
+| `printerService.ts` | `scanBluetoothPrinters`, `connectPrinter`, `printReceiptToThermal` (ESC/POS via `react-native-thermal-printer-driver`), `printReceipt` + `printReceiptHtmlFallback` (system-dialog fallback) |
+| `printerStorage.ts` | AsyncStorage persistence of the paired printer (`{ type, address, port?, deviceType? }`)                                                                                                     |
 
 **Local SQLite tables:** `transactions`, `transaction_items`, `inventory`, `stock_movements`, `categories`, `products`, `users` (see `initDb`).
+
+> **Printing requires a custom dev build / EAS APK** — `react-native-thermal-printer-driver` is a native module and will **not** work in Expo Go or on web. `expo start` still builds the JS; test the UI there, but verify printing on an EAS `preview` APK with a real thermal printer. The native module's config plugin auto-adds Android Bluetooth/location permissions and iOS usage strings.
 
 ---
 

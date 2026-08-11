@@ -10,7 +10,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Button } from '@/components/common/Button/Button';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
-import { TextField } from '@/components/common/TextField/TextField';
+import { InputField } from '@/components/common/InputField/InputField';
 import { useAuth } from '@/context/AuthContext';
 import { colors } from '@/theme';
 import { User } from '@/types/entities';
@@ -166,7 +166,7 @@ export function UserManagement({
               Create Account
             </Text>
             <View style={userManagementStyles.formCard}>
-              <TextField
+              <InputField
                 label="Username"
                 value={form.username}
                 onChangeText={(text) =>
@@ -176,7 +176,7 @@ export function UserManagement({
                 autoCorrect={false}
                 placeholder="Cashier username"
               />
-              <TextField
+              <InputField
                 label="Password"
                 value={form.password}
                 onChangeText={(text) =>

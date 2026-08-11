@@ -16,7 +16,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
-import { TextField } from '@/components/common/TextField/TextField';
+import { InputField } from '@/components/common/InputField/InputField';
 import { CategoryPickerModal } from '@/components/common/Category/CategoryPickerModal';
 import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/context/AuthContext';
@@ -169,7 +169,7 @@ export function AddEditMenuItem({
               initialUrl={imageUrl}
               onChange={handleImageChange}
             />
-            <TextField
+            <InputField
               label="Name"
               value={name}
               onChangeText={setName}
@@ -196,7 +196,7 @@ export function AddEditMenuItem({
               </Text>
               <ChevronDown size={18} color={colors.textSecondary} />
             </Pressable>
-            <TextField
+            <InputField
               label="Price"
               value={priceText}
               onChangeText={setPriceText}

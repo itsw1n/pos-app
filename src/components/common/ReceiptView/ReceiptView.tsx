@@ -3,13 +3,16 @@ import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Coffee, Printer, Share } from 'lucide-react-native';
 import { generateReceipt, shareReceipt } from '@/services/receiptService';
-import { printReceipt } from '@/services/printerService';
+import {
+  printReceiptToThermal,
+  printReceiptHtmlFallback,
+  ReceiptDocumentData,
+} from '@/services/printerService';
 import { PaymentMode } from '@/types/context';
 import { colors } from '@/theme';
 import { BUSINESS } from '@/constants/business';
 import { formatOrderNumber } from '@/utils/orderNumber';
 import { Barcode } from '@/components/common/Barcode/Barcode';
-import { code128ToSvg } from '@/utils/code128';
 import { receiptViewStyles } from './ReceiptView.styles';
 
 export interface ReceiptViewItem {
@@ -70,33 +73,38 @@ export function ReceiptView({
   const handleShare = async (): Promise<void> => {
     const uri = await generateReceipt({
       transaction_id: transaction.id,
-      total_amount: transaction.total_amount,
-      payment_mode: transaction.payment_mode,
+      order_number: transaction.order_number,
       date: transaction.date,
+      cashier_name: transaction.cashierName,
+      payment_mode: transaction.payment_mode,
+      total_amount: transaction.total_amount,
+      amount_received: transaction.amount_received,
+      change_given: transaction.change_given,
+      status: transaction.status,
+      void_reason: transaction.void_reason,
       items: transaction.items,
     });
     await shareReceipt(uri);
   };
 
   const handlePrint = async (): Promise<void> => {
-    const itemHtml = transaction.items
-      .map((i) => `<p>${i.name} x${i.quantity} = ${i.subtotal.toFixed(2)}</p>`)
-      .join('');
-    const barcodeSvg = code128ToSvg(transaction.id, 280, 48);
-    await printReceipt(
-      `<html><body style="font-family: monospace; padding: 20px;">
-        <h3>Elvira Cafe</h3>
-        <p>Transaction: ${transaction.id}</p>
-        <p>Date: ${transaction.date}</p>
-        <p>Payment: ${PAYMENT_LABEL[transaction.payment_mode]}</p>
-        <hr />
-        ${itemHtml}
-        <hr />
-        <p><strong>Total: ${transaction.total_amount.toFixed(2)}</strong></p>
-        ${transaction.change_given != null ? `<p>Change: ${transaction.change_given.toFixed(2)}</p>` : ''}
-        <div style="text-align: center; margin-top: 12px;">${barcodeSvg}</div>
-      </body></html>`,
-    );
+    const document: ReceiptDocumentData = {
+      transaction_id: transaction.id,
+      order_number: transaction.order_number,
+      date: transaction.date,
+      cashierName: transaction.cashierName,
+      payment_mode: transaction.payment_mode,
+      total_amount: transaction.total_amount,
+      amount_received: transaction.amount_received,
+      change_given: transaction.change_given,
+      status: transaction.status,
+      void_reason: transaction.void_reason,
+      items: transaction.items,
+    };
+    const thermalResult = await printReceiptToThermal(document);
+    if (!thermalResult) {
+      await printReceiptHtmlFallback(document);
+    }
   };
 
   return (

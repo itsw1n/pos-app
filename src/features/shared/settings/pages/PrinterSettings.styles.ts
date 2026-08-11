@@ -96,4 +96,35 @@ export const printerSettingsStyles = StyleSheet.create({
     ...typography.md,
     color: colors.surface,
   },
+  wifiFields: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  wifiHostField: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  deviceList: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+  },
+  deviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.md,
+  },
+  deviceItemActive: {
+    backgroundColor: colors.background,
+  },
+  webNote: {
+    ...typography.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
 });
