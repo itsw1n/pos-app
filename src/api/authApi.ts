@@ -37,11 +37,12 @@ export async function signInWithPassword(
 export async function getUserProfile(
   userId: string,
 ): Promise<StoredUserProfile | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('user')
     .select('user_id, username, role')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
+  if (error) throw error;
   return (data as StoredUserProfile | undefined) ?? null;
 }
 

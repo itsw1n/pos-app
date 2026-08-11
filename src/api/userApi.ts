@@ -28,7 +28,7 @@ async function errorMessage(err: unknown): Promise<string> {
 export async function getUsers(): Promise<User[]> {
   const { data, error } = await supabase
     .from('user')
-    .select('*')
+    .select('user_id, username, role, is_active')
     .order('username', { ascending: true });
   if (error) throw error;
   return (data as User[]) ?? [];

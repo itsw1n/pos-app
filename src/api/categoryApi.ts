@@ -21,24 +21,13 @@ export async function createCategory(name: string): Promise<CategoryRow> {
 }
 
 export async function getOrCreateUncategorized(): Promise<CategoryRow> {
-  const { data: uncategorized, error: uncatError } = await supabase
+  const { data, error } = await supabase
     .from('category')
-    .select('*')
-    .eq('name', UNCATEGORIZED)
-    .maybeSingle();
-  if (uncatError) throw uncatError;
-
-  if (uncategorized) {
-    return uncategorized as CategoryRow;
-  }
-
-  const insert = await supabase
-    .from('category')
-    .insert({ name: UNCATEGORIZED })
+    .upsert({ name: UNCATEGORIZED }, { onConflict: 'name' })
     .select()
     .single();
-  if (insert.error) throw insert.error;
-  return insert.data as CategoryRow;
+  if (error) throw error;
+  return data as CategoryRow;
 }
 
 export async function reassignProducts(

@@ -1,6 +1,6 @@
 import { supabase } from '../services/supabase';
 import { PaymentMode } from '../types/context';
-import { TransactionItem, UserRole } from '../types/entities';
+import { UserRole } from '../types/entities';
 
 export interface TransactionRow {
   id: string;
@@ -15,17 +15,36 @@ export interface TransactionRow {
   change_given?: number | null;
 }
 
+/** Full `transaction_items` row (`select('*')`). `id` is the uuid PK. */
+export interface TransactionItemRow {
+  id: string;
+  transaction_id: string;
+  product_id: number;
+  quantity: number;
+  subtotal: number;
+}
+
+/** Sparse `transaction_items` projection for product analytics. */
+export interface TransactionItemSparse {
+  product_id: number;
+  quantity: number;
+  subtotal: number;
+}
+
 export async function getTransactionsList(
   role: UserRole | null,
   userId: string | undefined,
 ): Promise<TransactionRow[]> {
+  if (role !== 'admin' && userId === undefined) {
+    return [];
+  }
   let query = supabase
     .from('transactions')
     .select(
       'id, date, total_amount, payment_mode, user_id, status, void_reason, order_number, amount_received, change_given',
     )
     .order('date', { ascending: false });
-  if (role !== 'admin' && userId !== undefined && userId !== null) {
+  if (role !== 'admin' && userId !== null) {
     query = query.eq('user_id', userId);
   }
   const { data, error } = await query;
@@ -46,13 +65,13 @@ export async function getTransactionItemsByIds(
 
 export async function getTransactionItems(
   transactionId: string,
-): Promise<TransactionItem[]> {
+): Promise<TransactionItemRow[]> {
   const { data, error } = await supabase
     .from('transaction_items')
     .select('*')
     .eq('transaction_id', transactionId);
   if (error) throw error;
-  return (data as TransactionItem[]) ?? [];
+  return (data as TransactionItemRow[]) ?? [];
 }
 
 export async function transactionExists(
@@ -85,13 +104,13 @@ export async function getTransactionStatusRange(
 
 export async function getTransactionItemsForProducts(
   ids: string[],
-): Promise<TransactionItem[]> {
+): Promise<TransactionItemSparse[]> {
   const { data, error } = await supabase
     .from('transaction_items')
     .select('product_id, quantity, subtotal')
     .in('transaction_id', ids);
   if (error) throw error;
-  return (data as TransactionItem[]) ?? [];
+  return (data as TransactionItemSparse[]) ?? [];
 }
 
 export async function getTransactionsForDashboard(): Promise<TransactionRow[]> {

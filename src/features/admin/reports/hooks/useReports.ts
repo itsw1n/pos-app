@@ -4,12 +4,13 @@ import {
   getTransactionsInRange,
   getTransactionItemsForProducts,
   getTransactionStatusRange,
+  TransactionItemSparse,
   TransactionRow,
 } from '@/api/transactionApi';
 import { getInventory } from '@/api/inventoryApi';
 import { getProducts } from '@/api/productApi';
 import { PaymentMode } from '@/types/context';
-import { Product, TransactionItem } from '@/types/entities';
+import { Product } from '@/types/entities';
 
 export type StockLevel = 'ok' | 'low' | 'critical';
 
@@ -134,7 +135,7 @@ function isActive(transaction: Pick<TransactionRow, 'status'>): boolean {
 }
 
 function aggregateTopProducts(
-  items: TransactionItem[],
+  items: TransactionItemSparse[],
   productById: Map<number, Product>,
 ): TopProduct[] {
   const soldByProduct = new Map<
