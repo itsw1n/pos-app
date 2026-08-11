@@ -7,9 +7,13 @@ export function useConnectivity(): boolean {
 
   useEffect(() => {
     let active = true;
-    NetInfo.fetch().then((state: NetInfoState) => {
-      if (active) setIsConnected(state.isConnected === true);
-    });
+    NetInfo.fetch()
+      .then((state: NetInfoState) => {
+        if (active) setIsConnected(state.isConnected === true);
+      })
+      .catch(() => {
+        // Network state unavailable; keep the current value.
+      });
     const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       if (active) setIsConnected(state.isConnected === true);
     });

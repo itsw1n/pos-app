@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
@@ -9,27 +9,9 @@ import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
 import { LoginScreen } from '@/features/shared/login/pages/Login';
 import { colors } from '@/theme';
+import { loadingStyles, navigationStyles } from './Navigation.styles';
 
 const Stack = createStackNavigator();
-
-const loadingStyles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  surface: {
-    flex: 1,
-  },
-});
-
-const navigationStyles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-});
 
 function LoadingScreen(): React.JSX.Element {
   return (
