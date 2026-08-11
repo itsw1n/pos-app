@@ -5,11 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { getCatalog } from '@/api/productApi';
 import { processSale } from '@/api/transactionApi';
-import {
-  decrementLocalInventory,
-  getLocalProducts,
-  saveToSQLite,
-} from '@/services/sqlite';
+import { getLocalProducts, saveOfflineSale } from '@/services/sqlite';
 import { toProduct, toProductFromCache } from '@/services/catalog';
 import { CartItem, PaymentMode, POSTransaction } from '@/types/context';
 import { Product } from '@/types/entities';
@@ -59,6 +55,10 @@ export function useMenu(): UseMenuResult {
         servedFromCache = true;
         setProducts(cached.map(toProductFromCache));
       }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
+    try {
       const rows = await getCatalog();
       setProducts(rows.map(toProduct));
     } catch (err) {
@@ -113,28 +113,24 @@ export function useMenu(): UseMenuResult {
           date: transaction.date,
         });
       } else {
-        await saveToSQLite('transactions', {
-          id: transaction.id,
-          total_amount: transaction.total_amount,
-          payment_mode: transaction.payment_mode,
-          amount_received: transaction.amount_received,
-          change_given: transaction.change_given,
-          user_id: transaction.user_id,
-          date: transaction.date,
-          synced: false,
-        });
-        for (const item of cart) {
-          await saveToSQLite('transaction_items', {
+        await saveOfflineSale(
+          {
+            id: transaction.id,
+            total_amount: transaction.total_amount,
+            payment_mode: transaction.payment_mode,
+            amount_received: transaction.amount_received,
+            change_given: transaction.change_given,
+            user_id: transaction.user_id,
+            date: transaction.date,
+          },
+          cart.map((item) => ({
             id: uuid.v4(),
             transaction_id: transaction.id,
             product_id: item.product_id,
             quantity: item.qty,
             subtotal: item.price * item.qty,
-          });
-        }
-        for (const item of cart) {
-          await decrementLocalInventory(item.product_id, item.qty);
-        }
+          })),
+        );
       }
 
       clearCart();
