@@ -5,10 +5,18 @@ import {
   getTransactionItems as fetchRemoteItems,
   getTransactionItemsByIds,
   getTransactionsList,
+  TransactionRow,
   voidSale,
 } from '@/api/transactionApi';
 import { getProductIdNamePrice } from '@/api/productApi';
 import { getUsersIdName } from '@/api/userApi';
+import {
+  getLocalProducts,
+  getLocalTransactionItems,
+  getLocalTransactions,
+  getLocalUsers,
+  LocalTransaction,
+} from '@/services/sqlite';
 import { PaymentMode } from '@/types/context';
 
 export interface TransactionRecord {
@@ -44,6 +52,57 @@ export interface UseTransactionsResult {
   voidTransaction: (transactionId: string, reason: string) => Promise<void>;
 }
 
+function toLocalRecord(
+  transaction: LocalTransaction,
+  itemsCount: number,
+  userById: Map<string, string>,
+): TransactionRecord {
+  return {
+    id: transaction.id,
+    date: transaction.date,
+    total_amount: transaction.total_amount,
+    payment_mode: (transaction.payment_mode as PaymentMode) ?? 'cash',
+    user_id: transaction.user_id,
+    user_name: userById.get(String(transaction.user_id)) ?? 'Cashier',
+    items_count: itemsCount,
+    order_number: transaction.order_number ?? undefined,
+    status: transaction.status === 'voided' ? 'voided' : 'completed',
+    void_reason: transaction.void_reason ?? null,
+    amount_received: transaction.amount_received ?? null,
+    change_given: transaction.change_given ?? null,
+  };
+}
+
+function countLocalItems(transactions: LocalTransaction[]): Promise<number[]> {
+  return Promise.all(
+    transactions.map(async (transaction) => {
+      const items = await getLocalTransactionItems(transaction.id);
+      return items.length;
+    }),
+  );
+}
+
+function mapRemoteRecord(
+  row: TransactionRow,
+  itemsCount: number,
+  userById: Map<number, string>,
+): TransactionRecord {
+  return {
+    id: row.id,
+    date: row.date,
+    total_amount: row.total_amount,
+    payment_mode: row.payment_mode,
+    user_id: row.user_id,
+    user_name: userById.get(row.user_id) ?? 'Cashier',
+    items_count: itemsCount,
+    order_number: row.order_number ?? undefined,
+    status: row.status === 'voided' ? 'voided' : 'completed',
+    void_reason: row.void_reason ?? null,
+    amount_received: row.amount_received ?? null,
+    change_given: row.change_given ?? null,
+  };
+}
+
 export function useOrders(): UseTransactionsResult {
   const { user, role } = useAuth();
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
@@ -54,6 +113,31 @@ export function useOrders(): UseTransactionsResult {
   const loadTransactions = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
+    try {
+      let userById = new Map<string, string>();
+      try {
+        const cachedUsers = await getLocalUsers();
+        userById = new Map(
+          cachedUsers.map((row) => [row.user_id, row.username]),
+        );
+      } catch {
+        // No cached users; user_name falls back below.
+      }
+      const locals = await getLocalTransactions();
+      if (locals.length > 0) {
+        servedFromCache = true;
+        const itemCounts = await countLocalItems(locals);
+        setTransactions(
+          locals.map((row, index) =>
+            toLocalRecord(row, itemCounts[index] ?? 0, userById),
+          ),
+        );
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
+
     try {
       const rows = await getTransactionsList(role, user?.user_id);
 
@@ -80,26 +164,44 @@ export function useOrders(): UseTransactionsResult {
         (users ?? []).map((row) => [row.user_id, row.username]),
       );
 
-      setTransactions(
-        rows.map((row) => ({
-          id: row.id,
-          date: row.date,
-          total_amount: row.total_amount,
-          payment_mode: row.payment_mode,
-          user_id: row.user_id,
-          user_name: userById.get(row.user_id) ?? 'Cashier',
-          items_count: itemsCount.get(row.id) ?? 0,
-          order_number: row.order_number ?? undefined,
-          status: row.status === 'voided' ? 'voided' : 'completed',
-          void_reason: row.void_reason ?? null,
-          amount_received: row.amount_received ?? null,
-          change_given: row.change_given ?? null,
-        })),
-      );
+      const merged = new Map<string, TransactionRecord>();
+      for (const row of rows) {
+        merged.set(
+          row.id,
+          mapRemoteRecord(row, itemsCount.get(row.id) ?? 0, userById),
+        );
+      }
+
+      const locals = await getLocalTransactions();
+      const unsynced = locals.filter((row) => row.synced === 0);
+      if (unsynced.length > 0) {
+        const itemCounts = await countLocalItems(unsynced);
+        let localUserById = new Map<string, string>();
+        try {
+          const cachedUsers = await getLocalUsers();
+          localUserById = new Map(
+            cachedUsers.map((row) => [row.user_id, row.username]),
+          );
+        } catch {
+          // Fall back to the default label.
+        }
+        unsynced.forEach((row, index) => {
+          if (!merged.has(row.id)) {
+            merged.set(
+              row.id,
+              toLocalRecord(row, itemCounts[index] ?? 0, localUserById),
+            );
+          }
+        });
+      }
+
+      setTransactions(Array.from(merged.values()));
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load transactions',
-      );
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load transactions',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -107,24 +209,45 @@ export function useOrders(): UseTransactionsResult {
 
   const getTransactionItems = useCallback(
     async (transactionId: string): Promise<TransactionItemRow[]> => {
-      const [items, productRows] = await Promise.all([
-        fetchRemoteItems(transactionId),
-        getProductIdNamePrice(),
-      ]);
-      const productById = new Map(
-        productRows.map((product) => [product.product_id, product]),
-      );
+      try {
+        const [items, productRows] = await Promise.all([
+          fetchRemoteItems(transactionId),
+          getProductIdNamePrice(),
+        ]);
+        const productById = new Map(
+          productRows.map((product) => [product.product_id, product]),
+        );
 
-      return items.map((item) => {
-        const product = productById.get(item.product_id);
-        return {
-          product_id: item.product_id,
-          product_name: product?.name ?? `Product #${item.product_id}`,
-          quantity: item.quantity,
-          price: product?.price ?? 0,
-          subtotal: item.subtotal,
-        };
-      });
+        return items.map((item) => {
+          const product = productById.get(item.product_id);
+          return {
+            product_id: item.product_id,
+            product_name: product?.name ?? `Product #${item.product_id}`,
+            quantity: item.quantity,
+            price: product?.price ?? 0,
+            subtotal: item.subtotal,
+          };
+        });
+      } catch {
+        const [items, productRows] = await Promise.all([
+          getLocalTransactionItems(transactionId),
+          getLocalProducts(),
+        ]);
+        const productById = new Map(
+          productRows.map((product) => [product.product_id, product]),
+        );
+
+        return items.map((item) => {
+          const product = productById.get(item.product_id);
+          return {
+            product_id: item.product_id,
+            product_name: product?.name ?? `Product #${item.product_id}`,
+            quantity: item.quantity,
+            price: product?.price ?? 0,
+            subtotal: item.subtotal,
+          };
+        });
+      }
     },
     [],
   );
