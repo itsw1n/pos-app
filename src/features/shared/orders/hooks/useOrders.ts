@@ -14,10 +14,19 @@ import {
   getLocalProducts,
   getLocalTransactionItems,
   getLocalTransactions,
+  getLocalTransactionItemsCount,
   getLocalUsers,
   LocalTransaction,
 } from '@/services/sqlite';
 import { PaymentMode } from '@/types/context';
+
+const PAYMENT_MODES: PaymentMode[] = ['cash', 'gcash', 'maya'];
+
+function normalizePaymentMode(value: string): PaymentMode {
+  return PAYMENT_MODES.includes(value as PaymentMode)
+    ? (value as PaymentMode)
+    : 'cash';
+}
 
 export interface TransactionRecord {
   id: string;
@@ -61,7 +70,7 @@ function toLocalRecord(
     id: transaction.id,
     date: transaction.date,
     total_amount: transaction.total_amount,
-    payment_mode: (transaction.payment_mode as PaymentMode) ?? 'cash',
+    payment_mode: normalizePaymentMode(transaction.payment_mode),
     user_id: transaction.user_id,
     user_name: userById.get(transaction.user_id) ?? 'Cashier',
     items_count: itemsCount,
@@ -75,10 +84,9 @@ function toLocalRecord(
 
 function countLocalItems(transactions: LocalTransaction[]): Promise<number[]> {
   return Promise.all(
-    transactions.map(async (transaction) => {
-      const items = await getLocalTransactionItems(transaction.id);
-      return items.length;
-    }),
+    transactions.map((transaction) =>
+      getLocalTransactionItemsCount(transaction.id),
+    ),
   );
 }
 
@@ -91,7 +99,7 @@ function mapRemoteRecord(
     id: row.id,
     date: row.date,
     total_amount: row.total_amount,
-    payment_mode: row.payment_mode,
+    payment_mode: normalizePaymentMode(row.payment_mode),
     user_id: row.user_id,
     user_name: userById.get(row.user_id) ?? 'Cashier',
     items_count: itemsCount,
@@ -101,6 +109,25 @@ function mapRemoteRecord(
     amount_received: row.amount_received ?? null,
     change_given: row.change_given ?? null,
   };
+}
+
+function mapTransactionItems(
+  items: { product_id: number; quantity: number; subtotal: number }[],
+  productRows: { product_id: number; name: string; price: number }[],
+): TransactionItemRow[] {
+  const productById = new Map(
+    productRows.map((product) => [product.product_id, product]),
+  );
+  return items.map((item) => {
+    const product = productById.get(item.product_id);
+    return {
+      product_id: item.product_id,
+      product_name: product?.name ?? `Product #${item.product_id}`,
+      quantity: item.quantity,
+      price: product?.price ?? 0,
+      subtotal: item.subtotal,
+    };
+  });
 }
 
 export function useOrders(): UseTransactionsResult {
@@ -124,7 +151,9 @@ export function useOrders(): UseTransactionsResult {
       } catch {
         // No cached users; user_name falls back below.
       }
-      const locals = await getLocalTransactions();
+      const locals = (await getLocalTransactions()).filter(
+        (row) => role === 'admin' || row.user_id === user?.user_id,
+      );
       if (locals.length > 0) {
         servedFromCache = true;
         const itemCounts = await countLocalItems(locals);
@@ -172,7 +201,9 @@ export function useOrders(): UseTransactionsResult {
         );
       }
 
-      const locals = await getLocalTransactions();
+      const locals = (await getLocalTransactions()).filter(
+        (row) => role === 'admin' || row.user_id === user?.user_id,
+      );
       const unsynced = locals.filter((row) => row.synced === 0);
       if (unsynced.length > 0) {
         const itemCounts = await countLocalItems(unsynced);
@@ -195,7 +226,11 @@ export function useOrders(): UseTransactionsResult {
         });
       }
 
-      setTransactions(Array.from(merged.values()));
+      setTransactions(
+        Array.from(merged.values()).sort((a, b) =>
+          b.date.localeCompare(a.date),
+        ),
+      );
     } catch (err) {
       if (!servedFromCache) {
         setError(
@@ -214,39 +249,13 @@ export function useOrders(): UseTransactionsResult {
           fetchRemoteItems(transactionId),
           getProductIdNamePrice(),
         ]);
-        const productById = new Map(
-          productRows.map((product) => [product.product_id, product]),
-        );
-
-        return items.map((item) => {
-          const product = productById.get(item.product_id);
-          return {
-            product_id: item.product_id,
-            product_name: product?.name ?? `Product #${item.product_id}`,
-            quantity: item.quantity,
-            price: product?.price ?? 0,
-            subtotal: item.subtotal,
-          };
-        });
+        return mapTransactionItems(items, productRows);
       } catch {
         const [items, productRows] = await Promise.all([
           getLocalTransactionItems(transactionId),
           getLocalProducts(),
         ]);
-        const productById = new Map(
-          productRows.map((product) => [product.product_id, product]),
-        );
-
-        return items.map((item) => {
-          const product = productById.get(item.product_id);
-          return {
-            product_id: item.product_id,
-            product_name: product?.name ?? `Product #${item.product_id}`,
-            quantity: item.quantity,
-            price: product?.price ?? 0,
-            subtotal: item.subtotal,
-          };
-        });
+        return mapTransactionItems(items, productRows);
       }
     },
     [],
