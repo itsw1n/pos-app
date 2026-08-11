@@ -18,7 +18,10 @@ export interface UseUsersResult {
 
 function validatePayload(payload: UserPayload): void {
   if (!payload.username.trim()) {
-    throw new Error('Username is required');
+    throw new Error('Email is required');
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.username.trim())) {
+    throw new Error('Email must be a full address, e.g. staff@example.com');
   }
   if (!payload.password) {
     throw new Error('Password is required');
