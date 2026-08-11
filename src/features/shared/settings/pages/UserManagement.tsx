@@ -40,7 +40,7 @@ export function UserManagement({
   });
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [pendingToggle, setPendingToggle] = useState<User | null>(null);
 
   const pendingWillDisable =

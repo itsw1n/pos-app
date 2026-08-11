@@ -8,11 +8,11 @@ import { supabase } from '../services/supabase';
 import { UserRole } from '../types/entities';
 
 /**
- * App-level profile row for the authenticated Supabase user. Mirrors the
- * legacy shape (`user.user_id` is the auth UUID in practice).
+ * App-level profile row for the authenticated Supabase user. `user.user_id`
+ * mirrors the Supabase Auth UUID (`auth.users.id`).
  */
 export interface StoredUserProfile {
-  user_id: number;
+  user_id: string;
   username: string;
   role: UserRole;
 }

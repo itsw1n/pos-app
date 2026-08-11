@@ -11,7 +11,7 @@ export interface UnsyncedTransaction {
   id: string;
   total_amount: number;
   payment_mode: string;
-  user_id: number;
+  user_id: string;
   date: string;
   synced: number;
   amount_received: number | null;

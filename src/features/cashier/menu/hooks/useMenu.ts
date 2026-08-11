@@ -92,7 +92,7 @@ export function useMenu(): UseMenuResult {
           paymentMode === 'cash' && amountReceived !== undefined
             ? amountReceived - total
             : null,
-        user_id: user?.user_id ?? 0,
+        user_id: user?.user_id ?? '',
         date: new Date().toISOString(),
         status: 'completed',
         items: cart,

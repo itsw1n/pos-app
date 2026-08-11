@@ -34,7 +34,7 @@ function toAppUser(
   fallbackUsername: string,
 ): User {
   return {
-    user_id: profile?.user_id ?? 0,
+    user_id: profile?.user_id ?? '',
     username: profile?.username ?? fallbackUsername,
     password: '',
     role: profile?.role ?? 'cashier',
@@ -51,7 +51,7 @@ async function persistProfile(
   if (!profile) return;
   try {
     await upsertLocalUser({
-      user_id: String(profile.user_id),
+      user_id: profile.user_id,
       username: profile.username,
       role: profile.role,
     });
@@ -62,18 +62,18 @@ async function persistProfile(
 
 /**
  * Fall back to the cached profile when the remote profile fetch fails
- * (no connectivity). Prefers a username matching the session email, else the
- * only/most-recent cached user.
+ * (no connectivity). Matches by the Supabase session user id so the restored
+ * session belongs to the same account; returns undefined when absent.
  */
 async function resolveProfileOffline(
-  email: string,
+  userId: string,
 ): Promise<StoredUserProfile | undefined> {
   try {
     const cached = await getLocalUsers();
-    const match = cached.find((user) => user.username === email) ?? cached[0];
+    const match = cached.find((user) => user.user_id === userId);
     if (match) {
       return {
-        user_id: match.user_id as unknown as number,
+        user_id: match.user_id,
         username: match.username,
         role: match.role,
       };
@@ -131,7 +131,7 @@ export function AuthProvider({
             profile = undefined;
           }
           if (!profile) {
-            profile = await resolveProfileOffline(email);
+            profile = await resolveProfileOffline(session.user.id);
           }
           if (active) applyProfile(profile, email);
         }
@@ -160,7 +160,7 @@ export function AuthProvider({
               profile = undefined;
             }
             if (!profile) {
-              profile = await resolveProfileOffline(email);
+              profile = await resolveProfileOffline(authUser.id);
             }
             if (active) applyProfile(profile, email);
           })

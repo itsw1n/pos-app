@@ -1,9 +1,9 @@
 export type UserRole = 'admin' | 'cashier';
 
 export interface User {
-  user_id: number;
+  user_id: string;
   username: string;
-  password: string;
+  password?: string;
   role: UserRole;
   is_active?: boolean;
 }
@@ -25,16 +25,16 @@ export interface Product {
 }
 
 export interface Transaction {
-  transaction_id: number;
+  transaction_id: string;
   date: string;
   total_amount: number;
   payment_mode: 'cash' | 'gcash' | 'maya';
-  user_id: number;
+  user_id: string;
 }
 
 export interface TransactionItem {
-  item_id: number;
-  transaction_id: number;
+  item_id: string;
+  transaction_id: string;
   product_id: number;
   quantity: number;
   subtotal: number;

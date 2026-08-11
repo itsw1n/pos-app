@@ -7,7 +7,7 @@ export interface TransactionRow {
   date: string;
   total_amount: number;
   payment_mode: PaymentMode;
-  user_id: number;
+  user_id: string;
   status?: string | null;
   void_reason?: string | null;
   order_number?: number | null;
@@ -17,7 +17,7 @@ export interface TransactionRow {
 
 export async function getTransactionsList(
   role: UserRole | null,
-  userId: number | undefined,
+  userId: string | undefined,
 ): Promise<TransactionRow[]> {
   let query = supabase
     .from('transactions')

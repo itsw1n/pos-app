@@ -35,13 +35,13 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function getUsersIdName(): Promise<
-  { user_id: number; username: string }[]
+  { user_id: string; username: string }[]
 > {
   const { data, error } = await supabase
     .from('user')
     .select('user_id, username');
   if (error) throw error;
-  return (data as { user_id: number; username: string }[]) ?? [];
+  return (data as { user_id: string; username: string }[]) ?? [];
 }
 
 export async function createUser(payload: UserPayload): Promise<User> {
@@ -54,20 +54,20 @@ export async function createUser(payload: UserPayload): Promise<User> {
   });
   if (error) throw new Error(await errorMessage(error));
   return {
-    user_id: typeof data?.user_id === 'string' ? data.user_id : '',
+    user_id: data?.user_id ?? '',
     username: payload.username.trim(),
     password: '',
     role: payload.role,
     is_active: true,
-  } as User;
+  };
 }
 
 export async function setUserActive(
-  userId: number,
+  userId: string,
   isActive: boolean,
 ): Promise<void> {
   const { error } = await supabase.rpc('set_user_active', {
-    p_user_id: String(userId),
+    p_user_id: userId,
     p_active: isActive,
   });
   if (error) throw error;

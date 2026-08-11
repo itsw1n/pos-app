@@ -24,7 +24,7 @@ export interface TransactionRecord {
   date: string;
   total_amount: number;
   payment_mode: PaymentMode;
-  user_id: number;
+  user_id: string;
   user_name: string;
   items_count: number;
   order_number?: number;
@@ -63,7 +63,7 @@ function toLocalRecord(
     total_amount: transaction.total_amount,
     payment_mode: (transaction.payment_mode as PaymentMode) ?? 'cash',
     user_id: transaction.user_id,
-    user_name: userById.get(String(transaction.user_id)) ?? 'Cashier',
+    user_name: userById.get(transaction.user_id) ?? 'Cashier',
     items_count: itemsCount,
     order_number: transaction.order_number ?? undefined,
     status: transaction.status === 'voided' ? 'voided' : 'completed',
@@ -85,7 +85,7 @@ function countLocalItems(transactions: LocalTransaction[]): Promise<number[]> {
 function mapRemoteRecord(
   row: TransactionRow,
   itemsCount: number,
-  userById: Map<number, string>,
+  userById: Map<string, string>,
 ): TransactionRecord {
   return {
     id: row.id,

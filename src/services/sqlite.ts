@@ -29,7 +29,7 @@ export interface LocalTransaction {
   id: string;
   total_amount: number;
   payment_mode: string;
-  user_id: number;
+  user_id: string;
   date: string;
   synced: number;
   status?: string | null;

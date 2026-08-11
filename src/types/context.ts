@@ -29,7 +29,7 @@ export interface POSTransaction {
   payment_mode: PaymentMode;
   amount_received: number | null;
   change_given: number | null;
-  user_id: number;
+  user_id: string;
   date: string;
   status: 'completed';
   items: CartItem[];

@@ -13,7 +13,7 @@ export interface UseUsersResult {
   error: string;
   loadUsers: () => Promise<void>;
   createUser: (payload: UserPayload) => Promise<User>;
-  setUserActive: (userId: number, isActive: boolean) => Promise<void>;
+  setUserActive: (userId: string, isActive: boolean) => Promise<void>;
 }
 
 function validatePayload(payload: UserPayload): void {
@@ -56,13 +56,11 @@ export function useUsers(): UseUsersResult {
   );
 
   const setUserActive = useCallback(
-    async (userId: number, isActive: boolean): Promise<void> => {
+    async (userId: string, isActive: boolean): Promise<void> => {
       await setRemoteUserActive(userId, isActive);
       setUsers((prev) =>
         prev.map((user) =>
-          String(user.user_id) === String(userId)
-            ? { ...user, is_active: isActive }
-            : user,
+          user.user_id === userId ? { ...user, is_active: isActive } : user,
         ),
       );
     },
