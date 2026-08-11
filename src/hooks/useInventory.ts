@@ -1,9 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { supabase } from '@/services/supabase';
-import { saveToSQLite } from '@/services/sqlite';
-import { ProductRow, toProduct } from '@/services/catalog';
-import { Inventory } from '@/types/entities';
+import { adjustStock, getInventory } from '@/api/inventoryApi';
+import { getCatalog } from '@/api/productApi';
+import {
+  getLocalInventory,
+  getLocalProducts,
+  saveOfflineStockIn,
+} from '@/services/sqlite';
+import { refreshLocalCache } from '@/services/catalogSync';
+import { toProduct, toProductFromCache } from '@/services/catalog';
+import { Inventory, Product } from '@/types/entities';
 
 export type StockStatus = 'ok' | 'low' | 'critical';
 
@@ -31,6 +37,23 @@ export interface UseInventoryResult {
   criticalCount: number;
 }
 
+function buildInventoryItems(
+  inventory: Inventory[],
+  products: Product[],
+): InventoryItem[] {
+  const productById = new Map(products.map((p) => [p.product_id, p]));
+  return inventory.map((record) => {
+    const product = productById.get(record.product_id);
+    return {
+      ...record,
+      product_name: product?.name ?? `Product #${record.product_id}`,
+      product_category: product?.category ?? 'Uncategorized',
+      price: product?.price ?? 0,
+      is_available: product?.is_available ?? false,
+    };
+  });
+}
+
 export function useInventory(): UseInventoryResult {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,30 +62,33 @@ export function useInventory(): UseInventoryResult {
   const loadInventory = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
     try {
-      const [inventoryRes, productRes] = await Promise.all([
-        supabase.from('inventory').select('*'),
-        supabase.from('product').select('*, category(name)'),
+      const [inventory, productRows] = await Promise.all([
+        getLocalInventory(),
+        getLocalProducts(),
       ]);
-      const inventory = (inventoryRes.data as Inventory[]) ?? [];
-      const products = ((productRes.data as unknown as ProductRow[]) ?? []).map(
-        toProduct,
-      );
-      const productById = new Map(products.map((p) => [p.product_id, p]));
-      setItems(
-        inventory.map((record) => {
-          const product = productById.get(record.product_id);
-          return {
-            ...record,
-            product_name: product?.name ?? `Product #${record.product_id}`,
-            product_category: product?.category ?? 'Uncategorized',
-            price: product?.price ?? 0,
-            is_available: product?.is_available ?? false,
-          };
-        }),
-      );
+      if (inventory.length > 0 && productRows.length > 0) {
+        servedFromCache = true;
+        setItems(
+          buildInventoryItems(inventory, productRows.map(toProductFromCache)),
+        );
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
+    try {
+      const [inventory, productRows] = await Promise.all([
+        getInventory(),
+        getCatalog(),
+      ]);
+      setItems(buildInventoryItems(inventory, productRows.map(toProduct)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inventory');
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load inventory',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -96,22 +122,20 @@ export function useInventory(): UseInventoryResult {
       const date = new Date().toISOString();
       const { isConnected } = await NetInfo.fetch();
       if (isConnected) {
-        const { error: adjustError } = await supabase.rpc('adjust_stock', {
-          p_stock_id: payload.stockId,
-          p_quantity: payload.quantity,
-          p_supplier: payload.supplier ?? null,
-        });
-        if (adjustError) throw adjustError;
+        await adjustStock(
+          payload.stockId,
+          payload.quantity,
+          payload.supplier ?? null,
+        );
       } else {
-        await saveToSQLite('stock_movements', {
+        await saveOfflineStockIn({
           stock_id: payload.stockId,
-          type: 'in',
           quantity: payload.quantity,
+          supplier: payload.supplier ?? null,
           date,
-          supplier: payload.supplier ?? '',
-          synced: false,
         });
       }
+      void refreshLocalCache();
       await loadInventory();
     },
     [loadInventory],

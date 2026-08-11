@@ -1,3 +1,4 @@
+import type { LocalProduct } from './sqlite';
 import { Category, Product } from '../types/entities';
 
 export const UNCATEGORIZED = 'Uncategorized';
@@ -42,5 +43,18 @@ export function toCategory(row: CategoryRow): Category {
     category_id: row.category_id,
     name: row.name,
     created_at: row.created_at,
+  };
+}
+
+/** Map a cached `products` row back to the domain `Product` shape. */
+export function toProductFromCache(local: LocalProduct): Product {
+  return {
+    product_id: local.product_id,
+    name: local.name,
+    category: local.category_name,
+    category_id: local.category_id,
+    price: local.price,
+    is_available: Boolean(local.is_available),
+    image_url: local.image_url ?? null,
   };
 }

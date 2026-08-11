@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Camera, RefreshCw, Trash2 } from 'lucide-react-native';
-import { ProductImageFile } from '@/services/storage';
+import { ProductImageFile } from '@/api/storageApi';
 import { colors } from '@/theme';
 import { imagePickerFieldStyles } from './ImagePickerField.styles';
 

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '../services/supabase';
 
 export const PRODUCT_IMAGES_BUCKET = 'product-images';
 

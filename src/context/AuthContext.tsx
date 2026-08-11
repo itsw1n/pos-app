@@ -5,7 +5,16 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { supabase } from '../services/supabase';
+import {
+  getCurrentUser,
+  getSession,
+  getUserProfile,
+  onAuthStateChange,
+  signInWithPassword,
+  signOut,
+  StoredUserProfile,
+} from '../api/authApi';
+import { getLocalUsers, upsertLocalUser } from '../services/sqlite';
 import { User, UserRole } from '../types/entities';
 
 export interface AuthContextType {
@@ -18,18 +27,61 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-type StoredUser = Pick<User, 'user_id' | 'username' | 'role'>;
+type StoredUser = StoredUserProfile;
 
 function toAppUser(
   profile: StoredUser | undefined,
   fallbackUsername: string,
 ): User {
   return {
-    user_id: profile?.user_id ?? 0,
+    user_id: profile?.user_id ?? '',
     username: profile?.username ?? fallbackUsername,
     password: '',
     role: profile?.role ?? 'cashier',
   };
+}
+
+/**
+ * Persist the signed-in app profile to the local cache so a later cold start
+ * can restore the session while offline. Best-effort; never blocks login.
+ */
+async function persistProfile(
+  profile: StoredUserProfile | undefined,
+): Promise<void> {
+  if (!profile) return;
+  try {
+    await upsertLocalUser({
+      user_id: profile.user_id,
+      username: profile.username,
+      role: profile.role,
+    });
+  } catch {
+    // Cache write is best-effort.
+  }
+}
+
+/**
+ * Fall back to the cached profile when the remote profile fetch fails
+ * (no connectivity). Matches by the Supabase session user id so the restored
+ * session belongs to the same account; returns undefined when absent.
+ */
+async function resolveProfileOffline(
+  userId: string,
+): Promise<StoredUserProfile | undefined> {
+  try {
+    const cached = await getLocalUsers();
+    const match = cached.find((user) => user.user_id === userId);
+    if (match) {
+      return {
+        user_id: match.user_id,
+        username: match.username,
+        role: match.role,
+      };
+    }
+  } catch {
+    // No local cache yet; the app falls back to the login screen.
+  }
+  return undefined;
 }
 
 export function AuthProvider({
@@ -51,23 +103,14 @@ export function AuthProvider({
   );
 
   const login = async (username: string, password: string): Promise<void> => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: username,
-      password,
-    });
-    if (error) throw error;
-
-    const { data: profile } = await supabase
-      .from('user')
-      .select('user_id, username, role')
-      .eq('user_id', data.user.id)
-      .single();
-
-    applyProfile(profile as StoredUser | undefined, username);
+    const authUser = await signInWithPassword(username, password);
+    const profile = await getUserProfile(authUser.id);
+    await persistProfile(profile ?? undefined);
+    applyProfile(profile ?? undefined, username);
   };
 
   const logout = async (): Promise<void> => {
-    await supabase.auth.signOut();
+    await signOut();
     setUser(null);
     setRole(null);
   };
@@ -75,25 +118,22 @@ export function AuthProvider({
   useEffect(() => {
     let active = true;
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
+    getSession()
+      .then(async (session) => {
         if (!active) return;
-        if (data.session) {
-          return supabase.auth.getUser().then(({ data: userData }) =>
-            supabase
-              .from('user')
-              .select('user_id, username, role')
-              .eq('user_id', userData.user?.id ?? '')
-              .single()
-              .then(({ data: profile }) => {
-                if (active)
-                  applyProfile(
-                    profile as StoredUser | undefined,
-                    userData.user?.email ?? '',
-                  );
-              }),
-          );
+        if (session) {
+          const email = session.user.email ?? '';
+          let profile: StoredUserProfile | undefined;
+          try {
+            profile = (await getUserProfile(session.user.id)) ?? undefined;
+            await persistProfile(profile);
+          } catch {
+            profile = undefined;
+          }
+          if (!profile) {
+            profile = await resolveProfileOffline(session.user.id);
+          }
+          if (active) applyProfile(profile, email);
         }
         return undefined;
       })
@@ -101,31 +141,34 @@ export function AuthProvider({
         if (active) setIsHydrating(false);
       });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT' || !session) {
-          if (active) {
-            setUser(null);
-            setRole(null);
-          }
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          supabase.auth.getUser().then(({ data: userData }) =>
-            supabase
-              .from('user')
-              .select('user_id, username, role')
-              .eq('user_id', userData.user?.id ?? '')
-              .single()
-              .then(({ data: profile }) => {
-                if (active)
-                  applyProfile(
-                    profile as StoredUser | undefined,
-                    userData.user?.email ?? '',
-                  );
-              }),
-          );
+    const { data: subscription } = onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        if (active) {
+          setUser(null);
+          setRole(null);
         }
-      },
-    );
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        getCurrentUser()
+          .then(async (authUser) => {
+            if (!authUser) return;
+            const email = authUser.email ?? '';
+            let profile: StoredUserProfile | undefined;
+            try {
+              profile = (await getUserProfile(authUser.id)) ?? undefined;
+              await persistProfile(profile);
+            } catch {
+              profile = undefined;
+            }
+            if (!profile) {
+              profile = await resolveProfileOffline(authUser.id);
+            }
+            if (active) applyProfile(profile, email);
+          })
+          .catch(() => {
+            // Profile resolution failed; session state drives navigation.
+          });
+      }
+    });
 
     return () => {
       active = false;

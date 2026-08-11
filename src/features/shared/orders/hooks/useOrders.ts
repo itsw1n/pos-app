@@ -1,21 +1,31 @@
 import { useCallback, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/services/supabase';
+import {
+  getTransactionItems as fetchRemoteItems,
+  getTransactionItemsByIds,
+  getTransactionsList,
+  TransactionRow,
+  voidSale,
+} from '@/api/transactionApi';
+import { getProductIdNamePrice } from '@/api/productApi';
+import { getUsersIdName } from '@/api/userApi';
+import {
+  getLocalProducts,
+  getLocalTransactionItems,
+  getLocalTransactions,
+  getLocalTransactionItemsCount,
+  getLocalUsers,
+  LocalTransaction,
+} from '@/services/sqlite';
 import { PaymentMode } from '@/types/context';
-import { Product, TransactionItem } from '@/types/entities';
 
-interface StoredTransaction {
-  id: string;
-  date: string;
-  total_amount: number;
-  payment_mode: PaymentMode;
-  user_id: number;
-  status?: string | null;
-  void_reason?: string | null;
-  order_number?: number | null;
-  amount_received?: number | null;
-  change_given?: number | null;
+const PAYMENT_MODES: PaymentMode[] = ['cash', 'gcash', 'maya'];
+
+function normalizePaymentMode(value: string): PaymentMode {
+  return PAYMENT_MODES.includes(value as PaymentMode)
+    ? (value as PaymentMode)
+    : 'cash';
 }
 
 export interface TransactionRecord {
@@ -23,7 +33,7 @@ export interface TransactionRecord {
   date: string;
   total_amount: number;
   payment_mode: PaymentMode;
-  user_id: number;
+  user_id: string;
   user_name: string;
   items_count: number;
   order_number?: number;
@@ -51,6 +61,75 @@ export interface UseTransactionsResult {
   voidTransaction: (transactionId: string, reason: string) => Promise<void>;
 }
 
+function toLocalRecord(
+  transaction: LocalTransaction,
+  itemsCount: number,
+  userById: Map<string, string>,
+): TransactionRecord {
+  return {
+    id: transaction.id,
+    date: transaction.date,
+    total_amount: transaction.total_amount,
+    payment_mode: normalizePaymentMode(transaction.payment_mode),
+    user_id: transaction.user_id,
+    user_name: userById.get(transaction.user_id) ?? 'Cashier',
+    items_count: itemsCount,
+    order_number: transaction.order_number ?? undefined,
+    status: transaction.status === 'voided' ? 'voided' : 'completed',
+    void_reason: transaction.void_reason ?? null,
+    amount_received: transaction.amount_received ?? null,
+    change_given: transaction.change_given ?? null,
+  };
+}
+
+function countLocalItems(transactions: LocalTransaction[]): Promise<number[]> {
+  return Promise.all(
+    transactions.map((transaction) =>
+      getLocalTransactionItemsCount(transaction.id),
+    ),
+  );
+}
+
+function mapRemoteRecord(
+  row: TransactionRow,
+  itemsCount: number,
+  userById: Map<string, string>,
+): TransactionRecord {
+  return {
+    id: row.id,
+    date: row.date,
+    total_amount: row.total_amount,
+    payment_mode: normalizePaymentMode(row.payment_mode),
+    user_id: row.user_id,
+    user_name: userById.get(row.user_id) ?? 'Cashier',
+    items_count: itemsCount,
+    order_number: row.order_number ?? undefined,
+    status: row.status === 'voided' ? 'voided' : 'completed',
+    void_reason: row.void_reason ?? null,
+    amount_received: row.amount_received ?? null,
+    change_given: row.change_given ?? null,
+  };
+}
+
+function mapTransactionItems(
+  items: { product_id: number; quantity: number; subtotal: number }[],
+  productRows: { product_id: number; name: string; price: number }[],
+): TransactionItemRow[] {
+  const productById = new Map(
+    productRows.map((product) => [product.product_id, product]),
+  );
+  return items.map((item) => {
+    const product = productById.get(item.product_id);
+    return {
+      product_id: item.product_id,
+      product_name: product?.name ?? `Product #${item.product_id}`,
+      quantity: item.quantity,
+      price: product?.price ?? 0,
+      subtotal: item.subtotal,
+    };
+  });
+}
+
 export function useOrders(): UseTransactionsResult {
   const { user, role } = useAuth();
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
@@ -61,69 +140,103 @@ export function useOrders(): UseTransactionsResult {
   const loadTransactions = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
     try {
-      let query = supabase
-        .from('transactions')
-        .select(
-          'id, date, total_amount, payment_mode, user_id, status, void_reason, order_number, amount_received, change_given',
-        )
-        .order('date', { ascending: false });
-      if (role !== 'admin' && user) {
-        query = query.eq('user_id', user.user_id);
+      let userById = new Map<string, string>();
+      try {
+        const cachedUsers = await getLocalUsers();
+        userById = new Map(
+          cachedUsers.map((row) => [row.user_id, row.username]),
+        );
+      } catch {
+        // No cached users; user_name falls back below.
       }
-      const { data, error: transactionsError } = await query;
-      if (transactionsError) throw transactionsError;
-      const rows = (data as StoredTransaction[]) ?? [];
+      const locals = (await getLocalTransactions()).filter(
+        (row) => role === 'admin' || row.user_id === user?.user_id,
+      );
+      if (locals.length > 0) {
+        servedFromCache = true;
+        const itemCounts = await countLocalItems(locals);
+        setTransactions(
+          locals.map((row, index) =>
+            toLocalRecord(row, itemCounts[index] ?? 0, userById),
+          ),
+        );
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
+
+    try {
+      const rows = await getTransactionsList(role, user?.user_id);
 
       let itemsCount = new Map<string, number>();
       if (rows.length > 0) {
-        const { data: items, error: itemsError } = await supabase
-          .from('transaction_items')
-          .select('transaction_id')
-          .in(
-            'transaction_id',
+        try {
+          const items = await getTransactionItemsByIds(
             rows.map((row) => row.id),
           );
-        if (!itemsError) {
           itemsCount = new Map<string, number>();
-          for (const item of (items as { transaction_id: string }[]) ?? []) {
+          for (const item of items) {
             itemsCount.set(
               item.transaction_id,
               (itemsCount.get(item.transaction_id) ?? 0) + 1,
             );
           }
+        } catch {
+          // Items count is secondary; the list still renders without it.
         }
       }
 
-      const { data: users } = await supabase
-        .from('user')
-        .select('user_id, username');
+      const users = await getUsersIdName();
       const userById = new Map(
-        ((users as { user_id: number; username: string }[]) ?? []).map(
-          (row) => [row.user_id, row.username],
-        ),
+        (users ?? []).map((row) => [row.user_id, row.username]),
       );
 
+      const merged = new Map<string, TransactionRecord>();
+      for (const row of rows) {
+        merged.set(
+          row.id,
+          mapRemoteRecord(row, itemsCount.get(row.id) ?? 0, userById),
+        );
+      }
+
+      const locals = (await getLocalTransactions()).filter(
+        (row) => role === 'admin' || row.user_id === user?.user_id,
+      );
+      const unsynced = locals.filter((row) => row.synced === 0);
+      if (unsynced.length > 0) {
+        const itemCounts = await countLocalItems(unsynced);
+        let localUserById = new Map<string, string>();
+        try {
+          const cachedUsers = await getLocalUsers();
+          localUserById = new Map(
+            cachedUsers.map((row) => [row.user_id, row.username]),
+          );
+        } catch {
+          // Fall back to the default label.
+        }
+        unsynced.forEach((row, index) => {
+          if (!merged.has(row.id)) {
+            merged.set(
+              row.id,
+              toLocalRecord(row, itemCounts[index] ?? 0, localUserById),
+            );
+          }
+        });
+      }
+
       setTransactions(
-        rows.map((row) => ({
-          id: row.id,
-          date: row.date,
-          total_amount: row.total_amount,
-          payment_mode: row.payment_mode,
-          user_id: row.user_id,
-          user_name: userById.get(row.user_id) ?? 'Cashier',
-          items_count: itemsCount.get(row.id) ?? 0,
-          order_number: row.order_number ?? undefined,
-          status: row.status === 'voided' ? 'voided' : 'completed',
-          void_reason: row.void_reason ?? null,
-          amount_received: row.amount_received ?? null,
-          change_given: row.change_given ?? null,
-        })),
+        Array.from(merged.values()).sort((a, b) =>
+          b.date.localeCompare(a.date),
+        ),
       );
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load transactions',
-      );
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load transactions',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -131,32 +244,19 @@ export function useOrders(): UseTransactionsResult {
 
   const getTransactionItems = useCallback(
     async (transactionId: string): Promise<TransactionItemRow[]> => {
-      const [itemsRes, productsRes] = await Promise.all([
-        supabase
-          .from('transaction_items')
-          .select('*')
-          .eq('transaction_id', transactionId),
-        supabase.from('product').select('product_id, name, price'),
-      ]);
-      if (itemsRes.error) throw itemsRes.error;
-      if (productsRes.error) throw productsRes.error;
-
-      const items = (itemsRes.data as TransactionItem[]) ?? [];
-      const products = (productsRes.data as Product[]) ?? [];
-      const productById = new Map(
-        products.map((product) => [product.product_id, product]),
-      );
-
-      return items.map((item) => {
-        const product = productById.get(item.product_id);
-        return {
-          product_id: item.product_id,
-          product_name: product?.name ?? `Product #${item.product_id}`,
-          quantity: item.quantity,
-          price: product?.price ?? 0,
-          subtotal: item.subtotal,
-        };
-      });
+      try {
+        const [items, productRows] = await Promise.all([
+          fetchRemoteItems(transactionId),
+          getProductIdNamePrice(),
+        ]);
+        return mapTransactionItems(items, productRows);
+      } catch {
+        const [items, productRows] = await Promise.all([
+          getLocalTransactionItems(transactionId),
+          getLocalProducts(),
+        ]);
+        return mapTransactionItems(items, productRows);
+      }
     },
     [],
   );
@@ -177,11 +277,7 @@ export function useOrders(): UseTransactionsResult {
       setIsVoiding(true);
       setError('');
       try {
-        const { error: voidError } = await supabase.rpc('void_sale', {
-          p_transaction_id: transactionId,
-          p_reason: trimmedReason,
-        });
-        if (voidError) throw voidError;
+        await voidSale(transactionId, trimmedReason);
 
         await loadTransactions();
       } catch (err) {

@@ -1,26 +1,17 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
+import { useConnectivity } from '@/hooks/useConnectivity';
+import { OfflineBanner } from '@/components/common/OfflineBanner/OfflineBanner';
 import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
 import { LoginScreen } from '@/features/shared/login/pages/Login';
 import { colors } from '@/theme';
+import { loadingStyles, navigationStyles } from './Navigation.styles';
 
 const Stack = createStackNavigator();
-
-const loadingStyles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  surface: {
-    flex: 1,
-  },
-});
 
 function LoadingScreen(): React.JSX.Element {
   return (
@@ -34,6 +25,7 @@ function LoadingScreen(): React.JSX.Element {
 
 export function Navigation(): React.JSX.Element {
   const { user, role, isHydrating } = useAuth();
+  const isConnected = useConnectivity();
 
   if (isHydrating) {
     return <LoadingScreen />;
@@ -41,21 +33,29 @@ export function Navigation(): React.JSX.Element {
 
   if (!user) {
     return (
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <View style={navigationStyles.root}>
+        <OfflineBanner visible={!isConnected} />
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Main">
-          {() => (role === 'admin' ? <AdminNavigator /> : <CashierNavigator />)}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={navigationStyles.root}>
+      <OfflineBanner visible={!isConnected} />
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Main">
+            {() =>
+              role === 'admin' ? <AdminNavigator /> : <CashierNavigator />
+            }
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
