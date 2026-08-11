@@ -8,24 +8,11 @@ import { processSale } from '@/api/transactionApi';
 import {
   decrementLocalInventory,
   getLocalProducts,
-  LocalProduct,
   saveToSQLite,
 } from '@/services/sqlite';
-import { toProduct } from '@/services/catalog';
+import { toProduct, toProductFromCache } from '@/services/catalog';
 import { CartItem, PaymentMode, POSTransaction } from '@/types/context';
 import { Product } from '@/types/entities';
-
-function toLocalProduct(product: LocalProduct): Product {
-  return {
-    product_id: product.product_id,
-    name: product.name,
-    category: product.category_name,
-    category_id: product.category_id,
-    price: product.price,
-    is_available: product.is_available,
-    image_url: product.image_url ?? null,
-  };
-}
 
 export interface UseMenuResult {
   cart: CartItem[];
@@ -70,7 +57,7 @@ export function useMenu(): UseMenuResult {
       const cached = await getLocalProducts();
       if (cached.length > 0) {
         servedFromCache = true;
-        setProducts(cached.map(toLocalProduct));
+        setProducts(cached.map(toProductFromCache));
       }
       const rows = await getCatalog();
       setProducts(rows.map(toProduct));

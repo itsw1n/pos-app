@@ -2,9 +2,13 @@ import { useCallback, useMemo, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { adjustStock, getInventory } from '@/api/inventoryApi';
 import { getCatalog } from '@/api/productApi';
-import { saveToSQLite } from '@/services/sqlite';
-import { toProduct } from '@/services/catalog';
-import { Inventory } from '@/types/entities';
+import {
+  getLocalInventory,
+  getLocalProducts,
+  saveToSQLite,
+} from '@/services/sqlite';
+import { toProduct, toProductFromCache } from '@/services/catalog';
+import { Inventory, Product } from '@/types/entities';
 
 export type StockStatus = 'ok' | 'low' | 'critical';
 
@@ -32,6 +36,23 @@ export interface UseInventoryResult {
   criticalCount: number;
 }
 
+function buildInventoryItems(
+  inventory: Inventory[],
+  products: Product[],
+): InventoryItem[] {
+  const productById = new Map(products.map((p) => [p.product_id, p]));
+  return inventory.map((record) => {
+    const product = productById.get(record.product_id);
+    return {
+      ...record,
+      product_name: product?.name ?? `Product #${record.product_id}`,
+      product_category: product?.category ?? 'Uncategorized',
+      price: product?.price ?? 0,
+      is_available: product?.is_available ?? false,
+    };
+  });
+}
+
 export function useInventory(): UseInventoryResult {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,27 +61,33 @@ export function useInventory(): UseInventoryResult {
   const loadInventory = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
+    try {
+      const [inventory, productRows] = await Promise.all([
+        getLocalInventory(),
+        getLocalProducts(),
+      ]);
+      if (inventory.length > 0 && productRows.length > 0) {
+        servedFromCache = true;
+        setItems(
+          buildInventoryItems(inventory, productRows.map(toProductFromCache)),
+        );
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
     try {
       const [inventory, productRows] = await Promise.all([
         getInventory(),
         getCatalog(),
       ]);
-      const products = productRows.map(toProduct);
-      const productById = new Map(products.map((p) => [p.product_id, p]));
-      setItems(
-        inventory.map((record) => {
-          const product = productById.get(record.product_id);
-          return {
-            ...record,
-            product_name: product?.name ?? `Product #${record.product_id}`,
-            product_category: product?.category ?? 'Uncategorized',
-            price: product?.price ?? 0,
-            is_available: product?.is_available ?? false,
-          };
-        }),
-      );
+      setItems(buildInventoryItems(inventory, productRows.map(toProduct)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load inventory');
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load inventory',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
