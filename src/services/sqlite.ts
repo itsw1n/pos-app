@@ -15,7 +15,7 @@ export interface LocalProduct {
   category_id: string;
   category_name: string;
   price: number;
-  is_available: boolean;
+  is_available: number;
   image_url: string | null;
 }
 
@@ -106,12 +106,14 @@ export async function initDb(): Promise<void> {
   `);
   try {
     await db.execAsync(
-      'CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_product ON inventory (product_id);',
+      'DELETE FROM inventory WHERE stock_id NOT IN (SELECT MIN(stock_id) FROM inventory GROUP BY product_id);',
     );
   } catch {
-    // Legacy local DBs may hold duplicate rows; a later full cache replace
-    // keeps exactly one row per product.
+    // No inventory rows yet on a fresh local DB.
   }
+  await db.execAsync(
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_product ON inventory (product_id);',
+  );
   try {
     await db.execAsync(
       'ALTER TABLE stock_movements ADD COLUMN synced INTEGER DEFAULT 0;',
@@ -184,8 +186,7 @@ export async function replaceLocalProducts(
   products: LocalProduct[],
 ): Promise<void> {
   const db = await getDb();
-  await db.execAsync('BEGIN');
-  try {
+  await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM products;');
     for (const product of products) {
       await db.runAsync(
@@ -196,15 +197,11 @@ export async function replaceLocalProducts(
         product.category_id,
         product.category_name,
         product.price,
-        product.is_available ? 1 : 0,
+        product.is_available,
         product.image_url,
       );
     }
-    await db.execAsync('COMMIT');
-  } catch (err) {
-    await db.execAsync('ROLLBACK');
-    throw err;
-  }
+  });
 }
 
 export async function getLocalCategories(): Promise<
@@ -226,8 +223,7 @@ export async function replaceLocalCategories(
   }[],
 ): Promise<void> {
   const db = await getDb();
-  await db.execAsync('BEGIN');
-  try {
+  await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM categories;');
     for (const category of categories) {
       await db.runAsync(
@@ -237,11 +233,7 @@ export async function replaceLocalCategories(
         category.created_at ?? null,
       );
     }
-    await db.execAsync('COMMIT');
-  } catch (err) {
-    await db.execAsync('ROLLBACK');
-    throw err;
-  }
+  });
 }
 
 export async function getLocalUsers(): Promise<LocalUser[]> {
@@ -251,8 +243,7 @@ export async function getLocalUsers(): Promise<LocalUser[]> {
 
 export async function upsertLocalUsers(users: LocalUser[]): Promise<void> {
   const db = await getDb();
-  await db.execAsync('BEGIN');
-  try {
+  await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM users;');
     for (const user of users) {
       await db.runAsync(
@@ -262,11 +253,7 @@ export async function upsertLocalUsers(users: LocalUser[]): Promise<void> {
         user.role,
       );
     }
-    await db.execAsync('COMMIT');
-  } catch (err) {
-    await db.execAsync('ROLLBACK');
-    throw err;
-  }
+  });
 }
 
 export async function upsertLocalUser(profile: LocalUser): Promise<void> {
@@ -306,8 +293,7 @@ export async function replaceLocalInventory(
   }[],
 ): Promise<void> {
   const db = await getDb();
-  await db.execAsync('BEGIN');
-  try {
+  await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM inventory;');
     for (const record of inventory) {
       await db.runAsync(
@@ -319,11 +305,7 @@ export async function replaceLocalInventory(
         record.reorder_level,
       );
     }
-    await db.execAsync('COMMIT');
-  } catch (err) {
-    await db.execAsync('ROLLBACK');
-    throw err;
-  }
+  });
 }
 
 export async function upsertLocalInventory(record: {
@@ -370,4 +352,71 @@ export async function getLocalTransactionItems(
     `SELECT product_id, quantity, subtotal FROM transaction_items WHERE transaction_id = ?`,
     transactionId,
   );
+}
+
+export async function getLocalTransactionItemsCount(
+  transactionId: string,
+): Promise<number> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM transaction_items WHERE transaction_id = ?`,
+    transactionId,
+  );
+  return row?.count ?? 0;
+}
+
+/**
+ * Persist an offline sale (transaction + items + inventory decrements) in a
+ * single transaction so a partial write can never be committed.
+ */
+export async function saveOfflineSale(
+  transaction: {
+    id: string;
+    total_amount: number;
+    payment_mode: string;
+    amount_received: number | null;
+    change_given: number | null;
+    user_id: string;
+    date: string;
+  },
+  items: {
+    id: string;
+    transaction_id: string;
+    product_id: number;
+    quantity: number;
+    subtotal: number;
+  }[],
+): Promise<void> {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `INSERT INTO transactions (id, total_amount, payment_mode, amount_received, change_given, user_id, date, synced)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+      transaction.id,
+      transaction.total_amount,
+      transaction.payment_mode,
+      transaction.amount_received,
+      transaction.change_given,
+      transaction.user_id,
+      transaction.date,
+    );
+    for (const item of items) {
+      await db.runAsync(
+        `INSERT INTO transaction_items (id, transaction_id, product_id, quantity, subtotal)
+         VALUES (?, ?, ?, ?, ?)`,
+        item.id,
+        item.transaction_id,
+        item.product_id,
+        item.quantity,
+        item.subtotal,
+      );
+    }
+    for (const item of items) {
+      await db.runAsync(
+        `UPDATE inventory SET quantity = MAX(0, quantity - ?) WHERE product_id = ?`,
+        item.quantity,
+        item.product_id,
+      );
+    }
+  });
 }

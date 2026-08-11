@@ -54,7 +54,7 @@ export function toProductFromCache(local: LocalProduct): Product {
     category: local.category_name,
     category_id: local.category_id,
     price: local.price,
-    is_available: local.is_available,
+    is_available: Boolean(local.is_available),
     image_url: local.image_url ?? null,
   };
 }
