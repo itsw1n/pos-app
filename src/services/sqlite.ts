@@ -366,6 +366,34 @@ export async function getLocalTransactionItemsCount(
 }
 
 /**
+ * Persist an offline stock-in movement and apply the quantity to the local
+ * inventory in a single transaction.
+ */
+export async function saveOfflineStockIn(params: {
+  stock_id: number;
+  quantity: number;
+  supplier: string | null;
+  date: string;
+}): Promise<void> {
+  const db = await getDb();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `INSERT INTO stock_movements (stock_id, type, quantity, date, supplier, synced)
+       VALUES (?, 'in', ?, ?, ?, 0)`,
+      params.stock_id,
+      params.quantity,
+      params.date,
+      params.supplier ?? '',
+    );
+    await db.runAsync(
+      `UPDATE inventory SET quantity = quantity + ? WHERE stock_id = ?`,
+      params.quantity,
+      params.stock_id,
+    );
+  });
+}
+
+/**
  * Persist an offline sale (transaction + items + inventory decrements) in a
  * single transaction so a partial write can never be committed.
  */

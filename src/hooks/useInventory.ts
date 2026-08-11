@@ -5,7 +5,7 @@ import { getCatalog } from '@/api/productApi';
 import {
   getLocalInventory,
   getLocalProducts,
-  saveToSQLite,
+  saveOfflineStockIn,
 } from '@/services/sqlite';
 import { refreshLocalCache } from '@/services/catalogSync';
 import { toProduct, toProductFromCache } from '@/services/catalog';
@@ -128,13 +128,11 @@ export function useInventory(): UseInventoryResult {
           payload.supplier ?? null,
         );
       } else {
-        await saveToSQLite('stock_movements', {
+        await saveOfflineStockIn({
           stock_id: payload.stockId,
-          type: 'in',
           quantity: payload.quantity,
+          supplier: payload.supplier ?? null,
           date,
-          supplier: payload.supplier ?? '',
-          synced: false,
         });
       }
       void refreshLocalCache();
