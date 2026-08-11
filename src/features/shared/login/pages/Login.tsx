@@ -72,13 +72,14 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
           </Text>
 
           <View style={loginScreenStyles.inputGroup}>
-            <Text style={loginScreenStyles.inputLabel}>Username</Text>
+            <Text style={loginScreenStyles.inputLabel}>Email</Text>
             <InputField
               value={username}
               onChangeText={setUsername}
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               autoCapitalize="none"
               autoCorrect={false}
+              keyboardType="email-address"
               disabled={isLoading}
               leftIcon={<User size={18} color={colors.textSecondary} />}
               style={{

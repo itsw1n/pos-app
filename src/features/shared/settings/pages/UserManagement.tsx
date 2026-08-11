@@ -68,8 +68,12 @@ export function UserManagement({
     );
   }
 
-  const formIsValid =
-    form.username.trim().length > 0 && form.password.length > 0;
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.username.trim());
+  const emailError =
+    form.username.trim().length > 0 && !emailIsValid
+      ? 'Enter a full email, e.g. staff@example.com'
+      : '';
+  const formIsValid = emailIsValid && form.password.length > 0;
 
   const handleCreate = async (): Promise<void> => {
     if (!formIsValid || isSubmitting) return;
@@ -167,14 +171,17 @@ export function UserManagement({
             </Text>
             <View style={userManagementStyles.formCard}>
               <InputField
-                label="Username"
+                label="Email"
                 value={form.username}
                 onChangeText={(text) =>
                   setForm((prev) => ({ ...prev, username: text }))
                 }
                 autoCapitalize="none"
                 autoCorrect={false}
-                placeholder="Cashier username"
+                keyboardType="email-address"
+                placeholder="staff@example.com"
+                error={emailError}
+                helperText="This is the login email — use a full address"
               />
               <InputField
                 label="Password"
