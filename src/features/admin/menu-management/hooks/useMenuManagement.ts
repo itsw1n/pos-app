@@ -9,6 +9,7 @@ import {
 import { deleteInventoryByProduct } from '@/api/inventoryApi';
 import { deleteProductImage } from '@/api/storageApi';
 import { toProduct, UNCATEGORIZED } from '@/services/catalog';
+import { refreshLocalCache } from '@/services/catalogSync';
 import { Product } from '@/types/entities';
 
 export interface UseMenuManagementResult {
@@ -56,6 +57,7 @@ export function useMenuManagement(): UseMenuManagementResult {
       validatePayload(payload);
       const created = toProduct(await createRemoteProduct(payload));
       setProducts((prev) => [...prev, created]);
+      void refreshLocalCache();
       return created;
     },
     [],
@@ -88,6 +90,7 @@ export function useMenuManagement(): UseMenuManagementResult {
             : product,
         ),
       );
+      void refreshLocalCache();
     },
     [products],
   );
@@ -103,6 +106,7 @@ export function useMenuManagement(): UseMenuManagementResult {
       setProducts((prev) =>
         prev.filter((product) => product.product_id !== productId),
       );
+      void refreshLocalCache();
     },
     [products],
   );

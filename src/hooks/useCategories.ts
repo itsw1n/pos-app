@@ -7,6 +7,7 @@ import {
   reassignProducts,
 } from '@/api/categoryApi';
 import { toCategory, UNCATEGORIZED } from '@/services/catalog';
+import { refreshLocalCache } from '@/services/catalogSync';
 import { getLocalCategories } from '@/services/sqlite';
 import { Category } from '@/types/entities';
 
@@ -71,6 +72,7 @@ export function useCategories(): UseCategoriesResult {
       const category = toCategory(await createRemoteCategory(trimmed));
       sharedCache = sharedCache ? [...sharedCache, category] : [category];
       setCategories(sharedCache);
+      void refreshLocalCache();
       return category;
     },
     [],
@@ -102,6 +104,7 @@ export function useCategories(): UseCategoriesResult {
       }
       sharedCache = remaining;
       setCategories(sharedCache);
+      void refreshLocalCache();
     },
     [],
   );

@@ -7,6 +7,7 @@ import {
   getLocalProducts,
   saveToSQLite,
 } from '@/services/sqlite';
+import { refreshLocalCache } from '@/services/catalogSync';
 import { toProduct, toProductFromCache } from '@/services/catalog';
 import { Inventory, Product } from '@/types/entities';
 
@@ -136,6 +137,7 @@ export function useInventory(): UseInventoryResult {
           synced: false,
         });
       }
+      void refreshLocalCache();
       await loadInventory();
     },
     [loadInventory],
