@@ -5,10 +5,27 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { getCatalog } from '@/api/productApi';
 import { processSale } from '@/api/transactionApi';
-import { saveToSQLite } from '@/services/sqlite';
+import {
+  decrementLocalInventory,
+  getLocalProducts,
+  LocalProduct,
+  saveToSQLite,
+} from '@/services/sqlite';
 import { toProduct } from '@/services/catalog';
 import { CartItem, PaymentMode, POSTransaction } from '@/types/context';
 import { Product } from '@/types/entities';
+
+function toLocalProduct(product: LocalProduct): Product {
+  return {
+    product_id: product.product_id,
+    name: product.name,
+    category: product.category_name,
+    category_id: product.category_id,
+    price: product.price,
+    is_available: product.is_available,
+    image_url: product.image_url ?? null,
+  };
+}
 
 export interface UseMenuResult {
   cart: CartItem[];
@@ -48,11 +65,21 @@ export function useMenu(): UseMenuResult {
   const loadProducts = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
     try {
+      const cached = await getLocalProducts();
+      if (cached.length > 0) {
+        servedFromCache = true;
+        setProducts(cached.map(toLocalProduct));
+      }
       const rows = await getCatalog();
       setProducts(rows.map(toProduct));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load products');
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load products',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,6 +144,9 @@ export function useMenu(): UseMenuResult {
             quantity: item.qty,
             subtotal: item.price * item.qty,
           });
+        }
+        for (const item of cart) {
+          await decrementLocalInventory(item.product_id, item.qty);
         }
       }
 

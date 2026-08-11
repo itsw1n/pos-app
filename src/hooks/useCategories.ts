@@ -7,6 +7,7 @@ import {
   reassignProducts,
 } from '@/api/categoryApi';
 import { toCategory, UNCATEGORIZED } from '@/services/catalog';
+import { getLocalCategories } from '@/services/sqlite';
 import { Category } from '@/types/entities';
 
 let sharedCache: Category[] | null = null;
@@ -42,9 +43,20 @@ export function useCategories(): UseCategoriesResult {
       sharedCache = rows.map(toCategory);
       setCategories(sharedCache);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load categories',
-      );
+      const cached = await getLocalCategories();
+      if (cached.length > 0) {
+        sharedCache = cached.map((category): Category =>
+          toCategory({
+            ...category,
+            created_at: category.created_at ?? undefined,
+          }),
+        );
+        setCategories(sharedCache);
+      } else {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load categories',
+        );
+      }
     } finally {
       setIsLoading(false);
     }
