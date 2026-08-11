@@ -108,21 +108,38 @@ make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
 
 ## Architecture
 
-**3-layer, feature-based.** Screens never touch the DB.
+**4-layer, feature-based.** Screens never touch the DB and never call Supabase
+directly — all remote transport lives in `src/api/*`.
 
 ```
 Screen (UI only)
   → Hook / Service (business logic)
-    → online?  → Supabase
-      offline? → SQLite (expo-sqlite)
+    → SQLite cache (render immediately, offline-first)
+      → api/* transport → Supabase (refresh; push when online)
       → returns typed result to Screen
 ```
 
 - **Layer 1 — UI/Screens:** React Native components only. No business logic.
-- **Layer 2 — Hooks + Services:** API calls, SQLite, sync, receipt generation.
-- **Layer 3 — Data:** Supabase (online) + SQLite (offline) via `src/services/*`.
+- **Layer 2 — Hooks + Services:** business logic, SQLite cache reads, sync, receipt generation.
+- **Layer 3 — Transport (`src/api/*`):** pure Supabase calls only (auth, products, categories, inventory, transactions, users, storage).
+- **Layer 4 — Data:** Supabase (online) + SQLite (offline) via `src/services/sqlite.ts`.
 
-**Offline sync:** transaction saved to SQLite with `synced: false` → on reconnect `syncService.ts` pushes to Supabase → marks `synced: true`. UUID transaction IDs (`react-native-uuid`) prevent duplicates (`syncService.ts` checks remote id before insert).
+**Offline-first reads:** reference data (products, categories, inventory, users)
+is mirrored into SQLite by `catalogSync.refreshLocalCache()` on app start,
+sign-in, and reconnection. Hooks hydrate from the local cache first, then
+refresh from `api/*` when online; failures fall back to the cache silently.
+
+**Offline writes:** transactions saved to SQLite with `synced: false` → on
+reconnect `syncService.ts` pushes to Supabase → marks `synced: true`. UUID
+transaction IDs (`react-native-uuid`) prevent duplicates (`syncService.ts`
+checks remote id before insert). Offline sales also decrement the local
+`inventory` cache so stock badges stay correct; remote deduction happens inside
+the `process_sale` RPC when the queued sale syncs.
+
+**Offline session restore:** a successful login persists the user profile to
+the local `users` table; on a later offline cold start `AuthContext` restores
+the cached profile without a password prompt. A brand-new device has no cache,
+so first login is online-only.
 
 ---
 
@@ -147,9 +164,11 @@ src/
 │   └── common/           # shared UI: Button, Card, ProductRow, ProductImage, StockBadge, TextField
 │       └── {Component}/  # Component.tsx + Component.styles.ts (co-located)
 ├── context/              # AuthContext (user+role), CartContext (cart state)
-├── hooks/                # cross-role hooks: useInventory, useCategories
-├── services/             # supabase.ts, sqlite.ts, syncService.ts,
-│   │                     #   receiptService.ts, printerService.ts
+├── hooks/                # cross-role hooks: useInventory, useCategories, useConnectivity
+├── api/                  # pure Supabase transport: authApi, productApi, categoryApi,
+│   │                     #   inventoryApi, transactionApi, userApi, storageApi
+├── services/             # supabase.ts, sqlite.ts, syncService.ts, catalogSync.ts,
+│   │                     #   receiptService.ts, printerService.ts, printerStorage.ts
 ├── styles/               # textStyles.ts (shared text styles)
 ├── theme/                # design tokens: colors, spacing, typography, radius, shadows, index
 └── types/                # entities.ts (6 ERD entities), context.ts, entityNames.ts
@@ -197,7 +216,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 ### Shared components (`src/components/common/`)
 
-`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error). All named exports, all accept `style`.
+`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `TextField` (label/error), `OfflineBanner` (warning strip shown when `useConnectivity()` reports no network). All named exports, all accept `style`.
 
 ---
 
@@ -230,7 +249,7 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 ## Auth & Role-Based Access
 
 - `src/context/AuthContext.tsx` — `AuthProvider` wraps the app; `useAuth()` returns `{ user, role, login, logout }`. Throws if used outside provider.
-- Login: `supabase.auth.signInWithPassword` → fetch role from `user` table.
+- Login: `authApi.signInWithPassword` → fetch role from `user` table; persists the profile to the local `users` cache so a later cold start can restore the session offline.
 - Navigation (`src/app/navigation/`):
   - not logged in → `Login`
   - `cashier` → Menu(POS) | Orders | Inventory(read-only) | Settings
@@ -238,17 +257,34 @@ StockMovement   { movement_id, stock_id, type: 'in'|'out', quantity, date, suppl
 
 ---
 
+## API Transport (`src/api/`)
+
+Pure Supabase transport modules — the **only** place screens/hooks/services may
+touch Supabase. One file per domain. All imports are relative.
+
+| File             | Purpose                        |
+| ---------------- | ------------------------------ |
+| `authApi.ts`     | sign-in/out, session, profile  |
+| `productApi.ts`  | catalog CRUD                   |
+| `categoryApi.ts` | category CRUD                  |
+| `inventoryApi.ts`| inventory reads, `adjust_stock`|
+| `transactionApi.ts` | transactions, items, `process_sale`, void |
+| `userApi.ts`     | user list/roles                |
+| `storageApi.ts`  | product image upload/delete    |
+
 ## Services (`src/services/`)
 
-| File                | Purpose                                                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `supabase.ts`       | `createClient` from `EXPO_PUBLIC_*` env vars                                                                         |
-| `sqlite.ts`         | `initDb` (4 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced` — modern async `expo-sqlite` API |
-| `syncService.ts`    | `syncPendingRecords()` pushes unsynced transactions, dedup via remote id check; `generateSyncId()`                   |
-| `receiptService.ts` | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)`                                                        |
-| `printerService.ts` | `printReceipt(html)`                                                                                                 |
+| File                 | Purpose                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `supabase.ts`        | `createClient` from `EXPO_PUBLIC_*` env vars                                                                                  |
+| `sqlite.ts`          | `initDb` (7 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced`, cache getters/setters (products, categories, users, inventory) — modern async `expo-sqlite` API |
+| `syncService.ts`     | `syncPendingRecords()` pushes unsynced transactions/stock movements, dedup via remote id check                                 |
+| `catalogSync.ts`     | `refreshLocalCache()` mirrors products/categories/inventory/users into SQLite (best-effort)                                   |
+| `receiptService.ts`  | `generateReceipt(ReceiptData)` → PDF URI, `shareReceipt(uri)`                                                                 |
+| `printerService.ts`  | `printReceipt(html)`                                                                                                          |
+| `printerStorage.ts`  | persisted printer settings                                                                                                   |
 
-**Local SQLite tables:** `transactions`, `transaction_items`, `inventory`, `stock_movements` (see `initDb`).
+**Local SQLite tables:** `transactions`, `transaction_items`, `inventory`, `stock_movements`, `categories`, `products`, `users` (see `initDb`).
 
 ---
 
@@ -258,7 +294,7 @@ Menu → Add to cart (global `CartContext`) → Checkout → Payment (Cash w/ ch
 
 1. Build `POSTransaction` with UUID id, `synced: false`.
 2. Online: insert transaction + items into Supabase, auto-deduct inventory, log `stock_movements` (type `out`).
-3. Offline: save transaction + items to SQLite.
+3. Offline: save transaction + items to SQLite and decrement the local `inventory` cache so stock badges stay correct (deduction is deferred to `process_sale` when the queued sale syncs).
 4. Clear cart, return transaction.
 
 ---
