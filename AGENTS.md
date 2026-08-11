@@ -111,7 +111,7 @@ make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
 **4-layer, feature-based.** Screens never touch the DB and never call Supabase
 directly — all remote transport lives in `src/api/*`.
 
-```
+```text
 Screen (UI only)
   → Hook / Service (business logic)
     → SQLite cache (render immediately, offline-first)
