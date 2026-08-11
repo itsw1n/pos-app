@@ -8,8 +8,13 @@ import {
 } from '@/api/productApi';
 import { deleteInventoryByProduct } from '@/api/inventoryApi';
 import { deleteProductImage } from '@/api/storageApi';
-import { toProduct, UNCATEGORIZED } from '@/services/catalog';
+import {
+  toProduct,
+  toProductFromCache,
+  UNCATEGORIZED,
+} from '@/services/catalog';
 import { refreshLocalCache } from '@/services/catalogSync';
+import { getLocalProducts } from '@/services/sqlite';
 import { Product } from '@/types/entities';
 
 export interface UseMenuManagementResult {
@@ -42,11 +47,25 @@ export function useMenuManagement(): UseMenuManagementResult {
   const loadProducts = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
+    try {
+      const cached = await getLocalProducts();
+      if (cached.length > 0) {
+        servedFromCache = true;
+        setProducts(cached.map(toProductFromCache));
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
     try {
       const rows = await getCatalog();
       setProducts(rows.map(toProduct));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load products');
+      if (!servedFromCache) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load products',
+        );
+      }
     } finally {
       setIsLoading(false);
     }

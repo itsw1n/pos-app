@@ -39,13 +39,11 @@ export function useCategories(): UseCategoriesResult {
     }
     setIsLoading(true);
     setError('');
+    let servedFromCache = false;
     try {
-      const rows = await getCategories();
-      sharedCache = rows.map(toCategory);
-      setCategories(sharedCache);
-    } catch (err) {
       const cached = await getLocalCategories();
       if (cached.length > 0) {
+        servedFromCache = true;
         sharedCache = cached.map((category): Category =>
           toCategory({
             ...category,
@@ -53,7 +51,16 @@ export function useCategories(): UseCategoriesResult {
           }),
         );
         setCategories(sharedCache);
-      } else {
+      }
+    } catch {
+      // Cache read is best-effort; the remote call below is authoritative.
+    }
+    try {
+      const rows = await getCategories();
+      sharedCache = rows.map(toCategory);
+      setCategories(sharedCache);
+    } catch (err) {
+      if (!servedFromCache) {
         setError(
           err instanceof Error ? err.message : 'Failed to load categories',
         );
