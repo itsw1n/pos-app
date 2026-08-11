@@ -3,8 +3,9 @@
 # migrations via the Supabase CLI.
 #
 # Environment targets:
-#   `make dev`  -> Expo dev server against .env.development
-#   `make prod` -> Expo dev server against .env.production
+#   `make dev`      -> Expo dev server against .env.development (dev build / Fast Refresh)
+#   `make prod`     -> Expo dev server against .env.production
+#   `make devbuild` -> Build a custom development APK via EAS (requires expo-dev-client)
 #
 # Database:
 #   DEV and PROD are BOTH remote Supabase projects. The Supabase CLI is linked
@@ -29,13 +30,14 @@ DEV_SUPABASE_REF := mhlmskbuifatnlehvodf
 # The CLI writes the linked project ref here after `supabase link`.
 LINKED_REF_FILE := supabase/.temp/project-ref
 
-.PHONY: help setup dev prod preview seed reset-dev typecheck lint format format-check \
+.PHONY: help setup dev devbuild prod preview seed reset-dev typecheck lint format format-check \
         build migrate-dev migrate-prod
 
 help: ## Show available commands
 	@echo "===== DEVELOPMENT ====="
-	@printf "  %-12s %s\n" "make dev"      "Start Expo dev server (development env)"
+	@printf "  %-12s %s\n" "make dev"      "Start Expo dev server (development env; connect via dev-build app)"
 	@printf "  %-12s %s\n" "make prod"     "Start Expo using the production env"
+	@printf "  %-12s %s\n" "make devbuild" "Build a custom development APK via EAS (install once, then Fast Refresh)"
 	@printf "  %-12s %s\n" "make preview"  "Build a test APK (EAS preview; gives a QR/URL to install & test on your phone)"
 	@printf "  %-12s %s\n" "make seed"     "Seed DEV database with demo data (data only; DEV-only)"
 	@printf "  %-12s %s\n" "make reset-dev" "REBUILD the linked DEV DB from local migrations (destructive, DEV-only, no seed)"
@@ -54,11 +56,19 @@ help: ## Show available commands
 setup: ## Install npm dependencies
 	npm install
 
-dev: ## Start Expo dev server (development env)
-	NODE_ENV=development $(EXPO) start
+dev: ## Start Expo dev server against the development build (Fast Refresh)
+	NODE_ENV=development $(EXPO) start --dev-client
 
 prod: ## Start Expo using the production environment
 	NODE_ENV=production $(EXPO) start
+
+devbuild: ## Build a custom development APK via EAS (install once, then Fast Refresh)
+	@$(EAS) build --platform android --profile development --non-interactive
+	@echo ""
+	@echo "Dev APK is ready. Scan the QR / open the URL above on your phone, and"
+	@echo "install it once. Then run 'make dev' and connect from the installed app."
+	@echo "JS changes hot-reload (Fast Refresh); only native/config changes need a"
+	@echo "rebuild (rerun 'make devbuild')."
 
 preview: ## Build a test APK via EAS (preview profile; QR/URL to install on your phone)
 	@bash -c 'set -a; . ./.env.production; set +a; $(EAS) build --platform android --profile preview --non-interactive'
