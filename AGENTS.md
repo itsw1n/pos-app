@@ -130,6 +130,9 @@ make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
 
 ## Architecture
 
+> Product spec, feature inventory, roadmap, and in-depth DB/API references
+> live in [`docs/`](docs/README.md). This section is the quick orientation.
+
 **4-layer, feature-based.** Screens never touch the DB and never call Supabase
 directly — all remote transport lives in `src/api/*`.
 
