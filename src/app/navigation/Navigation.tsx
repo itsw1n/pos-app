@@ -7,7 +7,7 @@ import { useConnectivity } from '@/hooks/useConnectivity';
 import { OfflineBanner } from '@/components/common/OfflineBanner/OfflineBanner';
 import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
-import { LoginScreen } from '@/features/shared/login/pages/Login';
+import { LoginNavigator } from '@/features/shared/login/LoginNavigator';
 import { colors } from '@/theme';
 import { loadingStyles, navigationStyles } from './Navigation.styles';
 
@@ -37,7 +37,7 @@ export function Navigation(): React.JSX.Element {
         <OfflineBanner visible={!isConnected} />
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Auth" component={LoginNavigator} />
           </Stack.Navigator>
         </NavigationContainer>
       </View>

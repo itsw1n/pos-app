@@ -130,6 +130,16 @@ export const loginScreenStyles = StyleSheet.create({
     color: colors.textSecondary,
     opacity: 0.7,
   },
+  forgotLinkPressable: {
+    alignSelf: 'flex-end',
+    marginBottom: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  forgotLink: {
+    ...typography.sm,
+    color: colors.primary,
+    fontWeight: '600' as const,
+  },
   error: {
     ...typography.sm,
     color: colors.danger,
