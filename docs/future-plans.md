@@ -44,6 +44,20 @@ Priority legend: **P1** = high value / likely soon · **P2** = nice-to-have ·
     (QR code, backup codes). Substantial UI + state work.
 - **Recommendation:** ship password change first (P2), 2FA later (P3).
 
+### Gap 2.1 Forgot Password (self-service via email link) — P2
+
+- **Where:** Login → _Forgot password?_ link (below password field, `features/shared/login/pages/Login.tsx`), flows to `ForgotPassword` → email link → `ResetPassword`.
+- **Current behavior:** no forgot link; Login only has email + password + error `Invalid credentials`.
+- **What's needed (free on Supabase Free tier — default SMTP ~4 emails/hour, 3k/mo; no custom SMTP required):**
+  - **Supabase Dashboard → Auth → URL Config:** add `Site URL` + `Redirect URLs` allowlist `com.elvira.pos://reset-password`.
+  - **`app.json`:** `"scheme": "com.elvira.pos"` (deep link, one `make devbuild` once).
+  - **ForgotPassword screen:** `InputField` email + `Button` send → `supabase.auth.resetPasswordForEmail(email, { redirectTo: 'com.elvira.pos://reset-password' })` → success "Check email". Online-only; offline shows `useConnectivity()` banner.
+  - **ResetPassword screen:** deep link `com.elvira.pos://reset-password?code=xxx` → session → `InputField` new password + confirm + `supabase.auth.updateUser({ password })` → `Login`. Rate-limit + `Invalid/expired link` error.
+  - **Navigation:** `LoginStack` `ForgotPassword` + `ResetPassword` routes, `Linking` config for scheme.
+- **Cost:** free — Supabase default email `noreply@supabase.co` free (small team 2–10 never hits limit). Custom sender (Resend/Gmail) optional via `SUPABASE_AUTH_SMTP_*`.
+- **Security:** link is single-use, short-lived, no PII in logs; offline void stays queued in SQLite.
+- **Effort:** S — two screens + `authApi.resetPassword/reset` helpers + deep link — no schema.
+
 ### Gap 3. Notification preferences
 
 - **Where:** Settings → _Notification Preferences_ (`Settings.tsx:165`), caption "Manage sales and stock notifications".
@@ -111,24 +125,28 @@ build before committing to it (do a spike first).
 
 Ship the non-email part of Gap 1. See Gap 1 for schema + RPC work.
 
-### 3. Password change — P2
+### 3. Forgot Password (email link) — P2
+
+See Gap 2.1. Two screens (`ForgotPassword` + `ResetPassword`) on Login stack, `supabase.auth.resetPasswordForEmail` + `updateUser`, deep link `com.elvira.pos://reset-password`, online-only, no schema.
+
+### 4. Password change (while logged in) — P2
 
 See Gap 2. No schema work; needs current-password re-auth UI.
 
-### 4. Dark Mode — P2
+### 5. Dark Mode — P2
 
 See Gap 4. Cross-cutting theme refactor; do after Excel export so both are
 reviewed independently.
 
-### 5. 2FA — P3
+### 6. 2FA — P3
 
 Supabase MFA/TOTP. Depends on Supabase plan + enrollment UI.
 
-### 6. Push notifications — P3
+### 7. Push notifications — P3
 
 Expo Push/FCM + `device_tokens` + preferences (unblocks Gap 3).
 
-### 7. Offline void — P3
+### 8. Offline void — P3
 
 Currently voids require the server RPC. An offline void would need an
 `is_voided` local flag + a sync-time RPC. Non-trivial; defer.
@@ -148,7 +166,7 @@ Currently voids require the server RPC. An offline void would need an
 ## Sequencing
 
 1. **Phase 1 (P1):** Excel export → Personal Info (name/phone).
-2. **Phase 2 (P2):** Password change → Dark Mode.
+2. **Phase 2 (P2):** Forgot Password → Password change → Dark Mode.
 3. **Phase 3 (P3):** 2FA → Push notifications → Offline void.
 
 Each item ships as its own feature branch off `dev`, one layer per commit
