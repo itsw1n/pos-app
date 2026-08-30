@@ -48,7 +48,14 @@ export function ResetPassword({
       await confirmPasswordReset(password);
       navigation.replace('Login');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Link expired or invalid');
+      const raw = e instanceof Error ? e.message : '';
+      const lower = raw.toLowerCase();
+      // Generic expired/invalid handling — don't leak internal details
+      if (lower.includes('expired') || lower.includes('invalid')) {
+        setError('Link expired or invalid — please request a new reset link');
+      } else {
+        setError(raw || 'Link expired or invalid');
+      }
     } finally {
       setLoading(false);
     }

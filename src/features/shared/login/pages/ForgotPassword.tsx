@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -32,9 +32,13 @@ export function ForgotPassword({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const lastSendRef = useRef(0);
 
   const onSend = async (): Promise<void> => {
     if (loading) return;
+    // Debounce / rate-limit: ignore rapid double-taps within 1s
+    const now = Date.now();
+    if (now - lastSendRef.current < 1000) return;
     if (!email.trim()) {
       setError('Enter your email');
       return;
@@ -48,6 +52,9 @@ export function ForgotPassword({
     setSuccess('');
     try {
       await requestPasswordReset(email);
+      lastSendRef.current = now;
+      // Generic success avoids email enumeration — Supabase already
+      // returns success even if address not found, keep UI generic.
       setSuccess('Check your email for the reset link');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to send email');
