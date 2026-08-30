@@ -71,8 +71,7 @@ src/
 └── types/                # entities, context, entityNames
 ```
 
-Imports are **relative** throughout (no `@/` alias in committed code despite
-tsconfig supporting it).
+Imports use the `@/*` alias (`tsconfig.json` `paths: {"@/*": ["./src/*"]}`) — e.g. `@/theme`, `@/services/supabase`. New code should use `@/`; relative imports are allowed for co-located files.
 
 ---
 

@@ -147,7 +147,7 @@ Details:
 
 Details:
 
-- Dashboard: total revenue, order count, 7-day Victory chart, low-stock list,
+- Dashboard: total revenue, order count, 7-day custom react-native-svg bar chart, low-stock list,
   top 5 products today.
 - Reports: date-range sales report (revenue, orders, AOV, payment-mode
   breakdown, daily breakdown), inventory report (stock value, low/out counts).

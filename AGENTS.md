@@ -19,7 +19,7 @@ Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System
 | Offline storage  | `expo-sqlite` (modern async API)                                                                                   |
 | Connectivity     | `@react-native-community/netinfo`                                                                                  |
 | Receipts         | `expo-print`, `expo-sharing` + `react-native-thermal-printer-driver` (ESC/POS for Bluetooth/WiFi thermal printers) |
-| Charts           | `victory-native` + `react-native-svg`                                                                              |
+| Charts           | `react-native-svg` (custom bar chart; `victory-native` not used)                                                   |
 | IDs              | `react-native-uuid` (transaction dedup)                                                                            |
 
 ### Key versions
@@ -249,7 +249,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 - `strict: true`. No `any`. Explicit return types on hooks/services.
 - Every feature has a `use{Feature}` hook; screens call the hook and render only.
-- All imports are **relative** (e.g. `../../theme`, `../../services/supabase`). Do not introduce the `@/` alias unless every import is migrated consistently.
+- Imports use the `@/*` alias (`tsconfig.json` `paths: {"@/*": ["./src/*"]}`) — e.g. `@/theme`, `@/services/supabase`. New code should use `@/`; relative imports are allowed for co-located files.
 - Type names: interfaces for shapes, `as const` for token objects, union types for enums.
 
 ### Domain types (`src/types/entities.ts`)
@@ -337,7 +337,7 @@ Menu → Add to cart (global `CartContext`) → Checkout → Payment (Cash w/ ch
 ## Reports / Transactions
 
 - Reports: daily/weekly/monthly sales + inventory (admin).
-- Dashboard: revenue, order count, weekly Victory chart, low-stock, top products (admin).
+- Dashboard: revenue, order count, weekly custom react-native-svg bar chart, low-stock, top products (admin).
 - Transaction history: cashier sees own, admin sees all.
 - Void: requires a non-empty reason; restores inventory on confirmation.
 
