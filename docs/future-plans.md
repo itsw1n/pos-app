@@ -57,6 +57,11 @@ Priority legend: **P1** = high value / likely soon · **P2** = nice-to-have ·
 - **Cost:** free — Supabase default email `noreply@supabase.co` free (small team 2–10 never hits limit). Custom sender (Resend/Gmail) optional via `SUPABASE_AUTH_SMTP_*`.
 - **Security:** link is single-use, short-lived, no PII in logs; offline void stays queued in SQLite.
 - **Effort:** S — two screens + `authApi.resetPassword/reset` helpers + deep link — no schema.
+- **Setup to make it work (APK, no domain needed — do later):**
+  1. Supabase Dashboard → Auth → URL Configuration → `Site URL` = project URL, `Redirect URLs` add `com.elvira.pos://reset-password` (do for dev + prod).
+  2. `app.json` already has `"scheme": "com.elvira.pos"` — rebuild APK once: `make devbuild` (or `make preview`) and reinstall on phone.
+  3. Test: Login → `Forgot password?` → enter email → `Check email` → tap link on same phone → `Reset password` → set new password → Login. Needs internet (email + link); offline POS still queues.
+  4. If no email: check spam + Dashboard → Auth → Users → Logs; default SMTP ~4/hr limit — never hit with 10 staff.
 
 ### Gap 3. Notification preferences
 
