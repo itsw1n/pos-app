@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { LoginScreen } from './pages/Login';
 import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 
 export type LoginStackParamList = {
   Login: undefined;
@@ -19,6 +20,11 @@ export function LoginNavigator(): React.JSX.Element {
         name="ForgotPassword"
         component={ForgotPassword}
         options={{ title: 'Reset password' }}
+      />
+      <Stack.Screen
+        name="ResetPassword"
+        component={ResetPassword}
+        options={{ title: 'Set new password' }}
       />
     </Stack.Navigator>
   );
