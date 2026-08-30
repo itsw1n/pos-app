@@ -8,6 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
 import {
@@ -255,7 +256,9 @@ export function Settings({
           <Text style={styles.logoutText}>Log Out</Text>
         </Pressable>
 
-        <Text style={styles.footer}>IPSS v1.0 • Elvira Cafe</Text>
+        <Text style={styles.footer}>
+          IPSS v{Constants.expoConfig?.version ?? '1.1.2'} • Elvira Cafe
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
