@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleProp,
@@ -10,8 +11,10 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import * as FileSystem from 'expo-file-system';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
 import { DateFilter } from '@/components/common/DateFilter/types';
+import { Button } from '@/components/common/Button/Button';
 import { colors } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import {
@@ -21,6 +24,14 @@ import {
   PaymentModeBreakdown,
   StockLevel,
 } from '@/features/admin/reports/hooks/useReports';
+import { useAuth } from '@/context/AuthContext';
+import {
+  exportTransactions,
+  TransactionExportRow,
+  shareExportedFile,
+} from '@/services/exportService';
+import { getTransactionsInRange } from '@/api/transactionApi';
+import { getUsersIdName } from '@/api/userApi';
 import { reportsStyles } from './Reports.styles';
 
 type ReportsProps = StackScreenProps<ReportsStackParamList, 'Reports'> & {
@@ -204,6 +215,58 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
     useState<InventoryReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const { role } = useAuth();
+
+  function getRangeLabel(filter: DateFilter): string {
+    if (filter.type === 'all') return 'all';
+    if (filter.type === 'single') return filter.date.toISOString().slice(0, 10);
+    return `${filter.from.toISOString().slice(0, 10)}_to_${filter.to.toISOString().slice(0, 10)}`;
+  }
+
+  const onExport = useCallback(async (): Promise<void> => {
+    if (role !== 'admin') return;
+    setExporting(true);
+    try {
+      const { start, end } = filterToRange(dateFilter);
+      const rangeLabel = getRangeLabel(dateFilter);
+      const transactions = await getTransactionsInRange(start, end);
+      let userMap = new Map<string, string>();
+      try {
+        const users = await getUsersIdName();
+        for (const u of users) userMap.set(u.user_id, u.username);
+      } catch {
+        // best-effort cashier lookup — fallback to user_id
+      }
+      const rows: TransactionExportRow[] = transactions.map((t) => ({
+        order_number: t.order_number ?? null,
+        transaction_id: t.id,
+        date: t.date,
+        items_summary: '',
+        payment_mode: t.payment_mode,
+        total_amount: t.total_amount,
+        status: t.status ?? 'completed',
+        cashier: userMap.get(t.user_id) ?? t.user_id,
+      }));
+      const uri = await exportTransactions(rows, rangeLabel);
+      await shareExportedFile(uri);
+      try {
+        await FileSystem.deleteAsync(uri, { idempotent: true });
+      } catch {
+        // best-effort cleanup after share
+      }
+    } catch (e) {
+      if (__DEV__) {
+        console.warn('[Export] transactions failed', e);
+      }
+      Alert.alert(
+        'Export failed',
+        e instanceof Error ? e.message : 'Unknown error',
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [role, dateFilter]);
 
   const loadReports = useCallback(
     async (filter: DateFilter): Promise<void> => {
@@ -245,6 +308,25 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
           allowAll={false}
           style={reportsStyles.dateFilter}
         />
+
+        <View style={reportsStyles.exportRow}>
+          <Button
+            variant="secondary"
+            size="small"
+            disabled={exporting || (isLoading && !salesReport)}
+            onPress={() => {
+              void onExport();
+            }}
+          >
+            {exporting ? 'Exporting...' : 'Export transactions'}
+          </Button>
+          {exporting ? (
+            <ActivityIndicator
+              color={colors.primary}
+              style={{ marginLeft: 8 }}
+            />
+          ) : null}
+        </View>
 
         {error ? <Text style={reportsStyles.errorText}>{error}</Text> : null}
 

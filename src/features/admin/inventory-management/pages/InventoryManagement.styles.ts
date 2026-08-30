@@ -78,6 +78,12 @@ export const inventoryManagementStyles = StyleSheet.create({
     color: colors.warning,
     flex: 1,
   },
+  exportRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
   filterBar: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
