@@ -37,7 +37,6 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
-    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.2.2",
     "@types/react-native": "^0.72.8",
     "eslint": "^9.39.5",
