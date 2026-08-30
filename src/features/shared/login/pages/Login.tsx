@@ -11,16 +11,20 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Eye, EyeOff, Lock, User } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { useAuth } from '@/context/AuthContext';
 import { colors, radius } from '@/theme';
 import { loginScreenStyles } from './Login.styles';
+import type { LoginStackParamList } from '../LoginNavigator';
 
 interface LoginScreenProps {
   style?: StyleProp<ViewStyle>;
 }
 
 export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
+  const navigation = useNavigation<StackNavigationProp<LoginStackParamList>>();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -117,6 +121,13 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               }}
             />
           </View>
+
+          <Pressable
+            onPress={() => navigation.navigate('ForgotPassword')}
+            style={loginScreenStyles.forgotLinkPressable}
+          >
+            <Text style={loginScreenStyles.forgotLink}>Forgot password?</Text>
+          </Pressable>
 
           {error ? <Text style={loginScreenStyles.error}>{error}</Text> : null}
 

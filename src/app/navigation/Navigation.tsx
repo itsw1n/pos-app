@@ -1,17 +1,35 @@
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  type LinkingOptions,
+} from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useConnectivity } from '@/hooks/useConnectivity';
 import { OfflineBanner } from '@/components/common/OfflineBanner/OfflineBanner';
 import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
-import { LoginScreen } from '@/features/shared/login/pages/Login';
+import { LoginNavigator } from '@/features/shared/login/LoginNavigator';
 import { colors } from '@/theme';
 import { loadingStyles, navigationStyles } from './Navigation.styles';
 
 const Stack = createStackNavigator();
+
+const linking = {
+  prefixes: ['com.elvira.pos://'],
+  config: {
+    screens: {
+      Auth: {
+        screens: {
+          Login: 'login',
+          ForgotPassword: 'forgot-password',
+          ResetPassword: 'reset-password',
+        },
+      },
+    },
+  },
+} as LinkingOptions<Record<string, unknown>>;
 
 function LoadingScreen(): React.JSX.Element {
   return (
@@ -35,9 +53,9 @@ export function Navigation(): React.JSX.Element {
     return (
       <View style={navigationStyles.root}>
         <OfflineBanner visible={!isConnected} />
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Auth" component={LoginNavigator} />
           </Stack.Navigator>
         </NavigationContainer>
       </View>

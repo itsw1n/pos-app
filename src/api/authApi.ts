@@ -61,6 +61,18 @@ export async function signOut(): Promise<void> {
   if (error) throw error;
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: 'com.elvira.pos://reset-password',
+  });
+  if (error) throw error;
+}
+
+export async function confirmPasswordReset(newPassword: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 export function onAuthStateChange(callback: AuthStateListener): {
   data: { subscription: Subscription };
 } {

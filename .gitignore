@@ -46,6 +46,7 @@ yarn-error.*
 # editor / scratch
 .vscode/
 .superpowers/
+docs/superpowers/
 
 # planning scratch docs (never committed)
 .opencode/plans/
