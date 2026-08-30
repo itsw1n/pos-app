@@ -8,10 +8,10 @@ import {
   exportTransactions,
   shareExportedFile,
 } from './exportService';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
-vi.mock('expo-file-system', () => ({
+vi.mock('expo-file-system/legacy', () => ({
   cacheDirectory: 'file:///cache/',
   documentDirectory: 'file:///doc/',
   EncodingType: { UTF8: 'utf8', Base64: 'base64' },
@@ -564,5 +564,164 @@ describe('no PII', () => {
     expect(csv).toContain('cashier1');
     // header is `cashier`, not `cashier_email` or `user_email`
     expect(buildTransactionsCsv([])).not.toContain('email');
+  });
+});
+
+describe('shareExportedFile — mime detection (M3)', () => {
+  it('uses text/csv for .csv uri', async () => {
+    mockedIsAvailable.mockResolvedValue(true);
+    await shareExportedFile('file:///cache/elvira-inventory-2026-08-30.csv');
+    expect(mockedShare).toHaveBeenCalledWith(
+      'file:///cache/elvira-inventory-2026-08-30.csv',
+      { mimeType: 'text/csv' },
+    );
+  });
+
+  it('uses xlsx mime for .xlsx uri', async () => {
+    mockedIsAvailable.mockResolvedValue(true);
+    await shareExportedFile(
+      'file:///cache/elvira-transactions-weekly-2026-08-30.xlsx',
+    );
+    expect(mockedShare).toHaveBeenCalledWith(
+      'file:///cache/elvira-transactions-weekly-2026-08-30.xlsx',
+      {
+        mimeType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    );
+  });
+
+  it('falls back to xlsx mime for other extensions', async () => {
+    mockedIsAvailable.mockResolvedValue(true);
+    await shareExportedFile(
+      'file:///cache/elvira-inventory-2026-08-30.unknown',
+    );
+    expect(mockedShare).toHaveBeenCalledWith(
+      'file:///cache/elvira-inventory-2026-08-30.unknown',
+      {
+        mimeType:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    );
+  });
+});
+
+describe('items_summary join (M1) and offline cache shape', () => {
+  it('joins 2x Coffee, 1x Tea and survives CSV quoting', () => {
+    const productMap = new Map<number, string>([
+      [1, 'Coffee'],
+      [2, 'Tea'],
+    ]);
+    const items = [
+      { product_id: 1, quantity: 2 },
+      { product_id: 2, quantity: 1 },
+    ];
+    const summary = items
+      .map(
+        (it) =>
+          `${it.quantity}x ${productMap.get(it.product_id) ?? `Product #${it.product_id}`}`,
+      )
+      .join(', ');
+    expect(summary).toBe('2x Coffee, 1x Tea');
+    const csv = buildTransactionsCsv([
+      {
+        order_number: 1,
+        transaction_id: 'tx-1',
+        date: '2026-08-30T00:00:00.000Z',
+        items_summary: summary,
+        payment_mode: 'cash',
+        total_amount: 100,
+        status: 'completed',
+        cashier: 'cashier1',
+      },
+    ]);
+    expect(csv).toContain('"2x Coffee, 1x Tea"');
+  });
+
+  it('falls back to Product #id when product missing (offline cache)', () => {
+    const productMap = new Map<number, string>();
+    const items = [{ product_id: 99, quantity: 3 }];
+    const summary = items
+      .map(
+        (it) =>
+          `${it.quantity}x ${productMap.get(it.product_id) ?? `Product #${it.product_id}`}`,
+      )
+      .join(', ');
+    expect(summary).toBe('3x Product #99');
+  });
+
+  it('offline-derived rows export via CSV fallback when workbook fails', async () => {
+    mockedWrite
+      .mockRejectedValueOnce(new Error('workbook fail'))
+      .mockResolvedValueOnce(undefined);
+    const products = [{ product_id: 1, name: 'Coffee' }];
+    const productMap = new Map(products.map((p) => [p.product_id, p.name]));
+    const items = [{ product_id: 1, quantity: 2 }];
+    const summary = items
+      .map((it) => `${it.quantity}x ${productMap.get(it.product_id)!}`)
+      .join(', ');
+    const uri = await exportTransactions(
+      [
+        {
+          order_number: null,
+          transaction_id: 'offline-tx-1',
+          date: '2026-08-30T10:00:00.000Z',
+          items_summary: summary,
+          payment_mode: 'cash',
+          total_amount: 50,
+          status: 'completed',
+          cashier: 'cashier1',
+        },
+      ],
+      '2026-08-30',
+    );
+    expect(uri).toContain('.csv');
+    const csvContent = mockedWrite.mock.calls[1][1] as string;
+    expect(csvContent).toContain('2x Coffee');
+    expect(csvContent.charCodeAt(0)).toBe(0xfeff);
+  });
+
+  it('empty offline items_summary remains empty string', () => {
+    const csv = buildTransactionsCsv([
+      {
+        order_number: 1,
+        transaction_id: 'tx-empty',
+        date: '2026-08-30T00:00:00.000Z',
+        items_summary: '',
+        payment_mode: 'cash',
+        total_amount: 100,
+        status: 'completed',
+        cashier: 'cashier1',
+      },
+    ]);
+    const line = csv.split('\n')[1];
+    // items_summary empty → two consecutive commas around it (date,items_summary,payment_mode)
+    expect(line).toContain(',,cash');
+  });
+});
+
+describe('ExcelJS null fallback (M2 legacy compat)', () => {
+  it('writeCsv fallback still produces BOM header when workbook throws', async () => {
+    mockedWrite
+      .mockRejectedValueOnce(new Error('exceljs polyfill missing'))
+      .mockResolvedValueOnce(undefined);
+    const uri = await exportInventory([
+      {
+        product_id: 1,
+        name: 'P1',
+        category: 'Cat',
+        price: 10,
+        quantity: 1,
+        reorder_level: 2,
+        status: 'ok',
+        stock_value: 10,
+        supplier: null,
+      },
+    ]);
+    expect(uri.endsWith('.csv')).toBe(true);
+    expect(mockedWrite).toHaveBeenCalledTimes(2);
+    const csv = mockedWrite.mock.calls[1][1] as string;
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    expect(csv).toContain('product_id,name');
   });
 });

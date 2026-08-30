@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import NetInfo from '@react-native-community/netinfo';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
 import { DateFilter } from '@/components/common/DateFilter/types';
 import { Button } from '@/components/common/Button/Button';
@@ -30,8 +31,19 @@ import {
   TransactionExportRow,
   shareExportedFile,
 } from '@/services/exportService';
-import { getTransactionsInRange } from '@/api/transactionApi';
+import {
+  getTransactionsInRange,
+  getTransactionItems,
+  getTransactionItemsByTransactionIds,
+} from '@/api/transactionApi';
 import { getUsersIdName } from '@/api/userApi';
+import { getProducts } from '@/api/productApi';
+import {
+  getLocalProducts,
+  getLocalTransactionItems,
+  getLocalTransactions,
+  getLocalUsers,
+} from '@/services/sqlite';
 import { reportsStyles } from './Reports.styles';
 
 type ReportsProps = StackScreenProps<ReportsStackParamList, 'Reports'> & {
@@ -230,24 +242,155 @@ export function Reports({ style }: ReportsProps): React.JSX.Element {
     try {
       const { start, end } = filterToRange(dateFilter);
       const rangeLabel = getRangeLabel(dateFilter);
-      const transactions = await getTransactionsInRange(start, end);
-      let userMap = new Map<string, string>();
+
+      let isConnected = true;
       try {
-        const users = await getUsersIdName();
-        for (const u of users) userMap.set(u.user_id, u.username);
+        const state = await NetInfo.fetch();
+        isConnected = state.isConnected === true;
       } catch {
-        // best-effort cashier lookup — fallback to user_id
+        isConnected = false;
       }
-      const rows: TransactionExportRow[] = transactions.map((t) => ({
-        order_number: t.order_number ?? null,
-        transaction_id: t.id,
-        date: t.date,
-        items_summary: '',
-        payment_mode: t.payment_mode,
-        total_amount: t.total_amount,
-        status: t.status ?? 'completed',
-        cashier: userMap.get(t.user_id) ?? t.user_id,
-      }));
+
+      const buildSummary = (
+        items: { product_id: number; quantity: number }[],
+        productMap: Map<number, string>,
+      ): string =>
+        items
+          .map(
+            (it) =>
+              `${it.quantity}x ${productMap.get(it.product_id) ?? `Product #${it.product_id}`}`,
+          )
+          .join(', ');
+
+      let rows: TransactionExportRow[] = [];
+      let onlineSucceeded = false;
+
+      if (isConnected) {
+        try {
+          const transactions = await getTransactionsInRange(start, end);
+          let users: { user_id: string; username: string }[] = [];
+          try {
+            users = await getUsersIdName();
+          } catch {
+            // best-effort cashier lookup — fallback to user_id
+          }
+          const userMap = new Map(users.map((u) => [u.user_id, u.username]));
+
+          let products: { product_id: number; name: string }[] = [];
+          try {
+            const fetched = await getProducts();
+            products = fetched.map((p) => ({
+              product_id: p.product_id,
+              name: p.name,
+            }));
+          } catch {
+            // fallback to local products if Supabase unavailable
+            try {
+              const local = await getLocalProducts();
+              products = local.map((p) => ({
+                product_id: p.product_id,
+                name: p.name,
+              }));
+            } catch {
+              // no products — summary will use fallback names
+            }
+          }
+          const productMap = new Map(
+            products.map((p) => [p.product_id, p.name]),
+          );
+
+          const ids = transactions.map((t) => t.id);
+          const itemsByTx = new Map<
+            string,
+            { product_id: number; quantity: number }[]
+          >();
+          if (ids.length > 0) {
+            try {
+              const bulk = await getTransactionItemsByTransactionIds(ids);
+              for (const it of bulk) {
+                const list = itemsByTx.get(it.transaction_id) ?? [];
+                list.push({
+                  product_id: it.product_id,
+                  quantity: it.quantity,
+                });
+                itemsByTx.set(it.transaction_id, list);
+              }
+            } catch {
+              const results = await Promise.all(
+                ids.map((id) =>
+                  getTransactionItems(id).catch(() => [] as never[]),
+                ),
+              );
+              ids.forEach((id, idx) => {
+                const list = (
+                  results[idx] as unknown as {
+                    product_id: number;
+                    quantity: number;
+                  }[]
+                ).map((r) => ({
+                  product_id: r.product_id,
+                  quantity: r.quantity,
+                }));
+                itemsByTx.set(id, list);
+              });
+            }
+          }
+
+          rows = transactions.map((t) => ({
+            order_number: t.order_number ?? null,
+            transaction_id: t.id,
+            date: t.date,
+            items_summary: buildSummary(itemsByTx.get(t.id) ?? [], productMap),
+            payment_mode: t.payment_mode,
+            total_amount: t.total_amount,
+            status: t.status ?? 'completed',
+            cashier: userMap.get(t.user_id) ?? t.user_id,
+          }));
+          onlineSucceeded = true;
+        } catch {
+          isConnected = false;
+        }
+      }
+
+      if (!isConnected || !onlineSucceeded) {
+        const localTx = await getLocalTransactions();
+        const filtered = localTx.filter((tx) => {
+          const t = new Date(tx.date).getTime();
+          return t >= start.getTime() && t <= end.getTime();
+        });
+        const [localUsers, localProducts] = await Promise.all([
+          getLocalUsers().catch(() => []),
+          getLocalProducts().catch(() => []),
+        ]);
+        const userMap = new Map(localUsers.map((u) => [u.user_id, u.username]));
+        const productMap = new Map(
+          localProducts.map((p) => [p.product_id, p.name]),
+        );
+        const offlineRows: TransactionExportRow[] = [];
+        for (const tx of filtered) {
+          let items: { product_id: number; quantity: number }[] = [];
+          try {
+            items = await getLocalTransactionItems(tx.id);
+          } catch {
+            // no items — leave summary empty
+          }
+          offlineRows.push({
+            order_number: tx.order_number ?? null,
+            transaction_id: tx.id,
+            date: tx.date,
+            items_summary: buildSummary(items, productMap),
+            payment_mode: tx.payment_mode,
+            total_amount: tx.total_amount,
+            status: tx.status ?? 'completed',
+            cashier: userMap.get(tx.user_id) ?? tx.user_id,
+          });
+        }
+        // Only replace rows when online did not succeed, or when offline has data and online failed
+        if (!onlineSucceeded) {
+          rows = offlineRows;
+        }
+      }
+
       const uri = await exportTransactions(rows, rangeLabel);
       await shareExportedFile(uri);
       try {

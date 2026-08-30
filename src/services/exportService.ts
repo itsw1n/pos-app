@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 /**
@@ -353,8 +353,10 @@ export async function shareExportedFile(uri: string): Promise<void> {
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Sharing not available');
   }
+  const mimeType = uri.endsWith('.csv')
+    ? 'text/csv'
+    : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
   await Sharing.shareAsync(uri, {
-    mimeType:
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    mimeType,
   });
 }
