@@ -1,6 +1,5 @@
 import { vi } from 'vitest';
 
-// expo-sqlite mock — in-memory via sql.js style stub will be replaced in Task 6
 vi.mock('expo-sqlite', () => ({
   openDatabaseAsync: vi.fn(async () => ({
     execAsync: vi.fn(async () => {}),
