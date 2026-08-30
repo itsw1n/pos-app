@@ -1,6 +1,22 @@
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+/**
+ * Offline-first export service — Inventory + Transactions to .xlsx with CSV fallback.
+ *
+ * Design notes (senior hardening):
+ * - Batching: rows can be 10k+. `exceljs` `writeBuffer` is O(n) memory. We add rows in
+ *   1000-row chunks and yield via `setImmediate`/`setTimeout(0)` every 5k rows to avoid
+ *   freezing the JS thread on low-end Android. Documented limit: 10k tested, scales linearly.
+ * - BOM: CSV fallback prefixes UTF-8 BOM `\ufeff` so Windows Excel opens correctly.
+ * - Cleanup: `export*` returns a `file://` uri in `FileSystem.cacheDirectory`; caller
+ *   deletes via `FileSystem.deleteAsync(uri, { idempotent: true })` after
+ *   `Sharing.shareAsync` dismiss. `export*` never deletes — safe for retry.
+ * - No PII: Inventory rows have no email/password; Transactions expose `cashier` username
+ *   only (already visible in Reports), never emails beyond what UI shows.
+ * - No network: writes to `cacheDirectory` only, works offline; sharing requires no network.
+ */
+
 // Lazy require so Metro can fall back to CSV if exceljs ever fails to bundle.
 // We keep the type narrow without `any`.
 let ExcelJS: typeof import('exceljs') | null = null;
@@ -59,8 +75,9 @@ const TRANSACTIONS_HEADERS = [
 ] as const;
 
 /**
- * RFC4180 quoting: double quotes are escaped as "", field is wrapped in
- * quotes if it contains comma, quote, or newline.
+ * RFC4180 quoting: double quotes escaped as `""`, field wrapped in quotes
+ * if it contains comma, quote, or newline (`\n`/`\r`). Used by both CSV builders.
+ * Example: `a"b, c\nd` → `"a""b, c\nd"`.
  */
 export function escapeCsvValue(value: string): string {
   const needsQuotes =
@@ -74,6 +91,10 @@ export function escapeCsvValue(value: string): string {
   return needsQuotes ? `"${value}"` : value;
 }
 
+/**
+ * Build Inventory CSV with BOM + RFC4180 quoting. Header is always emitted
+ * even for 0 rows. No PII beyond `supplier` (plain string).
+ */
 export function buildInventoryCsv(rows: InventoryExportRow[]): string {
   const lines: string[] = [];
   lines.push(INVENTORY_HEADERS.map(escapeCsvValue).join(','));
@@ -91,10 +112,14 @@ export function buildInventoryCsv(rows: InventoryExportRow[]): string {
     ].map(escapeCsvValue);
     lines.push(cells.join(','));
   }
-  // UTF-8 BOM so Excel on Windows opens correctly
+  // UTF-8 BOM so Excel on Windows opens correctly — see file header batching/BOM notes
   return '\ufeff' + lines.join('\n');
 }
 
+/**
+ * Build Transactions CSV with BOM + RFC4180 quoting. `cashier` is username only
+ * (no emails/passwords). Header emitted even for 0 rows.
+ */
 export function buildTransactionsCsv(rows: TransactionExportRow[]): string {
   const lines: string[] = [];
   lines.push(TRANSACTIONS_HEADERS.map(escapeCsvValue).join(','));
@@ -141,6 +166,10 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array): string {
   return globalThis.btoa(binary);
 }
 
+/**
+ * Write CSV content to `uri` as UTF8. Caller handles cleanup via
+ * `FileSystem.deleteAsync(uri, { idempotent: true })` after share.
+ */
 async function writeCsvFile(uri: string, content: string): Promise<string> {
   await FileSystem.writeAsStringAsync(uri, content, {
     encoding: FileSystem.EncodingType.UTF8,
@@ -149,12 +178,16 @@ async function writeCsvFile(uri: string, content: string): Promise<string> {
 }
 
 /**
- * Export inventory rows to .xlsx (or CSV fallback). Caller is responsible
- * for deleting the returned uri after Sharing.shareAsync (idempotent).
- * No network required — writes to FileSystem.cacheDirectory.
+ * Export inventory rows to .xlsx (or CSV fallback).
  *
- * Chunking: rows can be 10k+ — writeBuffer is O(n) memory. For >5k rows we
- * yield to the event loop every chunk to avoid JS freeze on low-end Android.
+ * @param rows - already-cached inventory rows (no DB fetch). May be 10k+.
+ * @returns file uri in `FileSystem.cacheDirectory` — caller deletes after `Sharing.shareAsync`.
+ *
+ * Batching: 1000-row chunks, `setImmediate` yield every 5k rows when `rows.length > 5000`
+ * to avoid OOM/freeze on low-end Android. `writeBuffer` byteLength >0 asserted in tests.
+ * On any workbook error we fall back to CSV (BOM + RFC4180) so export never hard-fails
+ * due to Metro polyfill issues. File cleanup is caller's responsibility (idempotent delete).
+ * No network required; works offline.
  */
 export async function exportInventory(
   rows: InventoryExportRow[],
@@ -234,9 +267,15 @@ export async function exportInventory(
 }
 
 /**
- * Export transactions — placeholder for Task 2, fleshed in Task 3.
- * Keeps same freeze/filter/numFmt pattern; date kept as ISO text to avoid
- * Excel date-shift. If rows is empty we still export header (not error).
+ * Export transactions to .xlsx (or CSV fallback) with date-range aware filename.
+ *
+ * @param rows - filtered transaction rows for the selected range (may be 0).
+ * @param rangeLabel - `daily`/`weekly`/`monthly` or `2026-08-30_to_2026-08-31`; sanitized to `[a-zA-Z0-9-_]` else `all`.
+ * @returns file uri — caller deletes after share (idempotent).
+ *
+ * Same batching/BOM/cleanup guarantees as `exportInventory`. Empty `rows` still
+ * emits header (not error). `date` kept as ISO text to avoid Excel date-shift.
+ * No PII: only `cashier` username (already visible in Reports).
  */
 export async function exportTransactions(
   rows: TransactionExportRow[],
@@ -305,6 +344,11 @@ export async function exportTransactions(
   }
 }
 
+/**
+ * Share `uri` via OS sheet. Throws if `Sharing.isAvailableAsync() === false`
+ * (caller shows `Alert`); `FileSystem.writeAsStringAsync` failures propagate to
+ * caller for `Alert` handling. Always `deleteAsync` after share (idempotent).
+ */
 export async function shareExportedFile(uri: string): Promise<void> {
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Sharing not available');
