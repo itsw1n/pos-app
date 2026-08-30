@@ -28,13 +28,23 @@ export interface UnsyncedStockMovement {
   synced: number;
 }
 
+export interface SyncResult {
+  synced: number;
+  failed: number;
+  lastError?: string;
+}
+
 async function isOnline(): Promise<boolean> {
   const { isConnected } = await NetInfo.fetch();
   return isConnected === true;
 }
 
-export async function syncPendingRecords(): Promise<void> {
-  if (!(await isOnline())) return;
+export async function syncPendingRecords(): Promise<SyncResult> {
+  if (!(await isOnline())) return { synced: 0, failed: 0 };
+
+  let synced = 0;
+  let failed = 0;
+  let lastError: string | undefined;
 
   const transactions =
     await getUnsyncedRecords<UnsyncedTransaction>('transactions');
@@ -42,6 +52,7 @@ export async function syncPendingRecords(): Promise<void> {
     try {
       if (await transactionExists(record.id)) {
         await markSynced('transactions', record.id);
+        synced++;
         continue;
       }
       await processSale({
@@ -56,8 +67,10 @@ export async function syncPendingRecords(): Promise<void> {
         date: record.date,
       });
       await markSynced('transactions', record.id);
-    } catch {
-      // Remote insert failed or is unreachable; retry next sync.
+      synced++;
+    } catch (e) {
+      failed++;
+      lastError = e instanceof Error ? e.message : String(e);
     }
   }
 
@@ -71,8 +84,12 @@ export async function syncPendingRecords(): Promise<void> {
         movement.supplier ?? null,
       );
       await markSynced('stock_movements', movement.movement_id);
-    } catch {
-      // Remote adjustment failed; retry next sync.
+      synced++;
+    } catch (e) {
+      failed++;
+      lastError = e instanceof Error ? e.message : String(e);
     }
   }
+
+  return { synced, failed, lastError };
 }

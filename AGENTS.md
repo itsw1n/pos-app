@@ -19,7 +19,7 @@ Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System
 | Offline storage  | `expo-sqlite` (modern async API)                                                                                   |
 | Connectivity     | `@react-native-community/netinfo`                                                                                  |
 | Receipts         | `expo-print`, `expo-sharing` + `react-native-thermal-printer-driver` (ESC/POS for Bluetooth/WiFi thermal printers) |
-| Charts           | `victory-native` + `react-native-svg`                                                                              |
+| Charts           | `react-native-svg` (custom bar chart; `victory-native` not used)                                                   |
 | IDs              | `react-native-uuid` (transaction dedup)                                                                            |
 
 ### Key versions
@@ -82,7 +82,8 @@ You need `.env.local` only to run the seed; the app itself only needs
 
 ```
 make setup        # npm install
-make dev          # expo start against the development env
+make dev          # expo start --dev-client against the development env (Fast Refresh)
+make devbuild     # build a custom development APK via EAS (install once on phone)
 make seed         # apply schema + upsert demo data into the configured DB
 make reset        # drop + recreate schema, then seed
 make typecheck    # npx tsc --noEmit
@@ -91,6 +92,27 @@ make format       # npx prettier --write .
 make format-check # npx prettier --check .
 make build        # npx expo export --platform android (mobile-only)
 ```
+
+#### Custom development build (dev APK)
+
+The app uses `react-native-thermal-printer-driver` (a native module), so it can't
+run in Expo Go. Development uses a **custom Expo development build**
+(`expo-dev-client`) installed once on a physical Android device:
+
+1. `make devbuild` — EAS builds `profile: development` (`developmentClient`,
+   APK) and prints a QR/install URL. Build once; re-run only when native
+   deps/`app.json` config plugins change.
+2. Install the dev APK on the phone (scan the QR/link EAS prints).
+3. `make dev` — starts Metro in dev-client mode. Scan the QR from the installed
+   app (or enter the URL manually). Same Wi-Fi for LAN; use
+   `npx expo start --dev-client --tunnel` (ngrok) when the phone isn't on LAN.
+4. JS/TS/React changes hot-reload via Fast Refresh — **no APK rebuild**.
+   Only native dependency or `app.json` config-plugin changes require a new
+   `make devbuild`.
+
+The dev APK is shareable: a teammate installs the same APK once and connects to
+your running Metro via LAN/tunnel to see live changes. For a standalone,
+no-Metro APK (JS baked in, `.env.production`), use `make preview` instead.
 
 Demo credentials created by the seed: `admin@elvira.cafe`/`admin123` (admin),
 `cashier@elvira.cafe`/`cashier123` (cashier). Log in with the email address;
@@ -107,6 +129,9 @@ make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
 ---
 
 ## Architecture
+
+> Product spec, feature inventory, roadmap, and in-depth DB/API references
+> live in [`docs/`](docs/README.md). This section is the quick orientation.
 
 **4-layer, feature-based.** Screens never touch the DB and never call Supabase
 directly — all remote transport lives in `src/api/*`.
@@ -224,7 +249,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 - `strict: true`. No `any`. Explicit return types on hooks/services.
 - Every feature has a `use{Feature}` hook; screens call the hook and render only.
-- All imports are **relative** (e.g. `../../theme`, `../../services/supabase`). Do not introduce the `@/` alias unless every import is migrated consistently.
+- Imports use the `@/*` alias (`tsconfig.json` `paths: {"@/*": ["./src/*"]}`) — e.g. `@/theme`, `@/services/supabase`. New code should use `@/`; relative imports are allowed for co-located files.
 - Type names: interfaces for shapes, `as const` for token objects, union types for enums.
 
 ### Domain types (`src/types/entities.ts`)
@@ -312,7 +337,7 @@ Menu → Add to cart (global `CartContext`) → Checkout → Payment (Cash w/ ch
 ## Reports / Transactions
 
 - Reports: daily/weekly/monthly sales + inventory (admin).
-- Dashboard: revenue, order count, weekly Victory chart, low-stock, top products (admin).
+- Dashboard: revenue, order count, weekly custom react-native-svg bar chart, low-stock, top products (admin).
 - Transaction history: cashier sees own, admin sees all.
 - Void: requires a non-empty reason; restores inventory on confirmation.
 

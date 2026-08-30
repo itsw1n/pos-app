@@ -57,7 +57,7 @@ export async function initDb(): Promise<void> {
       payment_mode TEXT NOT NULL,
       amount_received REAL,
       change_given REAL,
-      user_id INTEGER NOT NULL,
+      user_id TEXT NOT NULL,
       date TEXT NOT NULL,
       synced INTEGER DEFAULT 0
     );
@@ -104,6 +104,34 @@ export async function initDb(): Promise<void> {
       role TEXT NOT NULL
     );
   `);
+  // Migrate legacy INTEGER user_id on existing devices (SQLite typeless, so alter is best-effort)
+  try {
+    const cols = await db.getAllAsync<{ name: string; type: string }>(
+      `PRAGMA table_info(transactions)`,
+    );
+    const userIdCol = cols.find((c) => c.name === 'user_id');
+    if (userIdCol && userIdCol.type.toUpperCase() === 'INTEGER') {
+      // SQLite cannot alter column type in place; recreate via temp table
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS transactions_new (
+          id TEXT PRIMARY KEY,
+          total_amount REAL NOT NULL,
+          payment_mode TEXT NOT NULL,
+          amount_received REAL,
+          change_given REAL,
+          user_id TEXT NOT NULL,
+          date TEXT NOT NULL,
+          synced INTEGER DEFAULT 0
+        );
+        INSERT OR IGNORE INTO transactions_new (id, total_amount, payment_mode, amount_received, change_given, user_id, date, synced)
+          SELECT id, total_amount, payment_mode, amount_received, change_given, CAST(user_id AS TEXT), date, synced FROM transactions;
+        DROP TABLE transactions;
+        ALTER TABLE transactions_new RENAME TO transactions;
+      `);
+    }
+  } catch {
+    // Fresh DB or PRAGMA unavailable — ignore
+  }
   try {
     await db.execAsync(
       'DELETE FROM inventory WHERE stock_id NOT IN (SELECT MIN(stock_id) FROM inventory GROUP BY product_id);',

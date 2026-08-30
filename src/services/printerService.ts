@@ -72,7 +72,8 @@ function loadDriver(): Promise<ThermalDriverModule> {
   return thermalDriverPromise;
 }
 
-export const THERMAL_SUPPORTED = Platform.OS !== 'web';
+// iOS not planned per future-plans.md YAGNI; gate to Android only
+export const THERMAL_SUPPORTED = Platform.OS === 'android';
 
 export interface ThermalDevice {
   name: string;
