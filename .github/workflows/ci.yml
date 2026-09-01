@@ -62,6 +62,17 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  integration:
+    name: Supabase integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'npm' }
+      - run: npm ci
+      - name: Test migrations, RLS, RPCs, Auth, and Edge Functions
+        run: make integration-test
+
   export:
     name: Android bundle
     runs-on: ubuntu-latest
