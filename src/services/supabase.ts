@@ -5,7 +5,6 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 if (typeof window !== 'undefined') {
   // Diagnostic: log actual URL being used so web/phone can verify tunnel vs hosted vs LAN
-  // eslint-disable-next-line no-console
   console.log(
     '[supabase] URL:',
     supabaseUrl || '(empty)',
