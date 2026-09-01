@@ -49,7 +49,15 @@ if [[ -z "$_local_api_url" || -z "$_local_anon_key" ]]; then
   _local_fail 'Local Supabase status is missing API_URL or ANON_KEY.'
 fi
 
-if [[ "$_local_network_mode" == "lan" ]]; then
+# Tunnel override: if TUNNELED_SUPABASE_URL is set, use it directly so the
+# local DB can be reached from a different network (ngrok http 54321).
+# This keeps `local` for dev even across networks; hosted stays for preview/prod.
+if [[ -n "${TUNNELED_SUPABASE_URL:-}" ]]; then
+  if [[ ! "$TUNNELED_SUPABASE_URL" =~ ^https?:// ]]; then
+    _local_fail "TUNNELED_SUPABASE_URL must start with http:// or https:// (got: $TUNNELED_SUPABASE_URL)"
+  fi
+  _local_api_url="$TUNNELED_SUPABASE_URL"
+elif [[ "$_local_network_mode" == "lan" ]]; then
   _local_lan_ip="${LAN_IP:-}"
   if [[ -z "$_local_lan_ip" ]] && command -v ip >/dev/null 2>&1; then
     _local_lan_ip="$(ip route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") {print $(i + 1); exit}}')"
@@ -59,6 +67,8 @@ if [[ "$_local_network_mode" == "lan" ]]; then
   fi
   _local_api_url="${_local_api_url/127.0.0.1/$_local_lan_ip}"
   _local_api_url="${_local_api_url/localhost/$_local_lan_ip}"
+elif [[ "$_local_network_mode" == "tunnel" ]]; then
+  _local_fail "Tunnel mode requires TUNNELED_SUPABASE_URL. Run: ngrok http 54321 then TUNNELED_SUPABASE_URL=https://xxx.ngrok-free.app make dev"
 elif [[ "$_local_network_mode" != "loopback" ]]; then
   _local_fail "Unknown network mode: $_local_network_mode"
 fi

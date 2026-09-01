@@ -27,10 +27,18 @@ setup: ## Install npm dependencies
 
 dev: dev-lan ## Start local Supabase and Expo for a physical device
 
-dev-lan: supabase-start ## Start Expo with the local Supabase LAN address
-	@. ./scripts/local-supabase-env.sh lan app; \
+dev-lan: supabase-start ## Start Expo with the local Supabase LAN address (tunneled if TUNNELED_SUPABASE_URL is set)
+	@if [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
+		. ./scripts/local-supabase-env.sh lan app; \
+		printf 'Local Supabase (tunneled): %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
+		printf 'Expo tunnel mode — phone can be on different network (hosted stays for preview/prod)\n'; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --tunnel; \
+	else \
+		. ./scripts/local-supabase-env.sh lan app; \
 		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan
+		printf 'Expo LAN mode — phone must be on same WiFi (for cross-network: ngrok http 54321 + TUNNELED_SUPABASE_URL)\n'; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan; \
+	fi
 
 dev-loopback: supabase-start ## Start Expo with the local Supabase loopback address
 	@. ./scripts/local-supabase-env.sh loopback app; \
