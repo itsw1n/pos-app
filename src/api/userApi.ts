@@ -7,7 +7,10 @@ export interface CreateUserInput {
   role: UserRole;
 }
 
-async function errorMessage(err: unknown): Promise<string> {
+async function functionErrorMessage(
+  err: unknown,
+  fallback: string,
+): Promise<string> {
   if (err instanceof Error) {
     const context = (err as unknown as Record<string, unknown>).context;
     if (context instanceof Response) {
@@ -22,7 +25,7 @@ async function errorMessage(err: unknown): Promise<string> {
     }
     return err.message;
   }
-  return 'Failed to create user';
+  return fallback;
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -52,7 +55,9 @@ export async function createUser(payload: CreateUserInput): Promise<User> {
       role: payload.role,
     },
   });
-  if (error) throw new Error(await errorMessage(error));
+  if (error) {
+    throw new Error(await functionErrorMessage(error, 'Failed to create user'));
+  }
   return {
     user_id: data?.user_id ?? '',
     username: payload.username.trim(),
@@ -65,9 +70,12 @@ export async function setUserActive(
   userId: string,
   isActive: boolean,
 ): Promise<void> {
-  const { error } = await supabase.rpc('set_user_active', {
-    p_user_id: userId,
-    p_active: isActive,
+  const { error } = await supabase.functions.invoke('set-user-active', {
+    body: { user_id: userId, is_active: isActive },
   });
-  if (error) throw error;
+  if (error) {
+    throw new Error(
+      await functionErrorMessage(error, 'Failed to update the user account'),
+    );
+  }
 }
