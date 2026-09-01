@@ -8,10 +8,10 @@ EAS := npx eas-cli
 SUPABASE := npx supabase
 LOCAL_ENV := . ./scripts/local-supabase-env.sh loopback admin;
 
-.PHONY: help setup dev dev-lan dev-loopback web devbuild preview production
+.PHONY: help setup dev web devbuild preview production
 .PHONY: supabase-start supabase-stop supabase-status
-.PHONY: db-reset db-reset-clean db-seed db-clear db-types db-diff migration db-push
-.PHONY: typecheck lint format format-check test build check
+.PHONY: db-reset db-seed migration db-push
+.PHONY: dev-lan dev-loopback db-reset-clean db-clear db-types db-diff typecheck lint format format-check test build check
 
 help: ## Show all commands
 	@awk 'BEGIN {FS = ":.*## "} \
@@ -34,15 +34,6 @@ dev: supabase-start ## Start local Supabase + Expo for phone (LAN; TUNNEL=1 for 
 		printf 'Expo LAN — phone on same WiFi (TUNNEL=1 for cross-network)\n'; \
 		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan; \
 	fi
-
-dev-lan: supabase-start ## Start Expo LAN explicitly (no tunnel)
-	@. ./scripts/local-supabase-env.sh lan app; \
-		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan
-
-dev-loopback: supabase-start ## Start Expo loopback (127.0.0.1, no LAN)
-	@. ./scripts/local-supabase-env.sh loopback app; \
-		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client
 
 web: supabase-start ## Start Expo Web (localhost; TUNNEL=1 for tunnel, no emulator)
 	@if [ -n "$$TUNNEL" ] || [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
@@ -79,33 +70,8 @@ db-reset: supabase-start ## Reset the local DB, apply migrations, and seed demo 
 	$(SUPABASE) db reset --local --no-seed
 	@$(LOCAL_ENV) node scripts/seed.cjs
 
-db-reset-clean: supabase-start ## Reset the local DB without demo data
-	$(SUPABASE) db reset --local --no-seed
-
 db-seed: supabase-start ## Idempotently seed demo users and data into the local DB
 	@$(LOCAL_ENV) node scripts/seed.cjs
-
-db-clear: supabase-start ## Clear local operational/catalog data but keep user accounts
-	@$(LOCAL_ENV) psql "$$DATABASE_URL" -v ON_ERROR_STOP=1 -c \
-		'truncate table transaction_items, transactions, stock_movements, inventory, product, category restart identity cascade;'
-
-db-types: ## Regenerate TypeScript database types from the local schema
-	@mkdir -p src/types
-	@temp_file=$$(mktemp src/types/.database.types.ts.XXXXXX); \
-		trap 'rm -f "$$temp_file"' EXIT; \
-		$(SUPABASE) gen types typescript --local > "$$temp_file"; \
-		mv "$$temp_file" src/types/database.types.ts; \
-		trap - EXIT
-
-db-diff migration: export MIGRATION_NAME := $(value name)
-
-db-diff: ## Create a local schema diff (name required)
-	@migration_name="$${MIGRATION_NAME-}"; \
-		if [[ ! "$$migration_name" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$$ ]]; then \
-			printf 'Usage: make db-diff name=<migration-name>\n' >&2; \
-			exit 2; \
-		fi; \
-		$(SUPABASE) db diff --local --file "$$migration_name"
 
 migration: ## Create an empty migration (name required)
 	@migration_name="$${MIGRATION_NAME-}"; \
@@ -120,6 +86,41 @@ db-push: ## Push migrations to the intentionally linked hosted project
 	@read -r -p 'Type PUSH to continue: ' confirmation; \
 		[[ "$$confirmation" == 'PUSH' ]] || { printf 'Aborted.\n'; exit 1; }; \
 		$(SUPABASE) db push --linked
+
+# Hidden advanced (not in help, but still runnable):
+dev-lan: supabase-start # Start Expo LAN explicitly (no tunnel)
+	@. ./scripts/local-supabase-env.sh lan app; \
+		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan
+
+dev-loopback: supabase-start # Start Expo loopback (127.0.0.1, no LAN)
+	@. ./scripts/local-supabase-env.sh loopback app; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client
+
+db-reset-clean: supabase-start # Reset the local DB without demo data
+	$(SUPABASE) db reset --local --no-seed
+
+db-clear: supabase-start # Clear local operational/catalog data but keep user accounts
+	@$(LOCAL_ENV) psql "$$DATABASE_URL" -v ON_ERROR_STOP=1 -c \
+		'truncate table transaction_items, transactions, stock_movements, inventory, product, category restart identity cascade;'
+
+db-types: # Regenerate TypeScript database types from the local schema
+	@mkdir -p src/types
+	@temp_file=$$(mktemp src/types/.database.types.ts.XXXXXX); \
+		trap 'rm -f "$$temp_file"' EXIT; \
+		$(SUPABASE) gen types typescript --local > "$$temp_file"; \
+		mv "$$temp_file" src/types/database.types.ts; \
+		trap - EXIT
+
+db-diff migration: export MIGRATION_NAME := $(value name)
+
+db-diff: # Create a local schema diff (name required)
+	@migration_name="$${MIGRATION_NAME-}"; \
+		if [[ ! "$$migration_name" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$$ ]]; then \
+			printf 'Usage: make db-diff name=<migration-name>\n' >&2; \
+			exit 2; \
+		fi; \
+		$(SUPABASE) db diff --local --file "$$migration_name"
 
 ##@ Quality
 
