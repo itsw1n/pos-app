@@ -174,12 +174,13 @@ shadows) + shared `styles/textStyles.ts`. Rules:
 
 ## 7. Configuration & environments
 
-- Two environments: `development` and `production`, each its own Supabase
-  project. Only `EXPO_PUBLIC_*` env vars are bundled (never secrets).
-- `.env.local` is **seed-only** (service-role key + DB URL for
-  `scripts/seed.cjs`); the app never reads it.
+- Three isolated variants: local `development`, hosted `preview`, and hosted
+  `production`. Only `EXPO_PUBLIC_*` env vars are bundled (never secrets).
+- Local values come from `supabase status` through
+  `scripts/local-supabase-env.sh`; hosted values come from EAS environments.
+- Each variant has a separate native package ID, isolating Auth and SQLite.
 - Native module (`react-native-thermal-printer-driver`) requires a **custom
   development build** (`make devbuild`); the app cannot run in Expo Go.
 
-See `AGENTS.md` for the full command reference (`make dev`, `make seed`,
+See `AGENTS.md` for the full command reference (`make dev`, `make db-reset`,
 `make build`, `make devbuild`, CI/CD).

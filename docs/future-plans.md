@@ -49,8 +49,8 @@ Priority legend: **P1** = high value / likely soon · **P2** = nice-to-have ·
 - **Where:** Login → _Forgot password?_ link (below password field, `features/shared/login/pages/Login.tsx`), flows to `ForgotPassword` → email link → `ResetPassword`.
 - **Current behavior:** no forgot link; Login only has email + password + error `Invalid credentials`.
 - **What's needed (free on Supabase Free tier — default SMTP ~4 emails/hour, 3k/mo; no custom SMTP required):**
-  - **Supabase Dashboard → Auth → URL Config:** add `Site URL` + `Redirect URLs` allowlist `com.elvira.pos://reset-password`.
-  - **`app.json`:** `"scheme": "com.elvira.pos"` (deep link, one `make devbuild` once).
+  - **Supabase Auth URL config:** allow each app variant's reset URL (`com.elvira.pos.dev`, `com.elvira.pos.preview`, and `com.elvira.pos`).
+  - **`app.config.ts`:** variant-specific schemes (one `make devbuild` after native configuration changes).
   - **ForgotPassword screen:** `InputField` email + `Button` send → `supabase.auth.resetPasswordForEmail(email, { redirectTo: 'com.elvira.pos://reset-password' })` → success "Check email". Online-only; offline shows `useConnectivity()` banner.
   - **ResetPassword screen:** deep link `com.elvira.pos://reset-password?code=xxx` → session → `InputField` new password + confirm + `supabase.auth.updateUser({ password })` → `Login`. Rate-limit + `Invalid/expired link` error.
   - **Navigation:** `LoginStack` `ForgotPassword` + `ResetPassword` routes, `Linking` config for scheme.
@@ -58,8 +58,8 @@ Priority legend: **P1** = high value / likely soon · **P2** = nice-to-have ·
 - **Security:** link is single-use, short-lived, no PII in logs; offline void stays queued in SQLite.
 - **Effort:** S — two screens + `authApi.resetPassword/reset` helpers + deep link — no schema.
 - **Setup to make it work (APK, no domain needed — do later):**
-  1. Supabase Dashboard → Auth → URL Configuration → `Site URL` = project URL, `Redirect URLs` add `com.elvira.pos://reset-password` (do for dev + prod).
-  2. `app.json` already has `"scheme": "com.elvira.pos"` — rebuild APK once: `make devbuild` (or `make preview`) and reinstall on phone.
+  1. Configure each hosted Supabase project's Auth redirect allowlist for its matching app-variant URL; local redirects live in `supabase/config.toml`.
+  2. `app.config.ts` defines the schemes — rebuild the relevant APK and reinstall after changes.
   3. Test: Login → `Forgot password?` → enter email → `Check email` → tap link on same phone → `Reset password` → set new password → Login. Needs internet (email + link); offline POS still queues.
   4. If no email: check spam + Dashboard → Auth → Users → Logs; default SMTP ~4/hr limit — never hit with 10 staff.
 
