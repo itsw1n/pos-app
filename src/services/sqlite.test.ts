@@ -28,6 +28,7 @@ describe('sqlite schema', () => {
     const createSql = execCalls.join('\n');
     expect(createSql).toContain('user_id TEXT NOT NULL');
     expect(createSql).not.toContain('user_id INTEGER NOT NULL');
+    expect(createSql).toContain('is_active INTEGER NOT NULL DEFAULT 1');
   });
 });
 
@@ -120,5 +121,29 @@ describe('saveOfflineSale', () => {
       ),
     ).rejects.toThrow('insert failed');
     expect(runCalls.join('\n')).not.toContain('UPDATE inventory');
+  });
+});
+
+describe('getPendingSyncCount', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('adds unsynced transaction and stock movement counts', async () => {
+    const mockDb = {
+      execAsync: vi.fn(async () => {}),
+      runAsync: vi.fn(async () => {}),
+      getAllAsync: vi.fn(async () => []),
+      getFirstAsync: vi
+        .fn()
+        .mockResolvedValueOnce({ count: 3 })
+        .mockResolvedValueOnce({ count: 2 }),
+      withTransactionAsync: vi.fn(async (fn: () => Promise<void>) => fn()),
+    };
+    vi.doMock('expo-sqlite', () => ({ openDatabaseAsync: async () => mockDb }));
+
+    const { getPendingSyncCount } = await import('./sqlite');
+
+    await expect(getPendingSyncCount()).resolves.toBe(5);
   });
 });

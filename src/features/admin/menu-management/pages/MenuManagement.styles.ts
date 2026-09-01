@@ -78,7 +78,7 @@ export const menuManagementStyles = StyleSheet.create({
   },
   fabMenuBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.overlay,
     justifyContent: 'flex-end',
   },
   fabMenuSheet: {

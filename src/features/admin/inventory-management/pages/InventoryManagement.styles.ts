@@ -84,6 +84,9 @@ export const inventoryManagementStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
+  exportSpinner: {
+    marginLeft: spacing.sm,
+  },
   filterBar: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,

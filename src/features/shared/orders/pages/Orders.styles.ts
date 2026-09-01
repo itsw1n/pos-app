@@ -85,7 +85,7 @@ export const transactionHistoryScreenStyles = StyleSheet.create({
     ...shadows.resting,
   },
   cardVoided: {
-    backgroundColor: '#FEF9F9',
+    backgroundColor: colors.dangerSurface,
     borderWidth: 1,
     borderColor: colors.dangerBorder,
     opacity: 0.8,

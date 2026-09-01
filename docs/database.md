@@ -142,14 +142,18 @@ RPC for authorization.
 
 ### `set_user_active(p_user_id uuid, p_active boolean) → void`
 
-- Admin only. Toggles `is_active`. Role is never client-writable (no privilege
-  escalation path).
+- Active-admin only. Toggles `is_active`; rejects self-disable and disabling
+  the final active admin. Account-status changes are serialized to keep that
+  safeguard valid under concurrent requests. Role is never client-writable.
+- The client invokes this through `set-user-active`, which also bans/unbans the
+  corresponding Supabase Auth user.
 
 ---
 
 ## 3. RLS matrix
 
-Policies use `get_app_role()`. Direct client writes to `transactions`,
+Policies use `get_app_role()`, which returns no role for an inactive profile.
+Direct client writes to `transactions`,
 `transaction_items`, and `user` are **not allowed for either role** — mutation
 goes through the RPCs above.
 
@@ -220,6 +224,7 @@ Key behaviors:
 | `0006_secure_order_counter_rls.sql`     | RLS on `order_number_counter`, revoke client access                                                                                   |
 | `0007_secure_product_image_storage.sql` | Storage hardening: update/delete restricted to owner/admin                                                                            |
 | `0008_clear_legacy_passwords.sql`       | Clears legacy plaintext values from the public user profile table                                                                     |
+| `0009_enforce_active_users.sql`         | Denies inactive profiles through RLS and protects self/final-admin account status changes                                             |
 
 All migrations are reproducible locally via `make db-reset`; `make db-seed`
 idempotently refreshes demo users and data.

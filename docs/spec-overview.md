@@ -103,7 +103,9 @@ start restore the session offline (see `architecture.md`).
 1. Admin opens **Settings → User Management**.
 2. Create staff accounts (email + password + role) — provisioning runs through
    the `create-user` edge function so passwords never touch the client DB.
-3. Toggle accounts active/inactive.
+3. Toggle accounts active/inactive. Disabling bans the Auth identity and
+   immediately removes its database role; self-disable and disabling the final
+   active admin are rejected.
 
 ### 3.5 Receipt printing
 

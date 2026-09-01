@@ -51,3 +51,8 @@ minimum_password_length = 6
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/create-user/index.ts"
+
+[functions.set-user-active]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/set-user-active/index.ts"
