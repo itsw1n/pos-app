@@ -6,9 +6,6 @@ export const checkoutStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',

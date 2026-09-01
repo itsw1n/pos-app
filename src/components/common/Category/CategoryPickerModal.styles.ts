@@ -4,7 +4,7 @@ import { colors, radius, shadows, spacing, typography } from '../../../theme';
 export const categoryPickerModalStyles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing['2xl'],

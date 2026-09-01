@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -13,9 +14,8 @@ import { Eye, EyeOff, Lock, User } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
-import { Screen } from '@/components/common/Screen/Screen';
 import { useAuth } from '@/context/AuthContext';
-import { colors } from '@/theme';
+import { colors, radius } from '@/theme';
 import { loginScreenStyles } from './Login.styles';
 import type { LoginStackParamList } from '../LoginNavigator';
 
@@ -74,7 +74,7 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
   };
 
   return (
-    <Screen style={[loginScreenStyles.container, style]}>
+    <SafeAreaView style={[loginScreenStyles.container, style]}>
       <KeyboardAvoidingView
         style={loginScreenStyles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -110,7 +110,11 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               keyboardType="email-address"
               disabled={isLoading}
               leftIcon={<User size={18} color={colors.textSecondary} />}
-              style={loginScreenStyles.inputField}
+              style={{
+                borderRadius: radius.xl,
+                height: 52,
+                paddingHorizontal: 14,
+              }}
             />
           </View>
 
@@ -134,7 +138,11 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
                   )}
                 </Pressable>
               }
-              style={loginScreenStyles.inputField}
+              style={{
+                borderRadius: radius.xl,
+                height: 52,
+                paddingHorizontal: 14,
+              }}
             />
           </View>
 
@@ -156,15 +164,32 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               {isLoading ? 'Signing in...' : 'Log In →'}
             </Text>
           </Pressable>
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 10,
+              color: colors.textSecondary,
+              textAlign: 'center',
+            }}
+          >
+            {(() => {
+              try {
+                const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+                return url ? `DB: ${new URL(url).host}` : 'DB: (not set)';
+              } catch {
+                return `DB: ${process.env.EXPO_PUBLIC_SUPABASE_URL ?? '(invalid)'}`;
+              }
+            })()}
+          </Text>
         </ScrollView>
 
         <View style={loginScreenStyles.footer}>
           <Text style={loginScreenStyles.footerText}>
-            <Text style={loginScreenStyles.secureIndicator}>●</Text> Secure
-            Connection • v2.4.0
+            <Text style={{ color: colors.success }}>●</Text> Secure Connection •
+            v2.4.0
           </Text>
         </View>
       </KeyboardAvoidingView>
-    </Screen>
+    </SafeAreaView>
   );
 }

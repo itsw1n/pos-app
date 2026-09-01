@@ -4,9 +4,8 @@ Two surfaces:
 
 1. **Client transport** — `src/api/*`, the only place screens/hooks/services
    touch Supabase. Pure function modules, one per domain.
-2. **Edge functions** — `supabase/functions/create-user/` and
-   `supabase/functions/set-user-active/`, Deno functions for admin-only account
-   provisioning and status changes.
+2. **Edge function** — `supabase/functions/create-user/`, a Deno edge function
+   for admin-only user provisioning.
 
 All client transport functions are `async`, throw on Supabase errors, and
 return typed results. Authorization is enforced server-side via RLS/RPCs (see
@@ -18,14 +17,14 @@ return typed results. Authorization is enforced server-side via RLS/RPCs (see
 
 ### `authApi.ts` — authentication & profile
 
-| Function                              | Returns                      | Notes                                                       |
-| ------------------------------------- | ---------------------------- | ----------------------------------------------------------- |
-| `signInWithPassword(email, password)` | `User`                       | `supabase.auth.signInWithPassword`; email is the username   |
-| `getUserProfile(userId)`              | `StoredUserProfile \| null`  | reads profile, role, and active status for the session user |
-| `getSession()`                        | `Session \| null`            | `supabase.auth.getSession`                                  |
-| `getCurrentUser()`                    | `User \| null`               | `supabase.auth.getUser`                                     |
-| `signOut()`                           | `void`                       |                                                             |
-| `onAuthStateChange(callback)`         | `{ data: { subscription } }` | auth event listener                                         |
+| Function                              | Returns                      | Notes                                                      |
+| ------------------------------------- | ---------------------------- | ---------------------------------------------------------- |
+| `signInWithPassword(email, password)` | `User`                       | `supabase.auth.signInWithPassword`; email is the username  |
+| `getUserProfile(userId)`              | `StoredUserProfile \| null`  | reads `user(user_id, username, role)` for the session user |
+| `getSession()`                        | `Session \| null`            | `supabase.auth.getSession`                                 |
+| `getCurrentUser()`                    | `User \| null`               | `supabase.auth.getUser`                                    |
+| `signOut()`                           | `void`                       |                                                            |
+| `onAuthStateChange(callback)`         | `{ data: { subscription } }` | auth event listener                                        |
 
 `StoredUserProfile = { user_id, username, role }`. Used by `AuthContext` for
 login, session restore, and offline profile caching.
@@ -83,15 +82,15 @@ date }` with `SaleItem = { product_id, quantity }`.
 
 ### `userApi.ts` — users (admin)
 
-| Function                          | Returns                | Notes                               |
-| --------------------------------- | ---------------------- | ----------------------------------- |
-| `getUsers()`                      | `User[]`               | all users + `is_active`             |
-| `getUsersIdName()`                | `{user_id,username}[]` |                                     |
-| `createUser(payload)`             | `User`                 | via edge function `create-user`     |
-| `setUserActive(userId, isActive)` | `void`                 | via edge function `set-user-active` |
+| Function                          | Returns                | Notes                           |
+| --------------------------------- | ---------------------- | ------------------------------- |
+| `getUsers()`                      | `User[]`               | all users + `is_active`         |
+| `getUsersIdName()`                | `{user_id,username}[]` |                                 |
+| `createUser(payload)`             | `User`                 | via edge function `create-user` |
+| `setUserActive(userId, isActive)` | `void`                 | via RPC `set_user_active`       |
 
-Account edge-function failures surface their JSON error body as the thrown
-message.
+`createUser` surfaces the edge function's JSON error body as the thrown
+message (see `errorMessage`).
 
 ### `storageApi.ts` — product images
 
@@ -107,9 +106,7 @@ and prefixed with a random UUID to avoid collisions.
 
 ---
 
-## 2. Edge functions
-
-### `create-user`
+## 2. Edge function — `create-user`
 
 `supabase/functions/create-user/index.ts` (Deno). Admin-only user provisioning.
 
@@ -159,28 +156,14 @@ user_metadata: { role } })`.
 | `405`  | `{ error: 'Method not allowed' }`                       |
 | `500`  | `{ error }` — profile insert failure                    |
 
-### `set-user-active`
-
-`supabase/functions/set-user-active/index.ts` changes both sides of an
-account. It calls the guarded `set_user_active` RPC for the public profile and
-uses the service-role Auth Admin API to ban or unban the matching Auth user.
-The RPC prevents self-disable and serializes changes so the final active admin
-cannot be disabled. Inactive profiles also receive no role from
-`get_app_role()`, which makes RLS deny an already-issued token immediately.
-
-- **Method:** `POST`
-- **Path:** `functions/v1/set-user-active`
-- **Body:** `{ "user_id": "<uuid>", "is_active": false }`
-- **Authorization:** active admin JWT required
-
 ---
 
 ## 3. Error model
 
 - Supabase client errors are thrown as-is (callers catch and surface
   messages).
-- User account APIs unwrap an edge function's `{ error }` body for a clean
-  message.
+- `userApi.createUser` unwraps the edge function's `{ error }` body for a
+  clean message.
 - Storage cleanup (`deleteProductImage`) and sync pushes (`syncService`) are
   best-effort and never throw outward.
 
