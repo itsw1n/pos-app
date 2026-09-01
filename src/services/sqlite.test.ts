@@ -28,6 +28,7 @@ describe('sqlite schema', () => {
     const createSql = execCalls.join('\n');
     expect(createSql).toContain('user_id TEXT NOT NULL');
     expect(createSql).not.toContain('user_id INTEGER NOT NULL');
+    expect(createSql).toContain('is_active INTEGER NOT NULL DEFAULT 1');
   });
 });
 

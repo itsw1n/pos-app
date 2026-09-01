@@ -60,6 +60,7 @@ export async function refreshLocalCache(): Promise<void> {
         user_id: user.user_id,
         username: user.username,
         role: user.role,
+        is_active: user.is_active ? 1 : 0,
       })),
     );
   } catch {
