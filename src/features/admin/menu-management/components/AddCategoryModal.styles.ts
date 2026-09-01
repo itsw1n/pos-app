@@ -4,7 +4,7 @@ import { colors, radius, shadows, spacing, typography } from '@/theme';
 export const addCategoryModalStyles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing['2xl'],

@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleProp,
   Switch,
@@ -16,6 +15,7 @@ import { ArrowLeft, ChevronDown } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog/ConfirmDialog';
+import { Screen } from '@/components/common/Screen/Screen';
 import { InputField } from '@/components/common/InputField/InputField';
 import { CategoryPickerModal } from '@/components/common/Category/CategoryPickerModal';
 import { useCategories } from '@/hooks/useCategories';
@@ -145,7 +145,7 @@ export function AddEditMenuItem({
   };
 
   return (
-    <SafeAreaView style={[addEditMenuItemStyles.container, style]}>
+    <Screen style={[addEditMenuItemStyles.container, style]}>
       <View style={addEditMenuItemStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={colors.textPrimary} />
@@ -277,6 +277,6 @@ export function AddEditMenuItem({
         onConfirm={() => void handleDelete()}
         onCancel={() => setDeleteConfirmOpen(false)}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
