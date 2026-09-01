@@ -11,6 +11,10 @@ NGROK_API="http://127.0.0.1:4040/api/tunnels"
 TMP_LOG="$(mktemp /tmp/tunnel-local-XXXXXX.log)"
 NGROK_PID=""
 CLOUDFLARED_PID=""
+EXPO_MODE="dev-client"
+if [[ "${1:-}" == "--web" ]] || [[ "${WEB:-}" == "1" ]]; then
+  EXPO_MODE="web"
+fi
 
 cleanup() {
   if [[ -n "${NGROK_PID:-}" ]] && kill -0 "$NGROK_PID" 2>/dev/null; then
@@ -46,8 +50,13 @@ if [[ -n "${TUNNELED_SUPABASE_URL:-}" ]]; then
   fi
   _tunneled_url="$TUNNELED_SUPABASE_URL"
   echo "Local Supabase (tunneled, manual): $_tunneled_url"
-  echo "Expo tunnel mode — phone can be on different network (hosted stays for preview/prod)"
-  EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel
+  if [[ "$EXPO_MODE" == "web" ]]; then
+    echo "Expo web tunnel mode — open in browser, no emulator needed (hosted stays for preview/prod)"
+    EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --web --tunnel
+  else
+    echo "Expo tunnel mode — phone can be on different network (hosted stays for preview/prod)"
+    EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel
+  fi
   exit 0
 fi
 
@@ -111,6 +120,12 @@ if [[ -z "$_tunneled_url" ]]; then
   exit 1
 fi
 
-echo "Expo tunnel mode — phone can be on different network (hosted stays for preview/prod)"
-# 4) Start Expo with tunneled URL (blocking, cleanup on Ctrl+C via trap)
-EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel
+if [[ "$EXPO_MODE" == "web" ]]; then
+  echo "Expo web tunnel mode — open in browser, no emulator needed (hosted stays for preview/prod)"
+  # 4) Start Expo web with tunneled URL (blocking, cleanup on Ctrl+C via trap)
+  EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --web --tunnel
+else
+  echo "Expo tunnel mode — phone can be on different network (hosted stays for preview/prod)"
+  # 4) Start Expo with tunneled URL (blocking, cleanup on Ctrl+C via trap)
+  EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel
+fi

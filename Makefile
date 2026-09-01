@@ -8,7 +8,7 @@ EAS := npx eas-cli
 SUPABASE := npx supabase
 LOCAL_ENV := . ./scripts/local-supabase-env.sh loopback admin;
 
-.PHONY: help setup dev dev-lan dev-loopback devbuild preview production
+.PHONY: help setup dev dev-lan dev-loopback web devbuild preview production
 .PHONY: supabase-start supabase-stop supabase-status
 .PHONY: db-reset db-reset-clean db-seed db-clear db-types db-diff migration db-push
 .PHONY: typecheck lint format format-check test build check
@@ -45,6 +45,21 @@ dev-lan: supabase-start ## Start Expo with the local Supabase LAN address (or au
 dev-loopback: supabase-start ## Start Expo with the local Supabase loopback address
 	@. ./scripts/local-supabase-env.sh loopback app; \
 		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client
+
+web: supabase-start ## Start Expo Web with local Supabase (TUNNEL=1 for auto cross-network, no emulator)
+	@if [ -n "$$TUNNEL" ]; then \
+		WEB=1 ./scripts/tunnel-local.sh --web; \
+	elif [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
+		. ./scripts/local-supabase-env.sh loopback app; \
+		printf 'Local Supabase (tunneled): %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
+		printf 'Expo web tunnel mode — open in browser\n'; \
+		EXPO_PUBLIC_SUPABASE_URL="$$TUNNELED_SUPABASE_URL" EXPO_PUBLIC_SUPABASE_ANON_KEY="$$EXPO_PUBLIC_SUPABASE_ANON_KEY" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --web --tunnel; \
+	else \
+		. ./scripts/local-supabase-env.sh loopback app; \
+		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
+		printf 'Expo web mode — open http://localhost:8081\n'; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --web; \
+	fi
 
 devbuild: ## Build the development APK (rebuild only after native/config changes)
 	$(EAS) build --platform android --profile development --non-interactive
