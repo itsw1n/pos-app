@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import {
   createUser as createRemoteUser,
+  CreateUserInput,
   getUsers,
   setUserActive as setRemoteUserActive,
-  UserPayload,
 } from '@/api/userApi';
 import { User } from '@/types/entities';
 
@@ -12,11 +12,11 @@ export interface UseUsersResult {
   isLoading: boolean;
   error: string;
   loadUsers: () => Promise<void>;
-  createUser: (payload: UserPayload) => Promise<User>;
+  createUser: (payload: CreateUserInput) => Promise<User>;
   setUserActive: (userId: string, isActive: boolean) => Promise<void>;
 }
 
-function validatePayload(payload: UserPayload): void {
+function validatePayload(payload: CreateUserInput): void {
   if (!payload.username.trim()) {
     throw new Error('Email is required');
   }
@@ -49,7 +49,7 @@ export function useUsers(): UseUsersResult {
   }, []);
 
   const createUser = useCallback(
-    async (payload: UserPayload): Promise<User> => {
+    async (payload: CreateUserInput): Promise<User> => {
       validatePayload(payload);
       const created = await createRemoteUser(payload);
       setUsers((prev) => [...prev, created]);

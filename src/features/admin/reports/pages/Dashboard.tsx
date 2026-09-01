@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -15,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { Screen } from '@/components/common/Screen/Screen';
 import { colors, radius, spacing } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import {
@@ -171,7 +171,7 @@ export function Dashboard({
   const topProducts = dashboard?.topProducts ?? [];
 
   return (
-    <SafeAreaView style={[dashboardStyles.container, style]}>
+    <Screen style={[dashboardStyles.container, style]}>
       <AppHeader pageTitle="Dashboard Overview" />
 
       <ScrollView
@@ -261,6 +261,6 @@ export function Dashboard({
           </Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

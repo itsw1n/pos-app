@@ -278,7 +278,10 @@ export function InventoryManagement({
           {exporting ? 'Exporting...' : 'Export inventory'}
         </Button>
         {exporting ? (
-          <ActivityIndicator color={colors.primary} style={{ marginLeft: 8 }} />
+          <ActivityIndicator
+            color={colors.primary}
+            style={inventoryManagementStyles.exportSpinner}
+          />
         ) : null}
       </View>
 

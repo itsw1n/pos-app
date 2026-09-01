@@ -159,16 +159,19 @@ Details:
 
 ## User management (admin)
 
-| Status      | Screens                                             | Hooks               | API                                     | DB                       |
-| ----------- | --------------------------------------------------- | ------------------- | --------------------------------------- | ------------------------ |
-| implemented | `features/shared/settings/pages/UserManagement.tsx` | `hooks/useUsers.ts` | `api/userApi.ts`, edge fn `create-user` | `user` (+ Supabase Auth) |
+| Status      | Screens                                             | Hooks               | API                                                          | DB                       |
+| ----------- | --------------------------------------------------- | ------------------- | ------------------------------------------------------------ | ------------------------ |
+| implemented | `features/shared/settings/pages/UserManagement.tsx` | `hooks/useUsers.ts` | `api/userApi.ts`, edge fns `create-user` / `set-user-active` | `user` (+ Supabase Auth) |
 
 Details:
 
 - Create user via `supabase.functions.invoke('create-user', …)` — admin-only
   edge function provisions the Auth account + profile row; email validated
   before submit.
-- Enable/disable via `rpc('set_user_active')`.
+- Enable/disable via the admin-only `set-user-active` edge function. It updates
+  the profile through the guarded `set_user_active` RPC and bans/unbans the
+  matching Supabase Auth identity. An admin cannot disable their own account or
+  the final active admin.
 
 ---
 

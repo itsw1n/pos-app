@@ -3,7 +3,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -12,8 +11,9 @@ import { Eye, EyeOff, Lock } from 'lucide-react-native';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { Button } from '@/components/common/Button/Button';
+import { Screen } from '@/components/common/Screen/Screen';
 import { confirmPasswordReset } from '@/api/authApi';
-import { colors, radius } from '@/theme';
+import { colors } from '@/theme';
 import { resetPasswordStyles as styles } from './ResetPassword.styles';
 import type { LoginStackParamList } from '../LoginNavigator';
 
@@ -62,7 +62,7 @@ export function ResetPassword({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen style={styles.container}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -102,11 +102,7 @@ export function ResetPassword({
                   )}
                 </Pressable>
               }
-              style={{
-                borderRadius: radius.xl,
-                height: 52,
-                paddingHorizontal: 14,
-              }}
+              style={styles.inputField}
             />
 
             <InputField
@@ -127,11 +123,7 @@ export function ResetPassword({
                   )}
                 </Pressable>
               }
-              style={{
-                borderRadius: radius.xl,
-                height: 52,
-                paddingHorizontal: 14,
-              }}
+              style={styles.inputField}
               onSubmitEditing={() => {
                 void onReset();
               }}
@@ -145,6 +137,6 @@ export function ResetPassword({
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }

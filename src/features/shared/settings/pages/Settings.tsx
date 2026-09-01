@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -11,6 +10,7 @@ import {
 import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { Screen } from '@/components/common/Screen/Screen';
 import {
   Bell,
   ChevronRight,
@@ -194,7 +194,7 @@ export function Settings({
   });
 
   return (
-    <SafeAreaView style={[styles.container, style]}>
+    <Screen style={[styles.container, style]}>
       <AppHeader pageTitle="Settings" />
       <ScrollView
         contentContainerStyle={styles.content}
@@ -260,6 +260,6 @@ export function Settings({
           IPSS v{Constants.expoConfig?.version ?? '1.1.2'} • Elvira Cafe
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
-  SafeAreaView,
   GestureResponderEvent,
   StyleProp,
   Text,
@@ -14,8 +12,11 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
+import { EmptyState } from '@/components/common/EmptyState/EmptyState';
+import { ErrorState } from '@/components/common/ErrorState/ErrorState';
+import { LoadingState } from '@/components/common/LoadingState/LoadingState';
+import { Screen } from '@/components/common/Screen/Screen';
 import { PaymentBadge } from '@/components/common/PaymentBadge/PaymentBadge';
-import { colors } from '@/theme';
 import { OrdersStackParamList } from '@/features/shared/orders/OrdersNavigator';
 import {
   useOrders,
@@ -216,15 +217,26 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
 
   if (isLoading && transactions.length === 0) {
     return (
-      <View style={[S.loadingContainer, style]}>
-        <ActivityIndicator color={colors.primary} />
-        <Text style={S.loadingText}>Loading transactions...</Text>
-      </View>
+      <Screen style={[S.container, style]}>
+        <LoadingState message="Loading transactions..." />
+      </Screen>
+    );
+  }
+
+  if (error && transactions.length === 0) {
+    return (
+      <Screen style={[S.container, style]}>
+        <ErrorState
+          message={error}
+          onRetry={() => void loadTransactions()}
+          title="Unable to load transactions"
+        />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={[S.container, style]}>
+    <Screen style={[S.container, style]}>
       <AppHeader pageTitle="Orders" />
 
       <SearchBar
@@ -248,20 +260,14 @@ export function Orders({ navigation, style }: OrdersProps): React.JSX.Element {
         </View>
       </View>
 
-      {error ? <Text style={S.errorText}>{error}</Text> : null}
-
       <FlatList
         data={filteredTransactions}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={S.content}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={S.emptyContainer}>
-            <Text style={S.emptyText}>No transactions yet</Text>
-          </View>
-        }
+        ListEmptyComponent={<EmptyState title="No transactions yet" />}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }

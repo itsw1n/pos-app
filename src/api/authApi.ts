@@ -16,6 +16,7 @@ export interface StoredUserProfile {
   user_id: string;
   username: string;
   role: UserRole;
+  is_active: boolean;
 }
 
 export type AuthStateListener = (
@@ -40,7 +41,7 @@ export async function getUserProfile(
 ): Promise<StoredUserProfile | null> {
   const { data, error } = await supabase
     .from('user')
-    .select('user_id, username, role')
+    .select('user_id, username, role, is_active')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) throw error;

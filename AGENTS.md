@@ -236,7 +236,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 
 ### Shared components (`src/components/common/`)
 
-`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `InputField` (label/error), `OfflineBanner` (warning strip shown when `useConnectivity()` reports no network). All named exports, all accept `style`.
+`Button` (variant/size/disabled), `Card`, `ProductRow` (product image w/ ☕ fallback, name, price, trailing slot), `ProductImage` (image tile w/ ☕ fallback on missing/broken URL), `StockBadge` (ok/low/critical → success/warning/danger), `InputField` (label/error), `Screen` (safe-area root), `LoadingState`, `ErrorState`, `EmptyState`, and `OfflineBanner` (connectivity + queued-sync status). All named exports; visual roots accept `style`.
 
 ---
 
@@ -252,7 +252,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 ```ts
 UserRole = 'admin' | 'cashier'
 
-User            { user_id, username, password, role, is_active? }
+User            { user_id, username, role, is_active }
 Product         { product_id, name, category, price, is_available }
 Transaction     { transaction_id, date, total_amount, payment_mode: 'cash'|'gcash'|'maya', user_id }
 TransactionItem { item_id, transaction_id, product_id, quantity, subtotal }
@@ -289,14 +289,14 @@ touch Supabase. One file per domain. All imports are relative.
 | `categoryApi.ts`    | category CRUD                             |
 | `inventoryApi.ts`   | inventory reads, `adjust_stock`           |
 | `transactionApi.ts` | transactions, items, `process_sale`, void |
-| `userApi.ts`        | user list/roles                           |
+| `userApi.ts`        | user list/roles + account status          |
 | `storageApi.ts`     | product image upload/delete               |
 
 ## Services (`src/services/`)
 
 | File                | Purpose                                                                                                                                                                                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `supabase.ts`       | `createClient` from `EXPO_PUBLIC_*` env vars                                                                                                                                                 |
+| `supabase.ts`       | `createClient` from `EXPO_PUBLIC_*` env vars; persistent React Native Auth storage + foreground token refresh                                                                                |
 | `sqlite.ts`         | `initDb` (7 local tables), `saveToSQLite<T>`, `getUnsyncedRecords<T>`, `markSynced`, cache getters/setters (products, categories, users, inventory) — modern async `expo-sqlite` API         |
 | `syncService.ts`    | `syncPendingRecords()` pushes unsynced transactions/stock movements, dedup via remote id check                                                                                               |
 | `catalogSync.ts`    | `refreshLocalCache()` mirrors products/categories/inventory/users into SQLite (best-effort)                                                                                                  |

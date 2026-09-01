@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  SafeAreaView,
   StyleProp,
   Text,
   View,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { DateFilterPicker } from '@/components/common/DateFilter/DateFilterPicker';
+import { Screen } from '@/components/common/Screen/Screen';
 import { DateFilter } from '@/components/common/DateFilter/types';
 import { colors } from '@/theme';
 import {
@@ -114,7 +114,7 @@ export function TopSelling({ style }: TopSellingProps): React.JSX.Element {
   );
 
   return (
-    <SafeAreaView style={[S.container, style]}>
+    <Screen style={[S.container, style]}>
       <DateFilterPicker
         style={S.filterRow}
         value={dateFilter}
@@ -145,6 +145,6 @@ export function TopSelling({ style }: TopSellingProps): React.JSX.Element {
           </Text>
         </View>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }

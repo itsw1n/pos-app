@@ -3,7 +3,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -12,10 +11,11 @@ import { Mail } from 'lucide-react-native';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
 import { Button } from '@/components/common/Button/Button';
+import { Screen } from '@/components/common/Screen/Screen';
 import { OfflineBanner } from '@/components/common/OfflineBanner/OfflineBanner';
 import { useConnectivity } from '@/hooks/useConnectivity';
 import { requestPasswordReset } from '@/api/authApi';
-import { colors, radius } from '@/theme';
+import { colors } from '@/theme';
 import { forgotPasswordStyles as styles } from './ForgotPassword.styles';
 import type { LoginStackParamList } from '../LoginNavigator';
 
@@ -64,7 +64,7 @@ export function ForgotPassword({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen style={styles.container}>
       <OfflineBanner visible={!isOnline} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -98,11 +98,7 @@ export function ForgotPassword({
               autoCorrect={false}
               keyboardType="email-address"
               leftIcon={<Mail size={18} color={colors.textSecondary} />}
-              style={{
-                borderRadius: radius.xl,
-                height: 52,
-                paddingHorizontal: 14,
-              }}
+              style={styles.inputField}
               onSubmitEditing={() => {
                 void onSend();
               }}
@@ -117,6 +113,6 @@ export function ForgotPassword({
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }

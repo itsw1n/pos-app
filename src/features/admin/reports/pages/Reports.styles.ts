@@ -38,6 +38,9 @@ export const reportsStyles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: spacing.md,
   },
+  exportSpinner: {
+    marginLeft: spacing.sm,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
