@@ -55,8 +55,8 @@ if [[ -n "${TUNNELED_SUPABASE_URL:-}" ]]; then
     EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --web --tunnel --clear
   else
     echo "Local Supabase (tunneled, manual): $_tunneled_url"
-    echo "Expo tunnel mode — phone + web on different network (hosted stays for preview/prod)"
-    EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --web --tunnel --clear
+    echo "Expo tunnel mode — phone on different network (hosted stays for preview/prod)"
+    EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel --clear
   fi
   exit 0
 fi
@@ -126,8 +126,7 @@ if [[ "$EXPO_MODE" == "web" ]]; then
   # 4) Start Expo web with tunneled URL (blocking, cleanup on Ctrl+C via trap) --clear forces rebundle with new env
   EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --web --tunnel --clear
 else
-  echo "Expo tunnel mode — phone + web can be on different network (hosted stays for preview/prod)"
-  echo "Web will be at the tunnel URL printed below (no emulator needed)"
-  # 4) Start Expo with tunneled URL for both dev-client and web (blocking, cleanup on Ctrl+C via trap) --clear forces rebundle with new env
-  EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --web --tunnel --clear
+  echo "Expo tunnel mode — phone on different network (hosted stays for preview/prod)"
+  # 4) Start Expo with tunneled URL for dev-client only (blocking, cleanup on Ctrl+C via trap) --clear forces rebundle with new env
+  EXPO_PUBLIC_SUPABASE_URL="$_tunneled_url" EXPO_PUBLIC_SUPABASE_ANON_KEY="$_anon_key" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development npx expo start --dev-client --tunnel --clear
 fi

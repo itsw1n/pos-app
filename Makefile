@@ -25,7 +25,7 @@ setup: ## Install npm dependencies
 
 ##@ Development
 
-dev: supabase-start ## Start local Supabase + Expo (LAN; TUNNEL=1 auto-tunnels DB + Expo for phone + web)
+dev: supabase-start ## Start local Supabase + Expo for phone (LAN; TUNNEL=1 for tunnel)
 	@if [ -n "$$TUNNEL" ] || [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
 		./scripts/tunnel-local.sh; \
 	else \
