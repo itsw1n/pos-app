@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -14,6 +13,7 @@ import {
   ReceiptView,
   ReceiptViewTransaction,
 } from '@/components/common/ReceiptView/ReceiptView';
+import { Screen } from '@/components/common/Screen/Screen';
 import { POSTransaction } from '@/types/context';
 import { colors } from '@/theme';
 import { BUSINESS } from '@/constants/business';
@@ -64,7 +64,7 @@ export function Receipt({
   };
 
   return (
-    <SafeAreaView style={[receiptStyles.container, style]}>
+    <Screen style={[receiptStyles.container, style]}>
       <View style={receiptStyles.topBar}>
         <View style={receiptStyles.topBarBalance} />
         <Text style={receiptStyles.topBarTitle}>{BUSINESS.name}</Text>
@@ -76,7 +76,7 @@ export function Receipt({
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        style={receiptStyles.scroll}
         contentContainerStyle={receiptStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -107,6 +107,6 @@ export function Receipt({
           }
         />
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
