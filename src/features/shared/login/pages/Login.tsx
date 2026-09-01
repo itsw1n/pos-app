@@ -164,6 +164,23 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               {isLoading ? 'Signing in...' : 'Log In →'}
             </Text>
           </Pressable>
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 10,
+              color: colors.textSecondary,
+              textAlign: 'center',
+            }}
+          >
+            {(() => {
+              try {
+                const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+                return url ? `DB: ${new URL(url).host}` : 'DB: (not set)';
+              } catch {
+                return `DB: ${process.env.EXPO_PUBLIC_SUPABASE_URL ?? '(invalid)'}`;
+              }
+            })()}
+          </Text>
         </ScrollView>
 
         <View style={loginScreenStyles.footer}>
