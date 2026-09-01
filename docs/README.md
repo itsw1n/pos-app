@@ -14,14 +14,15 @@ is implemented, what is planned, and how it works under the hood.
 
 ## Document map
 
-| Document                               | Audience            | What it covers                                                                               |
-| -------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------- |
-| [`spec-overview.md`](spec-overview.md) | Stakeholders + devs | Product spec: roles, capabilities, shipped vs pending matrix, non-functional requirements    |
-| [`features.md`](features.md)           | Developers          | Feature inventory: every feature → screens/hooks/api/db + build status, with code references |
-| [`future-plans.md`](future-plans.md)   | Stakeholders + devs | Current gaps (promised but missing) and planned features with priority and effort            |
-| [`architecture.md`](architecture.md)   | Developers          | 4-layer architecture, offline-first sync flow, navigation tree, state contexts               |
-| [`database.md`](database.md)           | Developers          | Supabase schema, RPCs, RLS matrix, storage buckets, local SQLite mirror                      |
-| [`api.md`](api.md)                     | Developers          | Client transport (`src/api/*`) and the `create-user` edge function                           |
+| Document                                         | Audience            | What it covers                                                                               |
+| ------------------------------------------------ | ------------------- | -------------------------------------------------------------------------------------------- |
+| [`spec-overview.md`](spec-overview.md)           | Stakeholders + devs | Product spec: roles, capabilities, shipped vs pending matrix, non-functional requirements    |
+| [`features.md`](features.md)                     | Developers          | Feature inventory: every feature → screens/hooks/api/db + build status, with code references |
+| [`future-plans.md`](future-plans.md)             | Stakeholders + devs | Current gaps (promised but missing) and planned features with priority and effort            |
+| [`architecture.md`](architecture.md)             | Developers          | 4-layer architecture, offline-first sync flow, navigation tree, state contexts               |
+| [`database.md`](database.md)                     | Developers          | Supabase schema, RPCs, RLS matrix, storage buckets, local SQLite mirror                      |
+| [`api.md`](api.md)                               | Developers          | Client transport and account-management Edge Functions                                       |
+| [`release-acceptance.md`](release-acceptance.md) | Testers + operators | Preview APK, physical-device, offline, printer, and pilot release checklist                  |
 
 ---
 

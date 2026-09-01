@@ -40,12 +40,17 @@ npx expo lint            # ESLint (eslint-config-expo, flat config) + Prettier v
 npx prettier --write .   # format the whole codebase
 npx prettier --check .   # verify formatting
 npx expo export --platform android   # verify the Metro bundle actually builds
+make integration-test   # destructive local reset + real Supabase integration tests
 ```
 
 **Quality gates (all must pass before committing):** `npm run typecheck`
 (`tsc --noEmit`), `npm run lint` (`expo lint`), and `npm run format:check`
 (`prettier --check`). Config lives in `eslint.config.js`, `.prettierrc`
 (`singleQuote: true`), and `.prettierignore`.
+
+Before a preview/release candidate, also run `make integration-test`. It resets
+local Supabase, seeds demo fixtures, runs pgTAP against the real RLS/RPC schema,
+and exercises account Edge Functions against local Auth.
 
 > Two React 19 hooks rules are intentionally scoped-off with per-line
 > `eslint-disable` comments where the code uses canonical patterns the new
@@ -87,6 +92,7 @@ make lint         # npx expo lint
 make format       # npx prettier --write .
 make format-check # npx prettier --check .
 make build        # npx expo export --platform android (mobile-only)
+make integration-test # reset local DB + test RLS/RPC/Auth/Edge Functions
 ```
 
 #### Custom development build (dev APK)
