@@ -66,6 +66,7 @@ jobs:
     name: Android bundle
     runs-on: ubuntu-latest
     env:
+      APP_VARIANT: production
       EXPO_PUBLIC_SUPABASE_URL: https://example.supabase.co
       EXPO_PUBLIC_SUPABASE_ANON_KEY: anonymous-key
       EXPO_PUBLIC_APP_ENV: production
