@@ -219,5 +219,7 @@ Key behaviors:
 | `0005_add_product_image.sql`            | `product.image_url` + public `product-images` bucket + policies                                                                       |
 | `0006_secure_order_counter_rls.sql`     | RLS on `order_number_counter`, revoke client access                                                                                   |
 | `0007_secure_product_image_storage.sql` | Storage hardening: update/delete restricted to owner/admin                                                                            |
+| `0008_clear_legacy_passwords.sql`       | Clears legacy plaintext values from the public user profile table                                                                     |
 
-All migrations are idempotent and re-runnable via `make seed` / `make reset`.
+All migrations are reproducible locally via `make db-reset`; `make db-seed`
+idempotently refreshes demo users and data.

@@ -1,0 +1,53 @@
+project_id = "pos-application"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+# Login-capable demo users are created through the Auth Admin API by
+# scripts/seed.cjs, so the Makefile owns the complete seed sequence.
+[db.seed]
+enabled = false
+sql_paths = []
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[local_smtp]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+site_url = "com.elvira.pos.dev://reset-password"
+additional_redirect_urls = [
+  "com.elvira.pos.dev://reset-password",
+  "com.elvira.pos.preview://reset-password",
+  "com.elvira.pos://reset-password",
+]
+jwt_expiry = 3600
+enable_signup = true
+minimum_password_length = 6
+
+[functions.create-user]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/create-user/index.ts"

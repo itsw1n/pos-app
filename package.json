@@ -52,17 +52,15 @@
     "vitest": "^3.2.7"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "seed": "node scripts/seed.cjs seed",
-    "reset": "node scripts/seed.cjs reset",
+    "start": "EXPO_NO_DOTENV=1 expo start",
+    "android": "EXPO_NO_DOTENV=1 expo start --android",
+    "ios": "EXPO_NO_DOTENV=1 expo start --ios",
+    "web": "EXPO_NO_DOTENV=1 expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint",
+    "lint": "EXPO_NO_DOTENV=1 expo lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "expo export --platform android",
+    "build": "EXPO_NO_DOTENV=1 expo export --platform android",
     "test": "vitest run",
     "test:watch": "vitest"
   },

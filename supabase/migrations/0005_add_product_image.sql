@@ -2,7 +2,7 @@
 -- Product photos: nullable product.image_url column + a public Supabase
 -- Storage bucket ("product-images") for uploaded image files.
 --
--- Idempotent: safe to re-run via `supabase db reset` / `make reset-dev`.
+-- Idempotent: safe to re-run via `supabase db reset` / `make db-reset`.
 
 alter table product add column if not exists image_url text;
 

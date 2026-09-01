@@ -4,6 +4,7 @@ import type {
   Subscription,
   User,
 } from '@supabase/supabase-js';
+import { getPasswordResetRedirectUrl } from '../config/environment';
 import { supabase } from '../services/supabase';
 import { UserRole } from '../types/entities';
 
@@ -63,7 +64,7 @@ export async function signOut(): Promise<void> {
 
 export async function requestPasswordReset(email: string): Promise<void> {
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: 'com.elvira.pos://reset-password',
+    redirectTo: getPasswordResetRedirectUrl(),
   });
   if (error) throw error;
 }

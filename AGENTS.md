@@ -33,8 +33,8 @@ Agent and developer guide for **IPSS: Integrated POS and Stock Monitoring System
 
 ```bash
 npm install              # install deps
-npm start                # expo start (Metro)
-npm run android          # expo start --android
+npm start                # Metro only (no dotenv); prefer make dev for local Supabase
+npm run android          # Android Metro only (no dotenv)
 npx tsc --noEmit         # typecheck (MUST pass before committing — zero errors, no `any`)
 npx expo lint            # ESLint (eslint-config-expo, flat config) + Prettier via eslint-plugin-prettier
 npx prettier --write .   # format the whole codebase
@@ -58,34 +58,30 @@ npx expo export --platform android   # verify the Metro bundle actually builds
 
 ## Environment
 
-Two environments are supported: `development` and `production`. Each has its
-own Supabase project. Only variables prefixed with `EXPO_PUBLIC_` are bundled
-into the app (read via `process.env.EXPO_PUBLIC_*`, see
-`src/services/supabase.ts`); **never put secret keys in `EXPO_PUBLIC_*`**.
+Three isolated app variants are supported: local `development`, hosted
+`preview`, and hosted `production`. Development values are read dynamically
+from `supabase status`; preview/production values live in their corresponding
+EAS environments. Local `.env.*` files are not part of the normal workflow.
 
-```
-# runtime env files (NEVER commit — gitignored):
-.env.development   # EXPO_PUBLIC_SUPABASE_URL + EXPO_PUBLIC_SUPABASE_ANON_KEY (dev project, EXPO_PUBLIC_APP_ENV=development)
-.env.production    # same, for the prod project (EXPO_PUBLIC_APP_ENV=production)
-.env.local         # SEED-ONLY: DATABASE_URL + SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
-.env.example       # tracked template
-.env.local.example # tracked template (seed secrets)
-```
+Only variables prefixed with `EXPO_PUBLIC_` are bundled into the app (read via
+`process.env.EXPO_PUBLIC_*`, see `src/services/supabase.ts`); **never put secret
+keys in `EXPO_PUBLIC_*`**. `scripts/local-supabase-env.sh` exports the local
+service-role key and DB URL only for server-side seed commands, never for the
+Expo process.
 
-`.env.local` is used **only** by `scripts/seed.cjs` (and `make seed`/`make reset`).
-It holds the **service_role** key and the Postgres connection string — admin
-credentials that must never ship to a client. The app bundle never reads it.
-You need `.env.local` only to run the seed; the app itself only needs
-`.env.development` (or `.env.production`).
+The variants use `com.elvira.pos.dev`, `com.elvira.pos.preview`, and
+`com.elvira.pos`, keeping persisted Auth sessions and SQLite caches separate.
 
 ### Local Development (Makefile)
 
 ```
 make setup        # npm install
-make dev          # expo start --dev-client against the development env (Fast Refresh)
+make dev          # local Supabase + Expo over LAN for a physical phone
+make dev-loopback # local Supabase + Expo using 127.0.0.1
 make devbuild     # build a custom development APK via EAS (install once on phone)
-make seed         # apply schema + upsert demo data into the configured DB
-make reset        # drop + recreate schema, then seed
+make db-reset     # reset local schema and seed demo users/data
+make db-seed      # idempotently seed the running local stack
+make supabase-stop # stop the local stack
 make typecheck    # npx tsc --noEmit
 make lint         # npx expo lint
 make format       # npx prettier --write .
@@ -101,30 +97,29 @@ run in Expo Go. Development uses a **custom Expo development build**
 
 1. `make devbuild` — EAS builds `profile: development` (`developmentClient`,
    APK) and prints a QR/install URL. Build once; re-run only when native
-   deps/`app.json` config plugins change.
+   deps/`app.config.ts` config plugins change.
 2. Install the dev APK on the phone (scan the QR/link EAS prints).
-3. `make dev` — starts Metro in dev-client mode. Scan the QR from the installed
-   app (or enter the URL manually). Same Wi-Fi for LAN; use
-   `npx expo start --dev-client --tunnel` (ngrok) when the phone isn't on LAN.
+3. `make dev` — starts local Supabase and Metro in LAN mode. Scan the QR from
+   the installed app. The phone and computer must be on the same network;
+   override detection with `make dev LAN_IP=192.168.x.x` when needed. Expo's
+   tunnel exposes Metro only, not the local Supabase gateway.
 4. JS/TS/React changes hot-reload via Fast Refresh — **no APK rebuild**.
-   Only native dependency or `app.json` config-plugin changes require a new
+   Only native dependency or `app.config.ts` config-plugin changes require a new
    `make devbuild`.
 
-The dev APK is shareable: a teammate installs the same APK once and connects to
-your running Metro via LAN/tunnel to see live changes. For a standalone,
-no-Metro APK (JS baked in, `.env.production`), use `make preview` instead.
+The dev APK is shareable: a teammate installs it once and connects to your
+Metro and local Supabase over LAN. For a standalone, no-Metro APK, use
+`make preview`; hosted values come from the EAS `preview` environment.
 
 Demo credentials created by the seed: `admin@elvira.cafe`/`admin123` (admin),
 `cashier@elvira.cafe`/`cashier123` (cashier). Log in with the email address;
 AuthContext signs in with `email: username`.
 
-### Docker (tooling only — backend is a hosted Supabase project)
+### Docker
 
-The database is NOT containerized; Docker runs the Node tooling:
-
-```
-make docker-seed / docker-reset / docker-typecheck / docker-lint / docker-build
-```
+Supabase CLI manages the local backend containers. `docker-compose.yml` remains
+tooling-only for optional isolated Node quality commands and does not duplicate
+the Supabase stack.
 
 ---
 
@@ -383,8 +378,8 @@ all integration happens on `dev`.
 - `npm run lint` (`expo lint`) and `npm run format:check` (`prettier --check`)
   — must pass.
 - `npm run build` (`expo export --platform android`) — verifies the Metro
-  bundle. Uses dummy `EXPO_PUBLIC_*` values in CI; real values only ship via
-  git-ignored `.env.*` at runtime.
+  bundle. Uses dummy `EXPO_PUBLIC_*` values in CI; real hosted values are
+  supplied by the matching EAS environment at build time.
 
 **Tagging (`release.yml`)** — `googleapis/release-please-action` runs on push
 to `main`:

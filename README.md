@@ -53,14 +53,28 @@ Demo accounts, seeded with the sample data:
 
 ## Run it locally
 
-For developers. Requires Node.js and the `EXPO_PUBLIC_` environment variables
-from `.env.development`.
+For developers. Requires Node.js, a Docker-compatible runtime, and the Supabase
+CLI (invoked through `npx`). No local environment file is required.
 
 ```bash
 make setup      # install dependencies
-make seed       # apply the schema + demo data (DEV-only)
-make dev        # start the Expo dev server (development env)
+make db-reset   # start local Supabase, migrate, and seed demo data
+make dev        # start local Supabase + Expo for a phone on the same LAN
 ```
+
+`make dev-loopback` is available for host/loopback development. The local
+Supabase API, database, and Studio use ports 54321, 54322, and 54323.
+
+Preview and production APKs read `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_ANON_KEY` from their corresponding EAS environments;
+local `.env.development` and `.env.production` files are not used. The three
+app variants have separate package IDs so their auth sessions and offline
+SQLite caches cannot mix.
+
+Before running `make preview` or `make production`, configure those two public
+variables in the matching EAS environment. Use a hosted staging project for
+preview and the live project for production; never add a service-role key to
+EAS client variables.
 
 For a full list of available commands, run `make help`.
 

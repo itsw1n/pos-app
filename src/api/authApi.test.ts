@@ -16,6 +16,7 @@ import { supabase } from '@/services/supabase';
 describe('authApi reset', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it('requestPasswordReset trims email and sends redirectTo', async () => {
@@ -32,6 +33,18 @@ describe('authApi reset', () => {
     } as never);
     await expect(requestPasswordReset('a@b.com')).rejects.toThrow(
       'rate limited',
+    );
+  });
+
+  it.each([
+    ['development', 'com.elvira.pos.dev://reset-password'],
+    ['preview', 'com.elvira.pos.preview://reset-password'],
+  ])('uses the %s app redirect', async (environment, redirectTo) => {
+    vi.stubEnv('EXPO_PUBLIC_APP_ENV', environment);
+    await requestPasswordReset('a@b.com');
+    expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith(
+      'a@b.com',
+      { redirectTo },
     );
   });
 

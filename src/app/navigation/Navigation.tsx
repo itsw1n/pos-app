@@ -10,6 +10,7 @@ import { useConnectivity } from '@/hooks/useConnectivity';
 import { OfflineBanner } from '@/components/common/OfflineBanner/OfflineBanner';
 import { AdminNavigator } from '@/app/navigation/AdminNavigator';
 import { CashierNavigator } from '@/app/navigation/CashierNavigator';
+import { getAppScheme } from '@/config/environment';
 import { LoginNavigator } from '@/features/shared/login/LoginNavigator';
 import { colors } from '@/theme';
 import { loadingStyles, navigationStyles } from './Navigation.styles';
@@ -17,7 +18,7 @@ import { loadingStyles, navigationStyles } from './Navigation.styles';
 const Stack = createStackNavigator();
 
 const linking = {
-  prefixes: ['com.elvira.pos://'],
+  prefixes: [`${getAppScheme()}://`],
   config: {
     screens: {
       Auth: {

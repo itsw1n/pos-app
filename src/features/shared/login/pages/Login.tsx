@@ -42,8 +42,32 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
     setIsLoading(true);
     try {
       await login(username, password);
-    } catch {
-      setError('Invalid credentials');
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : '';
+      if (
+        message.includes('network') ||
+        message.includes('fetch') ||
+        message.includes('failed to fetch') ||
+        message.includes('connection') ||
+        message.includes('econnrefused') ||
+        message.includes('timeout') ||
+        message.includes('unable to') ||
+        message.includes('load failed')
+      ) {
+        setError(
+          'Cannot reach server. Check Local Supabase is running and your phone can reach it. Tunnel shares Metro only — for cross-network use: ngrok http 54321 + TUNNELED_SUPABASE_URL.',
+        );
+      } else if (
+        message.includes('invalid api key') ||
+        message.includes('api key') ||
+        message.includes('apikey')
+      ) {
+        setError(
+          'Invalid Supabase API key. Check EXPO_PUBLIC_SUPABASE_ANON_KEY.',
+        );
+      } else {
+        setError('Invalid credentials');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +164,23 @@ export function LoginScreen({ style }: LoginScreenProps): React.JSX.Element {
               {isLoading ? 'Signing in...' : 'Log In →'}
             </Text>
           </Pressable>
+          <Text
+            style={{
+              marginTop: 8,
+              fontSize: 10,
+              color: colors.textSecondary,
+              textAlign: 'center',
+            }}
+          >
+            {(() => {
+              try {
+                const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+                return url ? `DB: ${new URL(url).host}` : 'DB: (not set)';
+              } catch {
+                return `DB: ${process.env.EXPO_PUBLIC_SUPABASE_URL ?? '(invalid)'}`;
+              }
+            })()}
+          </Text>
         </ScrollView>
 
         <View style={loginScreenStyles.footer}>
