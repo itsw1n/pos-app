@@ -214,17 +214,23 @@ Key behaviors:
 
 ## 6. Migration map
 
-| File                                    | Content                                                                                                                               |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001_init.sql`                         | Core tables + permissive dev-preview RLS                                                                                              |
-| `0002_categories.sql`                   | `category` table + FK; legacy `product.category` backfilled and dropped                                                               |
-| `0003_rbac.sql`                         | Role-gated RLS, CHECK constraints, atomic write RPCs (`get_app_role`, `process_sale`, `adjust_stock`, `void_sale`, `set_user_active`) |
-| `0004_add_order_number.sql`             | `order_number` + `order_number_counter`; idempotent/concurrency-safe `process_sale`                                                   |
-| `0005_add_product_image.sql`            | `product.image_url` + public `product-images` bucket + policies                                                                       |
-| `0006_secure_order_counter_rls.sql`     | RLS on `order_number_counter`, revoke client access                                                                                   |
-| `0007_secure_product_image_storage.sql` | Storage hardening: update/delete restricted to owner/admin                                                                            |
-| `0008_clear_legacy_passwords.sql`       | Clears legacy plaintext values from the public user profile table                                                                     |
-| `0009_enforce_active_users.sql`         | Denies inactive profiles through RLS and protects self/final-admin account status changes                                             |
+| File                                     | Content                                                                                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001_init.sql`                          | Core tables + permissive dev-preview RLS                                                                                              |
+| `0002_categories.sql`                    | `category` table + FK; legacy `product.category` backfilled and dropped                                                               |
+| `0003_rbac.sql`                          | Role-gated RLS, CHECK constraints, atomic write RPCs (`get_app_role`, `process_sale`, `adjust_stock`, `void_sale`, `set_user_active`) |
+| `0004_add_order_number.sql`              | `order_number` + `order_number_counter`; idempotent/concurrency-safe `process_sale`                                                   |
+| `0005_add_product_image.sql`             | `product.image_url` + public `product-images` bucket + policies                                                                       |
+| `0006_secure_order_counter_rls.sql`      | RLS on `order_number_counter`, revoke client access                                                                                   |
+| `0007_secure_product_image_storage.sql`  | Storage hardening: update/delete restricted to owner/admin                                                                            |
+| `0008_clear_legacy_passwords.sql`        | Clears legacy plaintext values from the public user profile table                                                                     |
+| `0009_enforce_active_users.sql`          | Denies inactive profiles through RLS and protects self/final-admin account status changes                                             |
+| `0010_grant_app_privileges.sql`          | Least-privilege authenticated grants required before RLS policies can evaluate                                                        |
+| `0011_grant_service_role_privileges.sql` | Trusted server grants required by account-management Edge Functions                                                                   |
 
 All migrations are reproducible locally via `make db-reset`; `make db-seed`
 idempotently refreshes demo users and data.
+
+Database integration coverage lives in `supabase/tests/database`. Run
+`make integration-test` to reset and seed local Supabase, execute pgTAP against
+the real policies/RPCs, and test account Edge Functions against local Auth.

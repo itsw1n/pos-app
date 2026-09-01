@@ -44,13 +44,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       auth: { autoRefreshToken: false, persistSession: false },
     },
   );
-  const [{ data: callerUser }, { data: callerRole, error: roleError }] =
-    await Promise.all([caller.auth.getUser(), caller.rpc('get_app_role')]);
-  if (roleError || callerRole !== 'admin' || !callerUser.user) {
+  const { data: callerRole, error: roleError } =
+    await caller.rpc('get_app_role');
+  if (roleError || callerRole !== 'admin') {
     return jsonResponse({ error: 'Admin access required' }, 403);
-  }
-  if (!body.is_active && body.user_id === callerUser.user.id) {
-    return jsonResponse({ error: 'You cannot disable your own account' }, 400);
   }
 
   const admin = createClient(

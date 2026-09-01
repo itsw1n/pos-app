@@ -11,7 +11,7 @@ LOCAL_ENV := . ./scripts/local-supabase-env.sh loopback admin;
 .PHONY: help setup dev web devbuild preview production
 .PHONY: supabase-start supabase-stop supabase-status
 .PHONY: db-reset db-seed migration db-push
-.PHONY: dev-lan dev-loopback db-reset-clean db-clear db-types db-diff typecheck lint format format-check test build check
+.PHONY: dev-lan dev-loopback db-reset-clean db-clear db-types db-diff integration-test typecheck lint format format-check test build check
 
 help: ## Show all commands
 	@awk 'BEGIN {FS = ":.*## "} \
@@ -121,6 +121,10 @@ db-diff: # Create a local schema diff (name required)
 			exit 2; \
 		fi; \
 		$(SUPABASE) db diff --local --file "$$migration_name"
+
+integration-test: db-reset ## Reset local DB, then test real RLS/RPC/Auth/Edge Functions
+	@$(LOCAL_ENV) npm run test:db
+	@$(LOCAL_ENV) npm run test:functions
 
 ##@ Quality
 

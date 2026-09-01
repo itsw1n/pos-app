@@ -194,12 +194,12 @@ These rows exist in the Settings screen (`features/shared/settings/pages/Setting
 rendered gray and inert with a "Coming soon" badge. No screen, hook, API, or DB
 code exists for them.
 
-| Feature                        | Settings row (line) | Promised caption                        | Status  |
-| ------------------------------ | ------------------- | --------------------------------------- | ------- |
-| Personal Information           | `Settings.tsx:140`  | "Update your name, email, and phone"    | stubbed |
-| Security & Password / 2FA      | `Settings.tsx:146`  | "Change your password and enable 2FA"   | stubbed |
-| Notification Preferences       | `Settings.tsx:165`  | "Manage sales and stock notifications"  | stubbed |
-| Dark Mode                      | `Settings.tsx:172`  | "Switch the app to a dark color scheme" | stubbed |
-| Excel export (inventory / POS) | —                   | —                                       | planned |
+| Feature                        | Settings row (line)         | Promised caption                        | Status      |
+| ------------------------------ | --------------------------- | --------------------------------------- | ----------- |
+| Personal Information           | `Settings.tsx:140`          | "Update your name, email, and phone"    | stubbed     |
+| Security & Password / 2FA      | `Settings.tsx:146`          | "Change your password and enable 2FA"   | stubbed     |
+| Notification Preferences       | `Settings.tsx:165`          | "Manage sales and stock notifications"  | stubbed     |
+| Dark Mode                      | `Settings.tsx:172`          | "Switch the app to a dark color scheme" | stubbed     |
+| Excel export (inventory / POS) | Admin inventory and reports | `services/exportService.ts`             | implemented |
 
 > Shipping requirements for each are in [`future-plans.md`](future-plans.md).

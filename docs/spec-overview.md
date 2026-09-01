@@ -65,7 +65,7 @@ start restore the session offline (see `architecture.md`).
 | Security & Password / 2FA                           |    —     |   —   | Coming soon (Settings)          |
 | Notification preferences                            |    —     |   —   | Coming soon (Settings)          |
 | Dark Mode                                           |    —     |   —   | Coming soon (Settings)          |
-| Excel export (inventory / transactions)             |    —     |   —   | Planned                         |
+| Excel export (inventory / transactions)             |    —     |   ✓   | Shipped                         |
 
 > The four **Coming soon** rows are visible in the Settings screen but
 > rendered gray and inert. Details and shipping requirements in
