@@ -22,16 +22,16 @@ Priority legend: **P1** = high value / likely soon · **P2** = nice-to-have ·
 - **Current behavior:** row is gray and inert.
 - **What's missing:**
   - A profile-edit screen + navigation route (Settings stack).
-  - The `user` table has **no name/phone columns** — schema change needed
-    (add `full_name`, `phone` to `user`; backfill migration).
+  - The `user` table has **no name column** — schema change needed
+    (add `full_name` to `user`; backfill migration). Phone is YAGNI — not needed for cafe ops.
   - No client write path exists for the `user` table: RLS allows `select`
     only (`database.md` RLS matrix). Needs a new `SECURITY DEFINER` RPC
     `update_own_profile(...)` that lets a user update only their own row and
     never their `role`/`user_id`.
   - Changing email = changing the Auth identity; Supabase requires
     `auth.admin.updateUserById` (service role) — a new edge function or admin
-    path. Recommend starting with **name/phone only**, defer email change.
-- **Effort:** M — schema + RPC + one screen + hook.
+    path. Recommend starting with **name only**, defer email change.
+- **Effort:** S — schema + RPC + one screen + hook.
 
 ### Gap 2. Security & Password / 2FA
 
@@ -126,9 +126,9 @@ file (`.xlsx`) that opens in Microsoft Excel, shared via the OS share sheet.
 **Effort:** M. Risk: verify `exceljs` bundle works in the Expo SDK 57 Metro
 build before committing to it (do a spike first).
 
-### 2. Personal Information editing — P1 (name/phone only)
+### 2. Personal Information editing — P1 (name only)
 
-Ship the non-email part of Gap 1. See Gap 1 for schema + RPC work.
+Ship the non-email part of Gap 1. See Gap 1 for schema + RPC work (just `full_name`).
 
 ### 3. Forgot Password (email link) — P2
 
@@ -170,7 +170,7 @@ Currently voids require the server RPC. An offline void would need an
 
 ## Sequencing
 
-1. **Phase 1 (P1):** Excel export → Personal Info (name/phone).
+1. **Phase 1 (P1):** Excel export → Personal Info (name only).
 2. **Phase 2 (P2):** Forgot Password → Password change → Dark Mode.
 3. **Phase 3 (P3):** 2FA → Push notifications → Offline void.
 
