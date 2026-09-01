@@ -9,7 +9,6 @@ export const colors = {
   danger: '#E8614A',
   dangerSurface: '#FEF0F0',
   dangerBorder: '#FECACA',
-  overlay: 'rgba(0, 0, 0, 0.45)',
   disabled: '#C2C5C5',
   textPrimary: '#1A1A1A',
   textSecondary: '#6B6B6B',

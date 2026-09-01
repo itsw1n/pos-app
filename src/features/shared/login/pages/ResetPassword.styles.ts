@@ -42,11 +42,6 @@ export const resetPasswordStyles = StyleSheet.create({
   form: {
     gap: spacing.lg,
   },
-  inputField: {
-    height: 52,
-    paddingHorizontal: 14,
-    borderRadius: radius.xl,
-  },
   error: {
     ...typography.sm,
     color: colors.danger,

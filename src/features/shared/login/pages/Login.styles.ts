@@ -65,11 +65,6 @@ export const loginScreenStyles = StyleSheet.create({
   inputGroupLarge: {
     marginBottom: spacing['2xl'],
   },
-  inputField: {
-    height: 52,
-    paddingHorizontal: 14,
-    borderRadius: radius.xl,
-  },
   inputLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -134,9 +129,6 @@ export const loginScreenStyles = StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     opacity: 0.7,
-  },
-  secureIndicator: {
-    color: colors.success,
   },
   forgotLinkPressable: {
     alignSelf: 'flex-end',

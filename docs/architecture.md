@@ -84,19 +84,18 @@ ErrorBoundary
   └─ FontGate (Inter font load)
        └─ AuthProvider
             └─ CartProvider
+                 └─ OfflineSyncGate (useOfflineSync — init DB, cache, sync)
                  └─ Navigation
-                      └─ OfflineBanner (useOfflineSync — init DB, cache, sync)
 ```
 
 If `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` are missing,
 `App` renders a "not configured" screen instead of crashing
 (`services/supabase.ts` → `isSupabaseConfigured`).
 
-`useOfflineSync` has one owner (`OfflineBanner`). It runs once on mount and again on **network change** and
+`useOfflineSync` runs once on mount and again on **network change** and
 **SIGNED_IN**: it (1) checks connectivity, (2) `initDb()` (SQLite), (3)
 `refreshLocalCache()` (mirror products/categories/inventory/users), (4)
-`syncPendingRecords()` (push queued writes). The banner reports pending-record
-counts and retry state without exposing raw backend errors.
+`syncPendingRecords()` (push queued writes).
 
 ---
 
@@ -158,9 +157,6 @@ Screen → hook reads SQLite → render
 local `users` table. On a later offline cold start, `AuthContext` matches the
 Supabase session's user id against the cache and restores the profile without a
 password. A brand-new device has no cache, so first login is online-only.
-Supabase Auth persists its session through the documented React Native storage
-adapter and refreshes tokens only while the app is active. Credentials are
-request inputs only and are never part of the `User` entity or SQLite schema.
 
 ---
 
@@ -173,9 +169,6 @@ shadows) + shared `styles/textStyles.ts`. Rules:
 - Never hardcode colors/spacing/type values — import from `theme`.
 - Reusable components expose a `style` prop; conditional styling uses arrays.
 - Semantic props (`variant`, `size`) instead of ad-hoc consumer styles.
-- Screen roots use the shared `components/common/Screen` safe-area component.
-- Initial loading, blocking errors, and empty results use the shared state
-  components. A failed refresh does not hide usable cached data.
 
 ---
 

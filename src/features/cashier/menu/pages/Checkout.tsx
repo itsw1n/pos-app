@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -10,7 +11,6 @@ import {
 import { ArrowLeft, Utensils, User } from 'lucide-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { InputField } from '@/components/common/InputField/InputField';
-import { Screen } from '@/components/common/Screen/Screen';
 import { QtyControls } from '@/components/common/QtyControls/QtyControls';
 import { ProductRow } from '@/components/common/ProductRow/ProductRow';
 import { colors } from '@/theme';
@@ -35,7 +35,7 @@ export function Checkout({
   };
 
   return (
-    <Screen style={[checkoutStyles.container, style]}>
+    <SafeAreaView style={[checkoutStyles.container, style]}>
       <View style={checkoutStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={colors.textPrimary} />
@@ -45,7 +45,7 @@ export function Checkout({
       </View>
 
       <ScrollView
-        style={checkoutStyles.scroll}
+        style={{ flex: 1 }}
         contentContainerStyle={checkoutStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -122,6 +122,6 @@ export function Checkout({
           </Text>
         </Pressable>
       </ScrollView>
-    </Screen>
+    </SafeAreaView>
   );
 }

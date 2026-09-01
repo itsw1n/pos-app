@@ -6,10 +6,6 @@ export const menuStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  search: {
-    marginHorizontal: spacing['2xl'],
-    marginVertical: spacing.md,
-  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',

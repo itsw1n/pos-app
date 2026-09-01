@@ -1,16 +1,13 @@
 import { supabase } from '../services/supabase';
 import { User, UserRole } from '../types/entities';
 
-export interface CreateUserInput {
+export interface UserPayload {
   username: string;
   password: string;
   role: UserRole;
 }
 
-async function functionErrorMessage(
-  err: unknown,
-  fallback: string,
-): Promise<string> {
+async function errorMessage(err: unknown): Promise<string> {
   if (err instanceof Error) {
     const context = (err as unknown as Record<string, unknown>).context;
     if (context instanceof Response) {
@@ -25,7 +22,7 @@ async function functionErrorMessage(
     }
     return err.message;
   }
-  return fallback;
+  return 'Failed to create user';
 }
 
 export async function getUsers(): Promise<User[]> {
@@ -47,7 +44,7 @@ export async function getUsersIdName(): Promise<
   return (data as { user_id: string; username: string }[]) ?? [];
 }
 
-export async function createUser(payload: CreateUserInput): Promise<User> {
+export async function createUser(payload: UserPayload): Promise<User> {
   const { data, error } = await supabase.functions.invoke('create-user', {
     body: {
       username: payload.username.trim(),
@@ -55,12 +52,11 @@ export async function createUser(payload: CreateUserInput): Promise<User> {
       role: payload.role,
     },
   });
-  if (error) {
-    throw new Error(await functionErrorMessage(error, 'Failed to create user'));
-  }
+  if (error) throw new Error(await errorMessage(error));
   return {
     user_id: data?.user_id ?? '',
     username: payload.username.trim(),
+    password: '',
     role: payload.role,
     is_active: true,
   };
@@ -70,12 +66,9 @@ export async function setUserActive(
   userId: string,
   isActive: boolean,
 ): Promise<void> {
-  const { error } = await supabase.functions.invoke('set-user-active', {
-    body: { user_id: userId, is_active: isActive },
+  const { error } = await supabase.rpc('set_user_active', {
+    p_user_id: userId,
+    p_active: isActive,
   });
-  if (error) {
-    throw new Error(
-      await functionErrorMessage(error, 'Failed to update the user account'),
-    );
-  }
+  if (error) throw error;
 }

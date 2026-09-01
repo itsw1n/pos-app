@@ -12,19 +12,16 @@ export function OfflineBanner({
   visible = true,
   style,
 }: OfflineBannerProps): React.JSX.Element {
-  const syncStatus = useOfflineSync();
-  const hasFailure = syncStatus.state === 'error';
-  const hasPendingRecords = syncStatus.pendingCount > 0;
+  const { lastResult } = useOfflineSync();
+  const hasFailure = lastResult !== null && lastResult.failed > 0;
 
-  if (!visible && !hasFailure && !hasPendingRecords) return <></>;
+  if (!visible && !hasFailure) return <></>;
 
   let text = 'Offline — sales are queued';
-  if (syncStatus.state === 'syncing') {
-    text = 'Synchronizing queued records...';
-  } else if (hasFailure) {
-    text = `${syncStatus.pendingCount} record(s) queued — synchronization will retry`;
-  } else if (hasPendingRecords) {
-    text = `${syncStatus.pendingCount} record(s) waiting to synchronize`;
+  if (hasFailure && lastResult) {
+    text = lastResult.lastError
+      ? `Queued: ${lastResult.failed} \u2022 Last sync failed: ${lastResult.lastError}`
+      : `Queued: ${lastResult.failed} \u2022 Last sync failed`;
   }
 
   return (

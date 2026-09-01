@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -11,7 +11,19 @@ import {
 } from 'react-native';
 import { Button } from '@/components/common/Button/Button';
 import { InputField } from '@/components/common/InputField/InputField';
-import { usePrinterSettings } from '@/features/shared/settings/hooks/usePrinterSettings';
+import {
+  connectPrinter,
+  printThermalTest,
+  scanBluetoothPrinters,
+  ThermalDevice,
+  WIFI_DEFAULT_PORT,
+} from '@/services/printerService';
+import {
+  getPrinterConfig,
+  setPrinterConfig as savePrinterConfig,
+  clearPrinterConfig,
+  PrinterConfig,
+} from '@/services/printerStorage';
 import { colors } from '@/theme';
 import { printerSettingsStyles } from './PrinterSettings.styles';
 
@@ -19,30 +31,151 @@ type PrinterSettingsProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+export type PrinterConnectionType = 'bluetooth' | 'wifi';
+
 export function PrinterSettings({
   style,
 }: PrinterSettingsProps): React.JSX.Element {
-  const {
-    connectionType,
-    devices,
-    isConnecting,
-    isError,
-    isScanning,
-    isTestPrinting,
-    savedConfig,
-    status,
-    wifiHost,
-    wifiPort,
-    connectBluetooth,
-    connectWifi,
-    disconnect,
-    scan,
-    selectConnectionType,
-    setWifiHost,
-    setWifiPort,
-    testPrint,
-  } = usePrinterSettings();
-  const isConnected = savedConfig !== null;
+  const [connectionType, setConnectionType] =
+    useState<PrinterConnectionType>('bluetooth');
+  const [devices, setDevices] = useState<ThermalDevice[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [savedConfig, setSavedConfig] = useState<PrinterConfig | null>(null);
+  const [wifiHost, setWifiHost] = useState('');
+  const [wifiPort, setWifiPort] = useState(String(WIFI_DEFAULT_PORT));
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isTestPrinting, setIsTestPrinting] = useState(false);
+  const [status, setStatus] = useState('');
+  const [isError, setIsError] = useState(false);
+
+  const loadSaved = useCallback(async (): Promise<void> => {
+    const config = await getPrinterConfig();
+    setSavedConfig(config);
+    if (config?.type === 'wifi') {
+      const [host = ''] = config.address.split(':');
+      setWifiHost(host);
+      setWifiPort(String(config.port ?? WIFI_DEFAULT_PORT));
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial device config load
+    void loadSaved();
+  }, [loadSaved]);
+
+  const setStatusMessage = (message: string, error = false): void => {
+    setStatus(message);
+    setIsError(error);
+  };
+
+  const handleScan = async (): Promise<void> => {
+    if (isScanning) return;
+    setIsScanning(true);
+    setStatusMessage('Scanning for Bluetooth printers...');
+    setDevices([]);
+    try {
+      const found = await scanBluetoothPrinters();
+      setDevices(found);
+      setStatusMessage(
+        found.length > 0
+          ? `${found.length} printer(s) found`
+          : 'No printers found. Keep the printer discoverable and try again.',
+        found.length === 0,
+      );
+    } catch {
+      setStatusMessage('Bluetooth scanning failed', true);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleConnectBluetooth = async (
+    device: ThermalDevice,
+  ): Promise<void> => {
+    if (isConnecting) return;
+    setIsConnecting(true);
+    setStatusMessage(`Connecting to ${device.name}...`);
+    const config: PrinterConfig = {
+      type: 'bluetooth',
+      address: device.address,
+      name: device.name,
+      deviceType: device.deviceType,
+    };
+    try {
+      await connectPrinter(config);
+      await savePrinterConfig(config);
+      setSavedConfig(config);
+      setStatusMessage(`Connected to ${device.name}`);
+    } catch {
+      setStatusMessage(`Could not connect to ${device.name}`, true);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleConnectWifi = async (): Promise<void> => {
+    const host = wifiHost.trim();
+    const port = wifiPort.trim() === '' ? WIFI_DEFAULT_PORT : Number(wifiPort);
+    if (!host) {
+      setStatusMessage('Enter the printer IP address', true);
+      return;
+    }
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      setStatusMessage('Enter a valid port (1-65535)', true);
+      return;
+    }
+    if (isConnecting) return;
+    setIsConnecting(true);
+    setStatusMessage('Connecting to WiFi printer...');
+    const config: PrinterConfig = {
+      type: 'wifi',
+      address: host,
+      port,
+      name: `${host}:${port}`,
+    };
+    try {
+      await connectPrinter(config);
+      await savePrinterConfig(config);
+      setSavedConfig(config);
+      setStatusMessage(`Connected to ${host}:${port}`);
+    } catch {
+      setStatusMessage(`Could not connect to ${host}:${port}`, true);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleTestPrint = async (): Promise<void> => {
+    const config = savedConfig ?? (await getPrinterConfig());
+    if (!config) {
+      setStatusMessage('Connect a printer before running a test print', true);
+      return;
+    }
+    setIsTestPrinting(true);
+    try {
+      await printThermalTest(config);
+      setStatusMessage('Test print sent to the printer');
+    } catch {
+      setStatusMessage(
+        'Test print failed — check the printer connection',
+        true,
+      );
+    } finally {
+      setIsTestPrinting(false);
+    }
+  };
+
+  const handleDisconnect = async (): Promise<void> => {
+    await clearPrinterConfig();
+    setSavedConfig(null);
+    setStatusMessage('Printer disconnected');
+  };
+
+  const selectConnectionType = (type: PrinterConnectionType): void => {
+    setConnectionType(type);
+  };
+
+  const isConnected = savedConfig != null;
 
   return (
     <ScrollView
@@ -151,11 +284,7 @@ export function PrinterSettings({
             ) : null}
           </View>
           {isConnected ? (
-            <Button
-              variant="danger"
-              size="small"
-              onPress={() => void disconnect()}
-            >
+            <Button variant="danger" size="small" onPress={handleDisconnect}>
               Disconnect
             </Button>
           ) : (
@@ -165,13 +294,9 @@ export function PrinterSettings({
               disabled={
                 isConnecting || (connectionType === 'bluetooth' && isScanning)
               }
-              onPress={() => {
-                if (connectionType === 'wifi') {
-                  void connectWifi();
-                } else {
-                  void scan();
-                }
-              }}
+              onPress={
+                connectionType === 'wifi' ? handleConnectWifi : handleScan
+              }
             >
               {isConnecting
                 ? 'Connecting...'
@@ -186,16 +311,16 @@ export function PrinterSettings({
 
         {connectionType === 'bluetooth' && devices.length > 0 ? (
           <View style={printerSettingsStyles.deviceList}>
-            {devices.map((device) => (
+            {devices.map((device, index) => (
               <Pressable
-                key={`${device.deviceType}-${device.address}`}
+                key={`${device.address}-${index}`}
                 style={[
                   printerSettingsStyles.deviceItem,
                   savedConfig?.address === device.address
                     ? printerSettingsStyles.deviceItemActive
                     : null,
                 ]}
-                onPress={() => void connectBluetooth(device)}
+                onPress={() => handleConnectBluetooth(device)}
               >
                 <View style={printerSettingsStyles.deviceInfo}>
                   <Text style={printerSettingsStyles.deviceName}>
@@ -222,7 +347,7 @@ export function PrinterSettings({
       <Button
         variant="outline"
         size="large"
-        onPress={() => void testPrint()}
+        onPress={handleTestPrint}
         disabled={isTestPrinting || isConnecting}
         style={printerSettingsStyles.testButton}
       >
@@ -240,7 +365,9 @@ export function PrinterSettings({
         <View
           style={[
             printerSettingsStyles.statusBanner,
-            !isError ? printerSettingsStyles.statusBannerSuccess : null,
+            !isError && !status.includes('failed')
+              ? printerSettingsStyles.statusBannerSuccess
+              : null,
           ]}
         >
           <Text style={printerSettingsStyles.statusText}>{status}</Text>

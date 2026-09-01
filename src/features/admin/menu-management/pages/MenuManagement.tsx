@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   Modal,
   Pressable,
+  SafeAreaView,
   SectionList,
   StyleProp,
   Text,
@@ -15,7 +16,6 @@ import {
   Trash2,
   UtensilsCrossed,
 } from 'lucide-react-native';
-import { Screen } from '@/components/common/Screen/Screen';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
@@ -208,7 +208,7 @@ export function MenuManagement({
   }
 
   return (
-    <Screen style={[menuManagementStyles.container, style]}>
+    <SafeAreaView style={[menuManagementStyles.container, style]}>
       <AppHeader pageTitle="Products" />
 
       <SearchBar
@@ -377,6 +377,6 @@ export function MenuManagement({
           setDeleteError('');
         }}
       />
-    </Screen>
+    </SafeAreaView>
   );
 }

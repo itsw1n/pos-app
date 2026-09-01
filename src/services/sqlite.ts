@@ -23,7 +23,6 @@ export interface LocalUser {
   user_id: string;
   username: string;
   role: 'admin' | 'cashier';
-  is_active: number;
 }
 
 export interface LocalTransaction {
@@ -102,17 +101,9 @@ export async function initDb(): Promise<void> {
     CREATE TABLE IF NOT EXISTS users (
       user_id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
-      role TEXT NOT NULL,
-      is_active INTEGER NOT NULL DEFAULT 1
+      role TEXT NOT NULL
     );
   `);
-  try {
-    await db.execAsync(
-      'ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1;',
-    );
-  } catch {
-    // Existing databases that already have the column need no migration.
-  }
   // Migrate legacy INTEGER user_id on existing devices (SQLite typeless, so alter is best-effort)
   try {
     const cols = await db.getAllAsync<{ name: string; type: string }>(
@@ -204,17 +195,6 @@ export async function getUnsyncedRecords<T>(
   return db.getAllAsync<T>(`SELECT * FROM ${table} WHERE synced = 0`);
 }
 
-export async function getPendingSyncCount(): Promise<number> {
-  const db = await getDb();
-  const transactionCount = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM transactions WHERE synced = 0',
-  );
-  const movementCount = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM stock_movements WHERE synced = 0',
-  );
-  return (transactionCount?.count ?? 0) + (movementCount?.count ?? 0);
-}
-
 export async function markSynced(
   table: 'transactions' | 'stock_movements',
   id: string | number,
@@ -295,11 +275,10 @@ export async function upsertLocalUsers(users: LocalUser[]): Promise<void> {
     await db.runAsync('DELETE FROM users;');
     for (const user of users) {
       await db.runAsync(
-        `INSERT INTO users (user_id, username, role, is_active) VALUES (?, ?, ?, ?)`,
+        `INSERT INTO users (user_id, username, role) VALUES (?, ?, ?)`,
         user.user_id,
         user.username,
         user.role,
-        user.is_active,
       );
     }
   });
@@ -308,18 +287,12 @@ export async function upsertLocalUsers(users: LocalUser[]): Promise<void> {
 export async function upsertLocalUser(profile: LocalUser): Promise<void> {
   const db = await getDb();
   await db.runAsync(
-    `INSERT INTO users (user_id, username, role, is_active) VALUES (?, ?, ?, ?)
-     ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, role = excluded.role, is_active = excluded.is_active`,
+    `INSERT INTO users (user_id, username, role) VALUES (?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET username = excluded.username, role = excluded.role`,
     profile.user_id,
     profile.username,
     profile.role,
-    profile.is_active,
   );
-}
-
-export async function deleteLocalUser(userId: string): Promise<void> {
-  const db = await getDb();
-  await db.runAsync('DELETE FROM users WHERE user_id = ?', userId);
 }
 
 export async function getLocalInventory(): Promise<

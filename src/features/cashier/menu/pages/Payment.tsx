@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleProp,
   Text,
@@ -9,7 +10,6 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { Screen } from '@/components/common/Screen/Screen';
 import {
   ArrowLeft,
   ArrowRight,
@@ -83,7 +83,7 @@ export function Payment({
   };
 
   return (
-    <Screen style={[paymentStyles.container, style]}>
+    <SafeAreaView style={[paymentStyles.container, style]}>
       <View style={paymentStyles.topBar}>
         <Pressable onPress={() => navigation.goBack()}>
           <ArrowLeft size={22} color={colors.textPrimary} />
@@ -93,7 +93,7 @@ export function Payment({
       </View>
 
       <ScrollView
-        style={paymentStyles.scroll}
+        style={{ flex: 1 }}
         contentContainerStyle={paymentStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -194,6 +194,6 @@ export function Payment({
           )}
         </Pressable>
       </ScrollView>
-    </Screen>
+    </SafeAreaView>
   );
 }

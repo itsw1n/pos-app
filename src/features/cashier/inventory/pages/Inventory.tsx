@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
+  SafeAreaView,
   StyleProp,
   Text,
   View,
@@ -10,10 +11,6 @@ import {
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppHeader } from '@/components/common/AppHeader/AppHeader';
-import { EmptyState } from '@/components/common/EmptyState/EmptyState';
-import { ErrorState } from '@/components/common/ErrorState/ErrorState';
-import { LoadingState } from '@/components/common/LoadingState/LoadingState';
-import { Screen } from '@/components/common/Screen/Screen';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { StockBadge } from '@/components/common/StockBadge/StockBadge';
 import { colors } from '@/theme';
@@ -108,26 +105,14 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
 
   if (isLoading && items.length === 0) {
     return (
-      <Screen style={[inventoryStyles.container, style]}>
-        <LoadingState message="Loading inventory..." />
-      </Screen>
-    );
-  }
-
-  if (error && items.length === 0) {
-    return (
-      <Screen style={[inventoryStyles.container, style]}>
-        <ErrorState
-          message={error}
-          onRetry={() => void loadInventory()}
-          title="Unable to load inventory"
-        />
-      </Screen>
+      <View style={[inventoryStyles.loadingContainer, style]}>
+        <Text style={inventoryStyles.loadingText}>Loading inventory...</Text>
+      </View>
     );
   }
 
   return (
-    <Screen style={[inventoryStyles.container, style]}>
+    <SafeAreaView style={[inventoryStyles.container, style]}>
       <AppHeader pageTitle="Inventory" />
       <View style={inventoryStyles.summaryCard}>
         <View style={inventoryStyles.summaryRow}>
@@ -159,6 +144,8 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
           </Text>
         </View>
       ) : null}
+
+      {error ? <Text style={inventoryStyles.errorText}>{error}</Text> : null}
 
       <SearchBar
         value={searchQuery}
@@ -198,8 +185,7 @@ export function Inventory({ style }: InventoryProps): React.JSX.Element {
         renderItem={renderItem}
         contentContainerStyle={inventoryStyles.content}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyState title="No inventory items found" />}
       />
-    </Screen>
+    </SafeAreaView>
   );
 }
