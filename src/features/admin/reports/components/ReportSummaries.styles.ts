@@ -1,58 +1,19 @@
 import { StyleSheet } from 'react-native';
 import { colors, radius, shadows, spacing, typography } from '@/theme';
 
-export const reportsStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing['6xl'],
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing['5xl'],
-  },
-  loadingText: {
-    ...typography.md,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-  },
-  errorText: {
-    ...typography.sm,
-    color: colors.danger,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  dateFilter: {
-    marginBottom: spacing.md,
-    paddingHorizontal: 0,
-  },
-  exportRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: spacing.md,
-  },
-  exportSpinner: {
-    marginLeft: spacing.sm,
-  },
+export const reportSummariesStyles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
     ...shadows.resting,
   },
   cardTitle: {
     ...typography.lg,
-    fontWeight: '600' as const,
-    color: colors.textPrimary,
     marginBottom: spacing.md,
+    color: colors.textPrimary,
+    fontWeight: '600',
   },
   rangeRow: {
     marginBottom: spacing.md,
@@ -63,8 +24,8 @@ export const reportsStyles = StyleSheet.create({
   },
   summaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: spacing.xs,
   },
   summaryLabel: {
@@ -81,14 +42,14 @@ export const reportsStyles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
     marginVertical: spacing.md,
+    backgroundColor: colors.border,
   },
   sectionLabel: {
     ...typography.sm,
-    fontWeight: '600' as const,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   listRow: {
     flexDirection: 'row',
@@ -113,13 +74,13 @@ export const reportsStyles = StyleSheet.create({
   },
   rowValue: {
     ...typography.md,
-    fontWeight: '600' as const,
     color: colors.textPrimary,
+    fontWeight: '600',
   },
   stockBadge: {
-    borderRadius: radius.full,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
     backgroundColor: colors.success,
   },
   stockBadgeLow: {
