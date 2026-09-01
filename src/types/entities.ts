@@ -3,7 +3,6 @@ export type UserRole = 'admin' | 'cashier';
 export interface User {
   user_id: string;
   username: string;
-  password?: string;
   role: UserRole;
   is_active?: boolean;
 }
