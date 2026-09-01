@@ -36,7 +36,6 @@ function toAppUser(
   return {
     user_id: profile?.user_id ?? '',
     username: profile?.username ?? fallbackUsername,
-    password: '',
     role: profile?.role ?? 'cashier',
   };
 }
