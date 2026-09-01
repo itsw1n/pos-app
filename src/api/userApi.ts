@@ -1,7 +1,7 @@
 import { supabase } from '../services/supabase';
 import { User, UserRole } from '../types/entities';
 
-export interface UserPayload {
+export interface CreateUserInput {
   username: string;
   password: string;
   role: UserRole;
@@ -44,7 +44,7 @@ export async function getUsersIdName(): Promise<
   return (data as { user_id: string; username: string }[]) ?? [];
 }
 
-export async function createUser(payload: UserPayload): Promise<User> {
+export async function createUser(payload: CreateUserInput): Promise<User> {
   const { data, error } = await supabase.functions.invoke('create-user', {
     body: {
       username: payload.username.trim(),
@@ -56,7 +56,6 @@ export async function createUser(payload: UserPayload): Promise<User> {
   return {
     user_id: data?.user_id ?? '',
     username: payload.username.trim(),
-    password: '',
     role: payload.role,
     is_active: true,
   };
