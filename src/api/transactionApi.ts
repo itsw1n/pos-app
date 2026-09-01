@@ -113,6 +113,18 @@ export async function getTransactionItemsForProducts(
   return (data as TransactionItemSparse[]) ?? [];
 }
 
+export async function getTransactionItemsByTransactionIds(
+  ids: string[],
+): Promise<(TransactionItemSparse & { transaction_id: string })[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from('transaction_items')
+    .select('transaction_id, product_id, quantity, subtotal')
+    .in('transaction_id', ids);
+  if (error) throw error;
+  return (data as (TransactionItemSparse & { transaction_id: string })[]) ?? [];
+}
+
 export async function getTransactionsForDashboard(): Promise<TransactionRow[]> {
   const { data, error } = await supabase
     .from('transactions')

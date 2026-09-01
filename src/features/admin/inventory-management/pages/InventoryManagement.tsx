@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleProp,
@@ -10,11 +12,19 @@ import {
 import { TriangleAlert } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
+import * as FileSystem from 'expo-file-system/legacy';
 import { SearchBar } from '@/components/common/SearchBar/SearchBar';
 import { StockBadge } from '@/components/common/StockBadge/StockBadge';
+import { Button } from '@/components/common/Button/Button';
 import { colors } from '@/theme';
 import { ReportsStackParamList } from '@/features/admin/reports/ReportsNavigator';
 import { useInventory, InventoryItem, StockStatus } from '@/hooks/useInventory';
+import { useAuth } from '@/context/AuthContext';
+import {
+  exportInventory,
+  InventoryExportRow,
+  shareExportedFile,
+} from '@/services/exportService';
 import { inventoryManagementStyles } from './InventoryManagement.styles';
 
 type InventoryManagementProps = StackScreenProps<
@@ -53,12 +63,8 @@ export function InventoryManagement({
   } = useInventory();
   const [filter, setFilter] = useState<FilterKey>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadInventory();
-    }, [loadInventory]),
-  );
+  const [exporting, setExporting] = useState(false);
+  const { role } = useAuth();
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -73,6 +79,48 @@ export function InventoryManagement({
         item.product_category.toLowerCase().includes(query),
     );
   }, [items, filter, searchQuery, getStatus]);
+
+  const onExport = useCallback(async (): Promise<void> => {
+    if (role !== 'admin') return;
+    if (filteredItems.length === 0) return;
+    setExporting(true);
+    try {
+      const exportRows: InventoryExportRow[] = filteredItems.map((r) => ({
+        product_id: r.product_id,
+        name: r.product_name,
+        category: r.product_category,
+        price: r.price,
+        quantity: r.quantity,
+        reorder_level: r.reorder_level,
+        status: getStatus(r),
+        stock_value: r.price * r.quantity,
+        supplier: null,
+      }));
+      const uri = await exportInventory(exportRows);
+      await shareExportedFile(uri);
+      try {
+        await FileSystem.deleteAsync(uri, { idempotent: true });
+      } catch {
+        // best-effort cleanup after share
+      }
+    } catch (e) {
+      if (__DEV__) {
+        console.warn('[Export] inventory failed', e);
+      }
+      Alert.alert(
+        'Export failed',
+        e instanceof Error ? e.message : 'Unknown error',
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [role, filteredItems, getStatus]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadInventory();
+    }, [loadInventory]),
+  );
 
   const alertCount = lowCount + criticalCount;
 
@@ -216,6 +264,22 @@ export function InventoryManagement({
             </Pressable>
           );
         })}
+      </View>
+
+      <View style={inventoryManagementStyles.exportRow}>
+        <Button
+          variant="secondary"
+          size="small"
+          disabled={filteredItems.length === 0 || exporting}
+          onPress={() => {
+            void onExport();
+          }}
+        >
+          {exporting ? 'Exporting...' : 'Export inventory'}
+        </Button>
+        {exporting ? (
+          <ActivityIndicator color={colors.primary} style={{ marginLeft: 8 }} />
+        ) : null}
       </View>
 
       <FlatList

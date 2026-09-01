@@ -32,6 +32,12 @@ export const reportsStyles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingHorizontal: 0,
   },
+  exportRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: spacing.md,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
