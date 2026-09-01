@@ -195,6 +195,17 @@ export async function getUnsyncedRecords<T>(
   return db.getAllAsync<T>(`SELECT * FROM ${table} WHERE synced = 0`);
 }
 
+export async function getPendingSyncCount(): Promise<number> {
+  const db = await getDb();
+  const transactionCount = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) AS count FROM transactions WHERE synced = 0',
+  );
+  const movementCount = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) AS count FROM stock_movements WHERE synced = 0',
+  );
+  return (transactionCount?.count ?? 0) + (movementCount?.count ?? 0);
+}
+
 export async function markSynced(
   table: 'transactions' | 'stock_movements',
   id: string | number,
