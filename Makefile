@@ -25,39 +25,31 @@ setup: ## Install npm dependencies
 
 ##@ Development
 
-dev: dev-lan ## Start local Supabase and Expo for a physical device (TUNNEL=1 also binds web)
-
-dev-lan: supabase-start ## Start Expo with the local Supabase LAN address (or auto-tunnel if TUNNEL=1 / TUNNELED_SUPABASE_URL set, also binds web when tunneled)
-	@if [ -n "$$TUNNEL" ]; then \
+dev: supabase-start ## Start local Supabase + Expo (LAN; TUNNEL=1 auto-tunnels DB + Expo for phone + web)
+	@if [ -n "$$TUNNEL" ] || [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
 		./scripts/tunnel-local.sh; \
-	elif [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
-		. ./scripts/local-supabase-env.sh lan app; \
-		printf 'Local Supabase (tunneled): %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		printf 'Expo tunnel mode — phone + web on different network (hosted stays for preview/prod)\n'; \
-		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --web --tunnel; \
 	else \
 		. ./scripts/local-supabase-env.sh lan app; \
 		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		printf 'Expo LAN mode — phone must be on same WiFi (for cross-network: TUNNEL=1 make dev or ngrok + TUNNELED_SUPABASE_URL)\n'; \
+		printf 'Expo LAN — phone on same WiFi (TUNNEL=1 for cross-network)\n'; \
 		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan; \
 	fi
 
-dev-loopback: supabase-start ## Start Expo with the local Supabase loopback address
+dev-lan: supabase-start ## Start Expo LAN explicitly (no tunnel)
+	@. ./scripts/local-supabase-env.sh lan app; \
+		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
+		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client --lan
+
+dev-loopback: supabase-start ## Start Expo loopback (127.0.0.1, no LAN)
 	@. ./scripts/local-supabase-env.sh loopback app; \
 		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --dev-client
 
-web: supabase-start ## Start Expo Web with local Supabase (TUNNEL=1 for auto cross-network, no emulator)
-	@if [ -n "$$TUNNEL" ]; then \
+web: supabase-start ## Start Expo Web (localhost; TUNNEL=1 for tunnel, no emulator)
+	@if [ -n "$$TUNNEL" ] || [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
 		WEB=1 ./scripts/tunnel-local.sh --web; \
-	elif [ -n "$$TUNNELED_SUPABASE_URL" ]; then \
-		. ./scripts/local-supabase-env.sh loopback app; \
-		printf 'Local Supabase (tunneled): %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		printf 'Expo web tunnel mode — open in browser\n'; \
-		EXPO_PUBLIC_SUPABASE_URL="$$TUNNELED_SUPABASE_URL" EXPO_PUBLIC_SUPABASE_ANON_KEY="$$EXPO_PUBLIC_SUPABASE_ANON_KEY" EXPO_PUBLIC_APP_ENV=development EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --web --tunnel; \
 	else \
 		. ./scripts/local-supabase-env.sh loopback app; \
 		printf 'Local Supabase: %s\n' "$$EXPO_PUBLIC_SUPABASE_URL"; \
-		printf 'Expo web mode — open http://localhost:8081\n'; \
 		EXPO_NO_DOTENV=1 APP_VARIANT=development $(EXPO) start --web; \
 	fi
 
