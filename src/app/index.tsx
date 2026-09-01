@@ -10,14 +10,9 @@ import {
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary/ErrorBoundary';
-import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { isSupabaseConfigured } from '@/services/supabase';
 import { Navigation } from '@/app/navigation/Navigation';
-
-function OfflineSyncGate(): null {
-  useOfflineSync();
-  return null;
-}
+import { appStyles } from './App.styles';
 
 function FontGate({
   children,
@@ -31,7 +26,7 @@ function FontGate({
   });
 
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: '#F5F5F5' }} />;
+    return <View style={appStyles.gate} />;
   }
 
   return <>{children}</>;
@@ -40,26 +35,9 @@ function FontGate({
 export function App(): React.JSX.Element {
   if (!isSupabaseConfigured) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: '#F5F5F5',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 24,
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A1A1A' }}>
-          App not configured
-        </Text>
-        <Text
-          style={{
-            marginTop: 8,
-            fontSize: 14,
-            color: '#6B6B6B',
-            textAlign: 'center',
-          }}
-        >
+      <View style={appStyles.configurationError}>
+        <Text style={appStyles.configurationTitle}>App not configured</Text>
+        <Text style={appStyles.configurationMessage}>
           Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.
           Rebuild with the correct .env file.
         </Text>
@@ -72,7 +50,6 @@ export function App(): React.JSX.Element {
       <FontGate>
         <AuthProvider>
           <CartProvider>
-            <OfflineSyncGate />
             <Navigation />
             <StatusBar style="auto" />
           </CartProvider>
