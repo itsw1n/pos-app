@@ -1,44 +1,16 @@
 name: ipos
 
 services:
-  # Tooling network only. The data layer is a hosted Supabase project
-  # configured via .env.local / .env.development (mounted).
+  # Tooling only. Supabase CLI owns the separate local database stack.
 
   builder:
     build:
       context: .
       target: runner
     working_dir: /app
-    env_file:
-      - .env.local
-      - .env.development
     volumes:
       - .:/app:delegated
     command: ['npm', 'run', 'typecheck']
-
-  seed:
-    build:
-      context: .
-      target: runner
-    working_dir: /app
-    env_file:
-      - .env.local
-      - .env.development
-    volumes:
-      - .:/app:delegated
-    command: ['npm', 'run', 'seed']
-
-  reset:
-    build:
-      context: .
-      target: runner
-    working_dir: /app
-    env_file:
-      - .env.local
-      - .env.development
-    volumes:
-      - .:/app:delegated
-    command: ['npm', 'run', 'reset']
 
   typecheck:
     build:
@@ -63,8 +35,6 @@ services:
       context: .
       target: web
     working_dir: /app
-    env_file:
-      - .env.development
     volumes:
       - .:/app:delegated
     command: ['node', '/dev/null']
