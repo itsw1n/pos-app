@@ -48,6 +48,7 @@
     "jsdom": "^26.1.0",
     "pg": "^8.22.0",
     "prettier": "^3.9.6",
+    "supabase": "^2.111.0",
     "typescript": "~6.0.3",
     "vitest": "^3.2.7"
   },
@@ -62,7 +63,9 @@
     "format:check": "prettier --check .",
     "build": "EXPO_NO_DOTENV=1 expo export --platform android",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:db": "supabase test db supabase/tests/database --local",
+    "test:functions": "node scripts/test-edge-functions.cjs"
   },
   "private": true
 }
