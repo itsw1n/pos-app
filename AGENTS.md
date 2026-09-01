@@ -252,7 +252,7 @@ import { colors, spacing, typography, radius, shadows } from '../theme';
 ```ts
 UserRole = 'admin' | 'cashier'
 
-User            { user_id, username, role, is_active? }
+User            { user_id, username, role, is_active }
 Product         { product_id, name, category, price, is_available }
 Transaction     { transaction_id, date, total_amount, payment_mode: 'cash'|'gcash'|'maya', user_id }
 TransactionItem { item_id, transaction_id, product_id, quantity, subtotal }
@@ -289,7 +289,7 @@ touch Supabase. One file per domain. All imports are relative.
 | `categoryApi.ts`    | category CRUD                             |
 | `inventoryApi.ts`   | inventory reads, `adjust_stock`           |
 | `transactionApi.ts` | transactions, items, `process_sale`, void |
-| `userApi.ts`        | user list/roles                           |
+| `userApi.ts`        | user list/roles + account status          |
 | `storageApi.ts`     | product image upload/delete               |
 
 ## Services (`src/services/`)
