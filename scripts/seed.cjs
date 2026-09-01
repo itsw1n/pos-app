@@ -1,6 +1,6 @@
 /*
  * scripts/seed.cjs
- * Seeds the Supabase DEV database with demo data (users, categories,
+ * Seeds the local Supabase database with demo data (users, categories,
  * products, inventory, demo transactions) so the UI can be previewed.
  *
  * Responsibilities (DATA ONLY — this does NOT apply or modify any schema):
@@ -12,17 +12,16 @@
  *     RPC / adjust_stock RPC, not this script)
  *
  * Safety:
- *   - Refuses to run against any non-DEV database (guard below). Seeding is
- *     DEV-only; PROD is never seeded from here.
- *   - Assumes the DB schema is already migrated via `supabase db push`.
+ *   - Refuses to run against non-local API and database URLs.
+ *   - Assumes the DB schema is already migrated by `supabase db reset`.
  *
  * Usage:
- *   node scripts/seed.cjs            # seed dev data (idempotent upserts)
+ *   make db-seed                     # idempotent local seed
  *
- * Required env (read from .env / .env.development / .env.local):
- *   DATABASE_URL              (Supabase DEV pooler connection string)
- *   SUPABASE_URL              (dev project URL)
- *   SUPABASE_SERVICE_ROLE_KEY (dev service_role key)
+ * Required env (injected by scripts/local-supabase-env.sh):
+ *   DATABASE_URL              (local Postgres connection string)
+ *   SUPABASE_URL              (local API URL)
+ *   SUPABASE_SERVICE_ROLE_KEY (local service_role key)
  *
  * Demo credentials (created here):
  *   admin   @elvira.cafe / admin123   (Admin)
@@ -30,89 +29,42 @@
  */
 'use strict';
 
-const path = require('path');
 const { Client } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
-
-const ROOT = path.resolve(__dirname, '..');
-
-const DEV_SUPABASE_HOST = 'mhlmskbuifatnlehvodf'; // DEV project ref (must never appear for PROD)
-
-function loadEnvFile(file) {
-  const target = path.join(ROOT, file);
-  if (!require('fs').existsSync(target)) return;
-  for (const line of require('fs').readFileSync(target, 'utf8').split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    const value = trimmed
-      .slice(eq + 1)
-      .trim()
-      .replace(/^["']|["']$/g, '');
-    if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
-      process.env[key] = value;
-    }
-  }
-}
-
-loadEnvFile('.env');
-loadEnvFile('.env.development');
-loadEnvFile('.env.local');
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// --- Safety guard: DEV-only ------------------------------------------------
-function assertDevOnly() {
-  if (!DATABASE_URL) {
+// --- Safety guard: local-only ----------------------------------------------
+function assertLocalOnly() {
+  if (!DATABASE_URL || !SUPABASE_URL || !SERVICE_ROLE_KEY) {
     throw new Error(
-      'DATABASE_URL is required (set in .env.development / .env.local) and must point to the DEV project.',
+      'DATABASE_URL, SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY are required. Run through make db-seed.',
     );
   }
-  // Refuse anything that doesn't resolve to the DEV project. Newer pooler
-  // URLs carry the project ref in the user segment (postgres.<ref>@...) rather
-  // than the hostname, so match either — the literal DEV ref must still appear.
+
   try {
-    const parsed = new URL(DATABASE_URL);
-    const host = parsed.hostname;
-    const username = parsed.username;
-    if (
-      !host.includes(DEV_SUPABASE_HOST) &&
-      !username.includes(DEV_SUPABASE_HOST)
-    ) {
-      throw new Error(
-        `seed.js is DEV-only. Refusing to seed a non-DEV database (host="${host}").`,
-      );
+    const databaseHost = new URL(DATABASE_URL).hostname;
+    const apiHost = new URL(SUPABASE_URL).hostname;
+    const localHosts = new Set(['127.0.0.1', 'localhost', '::1']);
+    if (!localHosts.has(databaseHost) || !localHosts.has(apiHost)) {
+      throw new Error('refusing to seed a non-local Supabase project');
     }
-  } catch (e) {
-    throw new Error(`Invalid DATABASE_URL: ${e.message}`);
-  }
-  if (!SUPABASE_URL || !SUPABASE_URL.includes(DEV_SUPABASE_HOST)) {
-    throw new Error('SUPABASE_URL must point to the DEV project.');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'invalid URL';
+    throw new Error(`Local seed safety check failed: ${message}`);
   }
 }
 
-// pg 8.22+ treats `sslmode=require` in the connection string as `verify-full`,
-// which rejects Supabase's self-signed pooler certificate. Strip the query
-// string and rely on the explicit `ssl: { rejectUnauthorized: false }` below.
-function connectionString() {
-  return (DATABASE_URL ?? '').split('?')[0];
-}
-
-assertDevOnly();
+assertLocalOnly();
 
 async function withDb(callback) {
   if (!DATABASE_URL) {
-    throw new Error(
-      'DATABASE_URL is required (set in .env.development / .env.local)',
-    );
+    throw new Error('DATABASE_URL is required (run through make db-seed)');
   }
   const client = new Client({
-    connectionString: connectionString(),
-    ssl: { rejectUnauthorized: false },
+    connectionString: DATABASE_URL,
   });
   try {
     await client.connect();
@@ -394,6 +346,7 @@ insert into "user" (user_id, username, password, role, is_active)
 values $1
 on conflict (username) do update
   set user_id = excluded.user_id,
+      password = null,
       role = excluded.role,
       is_active = excluded.is_active;`;
 
@@ -600,7 +553,7 @@ async function runSeed() {
     const rows = authUsers.map((u) => ({
       user_id: authIds[u.username],
       username: u.username,
-      password: u.password,
+      password: null,
       role: u.role,
       is_active: true,
     }));
@@ -616,7 +569,7 @@ async function runSeed() {
   });
 }
 
-console.log('[seed] mode=seed (DEV data only)');
+console.log('[seed] mode=seed (local data only)');
 runSeed()
   .then(() => console.log('[seed] complete'))
   .catch((err) => {
